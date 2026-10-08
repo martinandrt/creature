@@ -137,8 +137,18 @@ def _sha256(path: Path) -> str:
 
 
 def skill_md(spec: Spec, version: int, origin: dict[str, Any]) -> str:
-    seconds = spec.output["duration_s"]
     first_line = (spec.effect.splitlines() or [""])[0][:200]
+    if "duration_s" not in spec.output:  # a tool: it answers about a clip, it renders none
+        return (
+            f"---\nname: {spec.slug}\ndescription: {first_line}\n---\n\n"
+            f"# {spec.slug} (v{version}, tool)\n\n{spec.effect}\n\n"
+            f"- Input: `clip` (an H.264 MP4), optional `params`.\n"
+            f"- Output: a JSON object. {spec.output.get('returns', '')}\n"
+            f"- Wished for after: {origin.get('wish', '?')} (run {origin.get('run', '?')}).\n"
+            f"- Tests: `tests.json` ({len(spec.checks)} cases rendered by fixed code, compared exactly).\n"
+            "- Runs only inside the creature's workshop container.\n"
+        )
+    seconds = spec.output["duration_s"]
     return (
         f"---\nname: {spec.slug}\n"
         f"description: {first_line} Use it to animate a short text in this style.\n"
