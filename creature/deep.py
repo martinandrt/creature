@@ -428,6 +428,8 @@ def build(
     feedback, measured = "", ""
     shelf = library(assets, spec)
     said: list[str] = []
+    failed: set[str] = set()  # file sets the whole-clip check already failed
+    last_verdict = ""
     # the version the next round starts from (round, files, images), and the lowest score seen
     base: tuple[int, dict[str, str], tuple[tuple[str, Path], ...]] = (0, {}, ())
     lowest = float("inf")
@@ -495,9 +497,16 @@ def build(
             space.files, images = dict(base[1]), base[2]
         ledger.record("round_score", round=number, score=preview.score, best=lowest, best_round=base[0])
         if reply.get("done") is True or number == rounds:
+            judged = json.dumps(space.files, sort_keys=True)
+            if judged in failed:  # the same files again: forge and judge disagree, more rounds buy nothing
+                ledger.record("stalemate", round=number, why=feedback.strip()[-400:])
+                return Result(False, space.files, number, "stalemate: the forge calls these files done, the "
+                              "judge already failed them:" + last_verdict)  # fmt: skip
             outcome = finish(skill_code(space.files), number)
             if outcome.ok:
                 return Result(True, space.files, number, "", tuple(used_assets(space.files, said)))
+            failed.add(judged)
+            last_verdict = "\n" + outcome.feedback
             feedback += "\nYour whole clip was checked and did not pass:\n" + outcome.feedback
     return Result(False, space.files, rounds, feedback.strip() or "no round passed")
 
