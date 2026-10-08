@@ -239,3 +239,18 @@ def test_stored_tests_are_tamper_evident(world, fake_model):
     path.write_text(json.dumps(tests), encoding="utf-8")
     with pytest.raises(ValueError, match="tests"):
         registry.get(root, "typewriter-reveal")
+
+
+# --- designs ---------------------------------------------------------------------
+
+
+def test_design_replays_with_no_model_call_and_no_dollars(world, fake_model):
+    # Martin's rule: a learned design replays at $0 — no planner, no judge, no model call at all
+    _build(world, fake_model)
+    silent = FakeModel()  # unscripted: any model call raises
+    creature = _creature(world, silent)
+    report = creature.run_design("typewriter-reveal", "Replay this.")
+    assert report.status == "DONE" and silent.calls == []
+    kinds = _kinds(creature)
+    assert "model_call" not in kinds and "design_step" in kinds and kinds[-1] == "run_end"
+    assert creature.ledger.spent_usd == 0 and report.spent_usd == 0
