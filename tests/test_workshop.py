@@ -135,10 +135,17 @@ def test_image_id_is_immutable_id(image):
     assert image.startswith("sha256:") and workshop.image_id(workshop.IMAGE) == image
 
 
-def test_no_container_left_behind(image, limits):
+def test_no_container_left_behind(image, limits, monkeypatch):
+    # this test's container gets a name of its own: a creature run of a parallel session shares the
+    # Docker daemon and must not count as a leftover here
+    import uuid
+
+    token = uuid.uuid4().hex[:12]
+    own = f"creature-ws-{token}"
+    monkeypatch.setattr(workshop.uuid, "uuid4", lambda: uuid.UUID(hex=token + "0" * 20))
     _run(image, limits, "def run(input, work):\n    while True:\n        pass", timeout_s=2)
     names = subprocess.run(
-        ["docker", "ps", "-a", "--filter", "name=creature-", "--format", "{{.Names}}"],
+        ["docker", "ps", "-a", "--filter", f"name={own}", "--format", "{{.Names}}"],
         capture_output=True,
         text=True,
     ).stdout.split()
