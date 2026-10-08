@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "domain": "motion design: text and graphic animation",
+  "spine_network": [
+    "Apify API",
+    "Instagram CDN (perception only)",
+    "ElevenLabs API",
+    "the model via claude -p"
+  ],
+  "models": {
+    "default": "claude-haiku-5-5",
+    "criteria": "claude-opus-5-5",
+    "forge": "claude-opus-5-5"
+  },
+  "caps": {
+    "run_budget_usd": 4.0,
+    "call_reserve_usd": 0.25,
+    "forge_attempts": 30,
+    "new_skills_per_run": 5,
+    "step_cap_usd": {
+      "perceive": 0.05,
+      "criteria": 0.2,
+      "planner": 0.03,
+      "forge": 0.25,
+      "judge": 0.03
+    }
+  },
+  "workshop": {
+    "image": "creature-workshop:v1",
+    "network": false,
+    "timeout_s": 300,
+    "memory_mb": 4096,
+    "cpus": 4,
+    "pids": 256,
+    "work_mb": 1024,
+    "tmp_mb": 64,
+    "output_mb": 300
+  },
+  "install": "automatic after all file checks and the judge pass",
+  "refuse": [
+    "send messages",
+    "make payments",
+    "delete anything outside the work folder",
+    "read or use credentials",
+    "publish in someone's name",
+    "change authority, workshop, verdict or registry code"
+  ],
+  "ask": [
+    "network for skills",
+    "a package or model downloaded at run time",
+    "files outside the work folder",
+    "more budget or higher limits"
+  ]
+}
