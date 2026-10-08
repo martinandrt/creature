@@ -80,7 +80,7 @@ def run(input, work):
     tiles = []
     for i, t in enumerate(times):
         path = f"{work}/frame_{i:03d}.png"
-        grab(video, t, path, fit(landscape))
+        times[i] = grab(video, t, path, fit(landscape))  # labels and Reel.times say where frames come from
         tiles.append(path)
     sheets(tiles, times, f"{work}/out/strip", landscape)
     audio = any(s.get("codec_type") == "audio" for s in streams)
@@ -185,12 +185,12 @@ FRAMES_AT_CODE = (
     workshop.SHEET_CODE
     + r"""
 def run(input, work):
-    tiles = []
+    tiles, times = [], []
     for i, t in enumerate(input["times"]):
         path = f"{work}/frame_{i:03d}.png"
-        grab(f"{work}/in/reel.mp4", t, path, fit(input.get("landscape", False)))
+        times.append(grab(f"{work}/in/reel.mp4", t, path, fit(input.get("landscape", False))))
         tiles.append(path)
-    sheets(tiles, input["times"], f"{work}/out/strip", input.get("landscape", False))
+    sheets(tiles, times, f"{work}/out/strip", input.get("landscape", False))
     return len(tiles)
 """
 )

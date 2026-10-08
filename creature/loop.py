@@ -94,6 +94,13 @@ class Creature:
         page.overview(self.home)
         return report
 
+    def needs_library(self, skill: registry.Skill) -> str:
+        """Why a skill cannot run here: it reads the asset library and this home mounts none."""
+        wanted = skill.capability.get("assets") or []
+        if wanted and not self.authority.workshop.assets:
+            return f"{skill.slug} needs the asset library ({', '.join(wanted[:3])}): this home has none"
+        return ""
+
     def run_skill(
         self, code: str, spec: criteria.Spec, attempt: Path, reference: Path
     ) -> tuple[Outcome, Path | None]:
@@ -147,9 +154,13 @@ class Creature:
         )
         # does an installed skill do this already? Then it is judged by its own stored tests
         skill, why = planner.match(
-            self.model, self.reel, registry.skills(self.registry), cap_usd=self.cap("planner")
-        )
+            self.model, self.reel, registry.skills(self.registry), cap_usd=self.cap("planner"),
+            library=bool(self.authority.workshop.assets),
+        )  # fmt: skip
         self.ledger.record("plan", skill=skill.slug if skill else None, reason=why)
+        if skill and self.needs_library(skill):
+            report.gap = self.needs_library(skill)
+            return self.finish(report)
         if skill:
             spec = registry.spec_of(skill, text)
             reference = skill.path / registry.REFERENCE
@@ -261,7 +272,7 @@ class Creature:
             cost=cost,
             reference=reference,
             staging=self.folder,
-            assets=list(built.assets),
+            assets=self._existing(list(built.assets)),
         )
         self.installed += 1
         self.ledger.record("installed", skill=skill.slug, version=skill.version, design=spec.slug, **cost)
@@ -312,6 +323,16 @@ class Creature:
             return Outcome(False, f"At {seconds:.2f} s instead of {asked} s it fails: {text}",
                            {"stage": "other_length", "problems": problems})  # fmt: skip
         return Outcome(True, "", {"stage": "other_length", "seconds": seconds})
+
+    def _existing(self, paths: list[str]) -> list[str]:
+        """Declared library files that really exist there; the rest is noted and dropped."""
+        root = self.authority.workshop.assets
+        if not root:
+            return []
+        kept = [p for p in paths if (Path(root) / p.removeprefix(workshop.ASSETS + "/")).is_file()]
+        if len(kept) < len(paths):
+            self.ledger.record("assets_dropped", missing=sorted(set(paths) - set(kept))[:20])
+        return kept
 
     def learn_montage(
         self, report: Report, spec: criteria.Spec, source: str, text: str, *, mark: Path | None
@@ -547,6 +568,8 @@ class Creature:
         clips = {}
         for sid, source in sorted(t["sources"].items()):
             skill = registry.get(self.registry, source["skill"], source["version"])  # seals checked here
+            if self.needs_library(skill):
+                return None, [self.needs_library(skill)], None
             base = registry.spec_of(skill, text)
             output = {**base.output, "duration_s": t["frames"] / t["fps"]}
             spec = dataclasses.replace(
@@ -637,6 +660,9 @@ class Creature:
         frames = 0
         for number, step in enumerate(recipe["steps"], start=1):
             skill = registry.get(self.registry, step["skill"], step["version"])  # sealed tests checked here
+            if self.needs_library(skill):
+                report.gap = self.needs_library(skill)
+                return self.finish(report)
             step_text = texts[0] if len(texts) == 1 else texts[number - 1]
             spec = dataclasses.replace(registry.spec_of(skill, step_text), params=step.get("params", {}))
             folder = self.folder / f"step-{number}-{skill.slug}"

@@ -60,7 +60,7 @@ def grab(video, t, path, vf=None):
         args = ["ffmpeg", "-v", "error", "-y", "-ss", str(max(0.0, t - back)), "-i", video, "-frames:v", "1"]
         subprocess.run(args + (["-vf", vf] if vf else []) + [path], check=True)
         if os.path.exists(path):
-            return path
+            return round(max(0.0, t - back), 3)  # the time the frame really comes from
     raise RuntimeError(f"no frame could be read near {t} s")
 
 def sheets(tiles, times, prefix, landscape=False):
@@ -180,6 +180,8 @@ def asset_mounts(folder: str | None) -> list[str]:
     for entry in sorted(root.iterdir()):
         if entry.name.startswith(".") or not (entry.is_dir() or entry.is_file()) or entry.is_symlink():
             continue
+        if "," in entry.name or "=" in entry.name:  # would break the mount spec
+            raise ValueError(f"asset library entry {entry.name!r}: names with ',' or '=' cannot be mounted")
         mounts += ["--mount", f"type=bind,src={entry},dst={ASSETS}/{entry.name},readonly"]
     return mounts
 
@@ -194,7 +196,8 @@ def assets_digest(folder: str | None) -> str:
     combined = hashlib.sha256()
     for path in sorted(root.rglob("*")):
         parts = path.relative_to(root).parts
-        if any(p.startswith(".") for p in parts) or not path.is_file() or path.is_symlink():
+        # exactly what the mounts expose: only hidden top-level entries stay out, nested ones are readable
+        if parts[0].startswith(".") or not path.is_file() or path.is_symlink():
             continue
         combined.update(f"{'/'.join(parts)}\0{hashlib.sha256(path.read_bytes()).hexdigest()}\n".encode())
     return combined.hexdigest()

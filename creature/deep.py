@@ -207,7 +207,7 @@ def run(input, work):
     tiles, times = [], []
     for i, (t, n) in enumerate(input["pairs"]):
         reel_tile, out_tile = f"{work}/r_{i:02d}.png", f"{work}/o_{i:02d}.png"
-        grab(f"{work}/in/reel.mp4", t, reel_tile, fit(input["landscape"]))
+        t = grab(f"{work}/in/reel.mp4", t, reel_tile, fit(input["landscape"]))
         shape = fit(input["landscape"])
         subprocess.run(["ffmpeg", "-v", "error", "-i", f"{work}/in/f_{n:04d}.png", "-vf", shape, out_tile],
                        check=True)
@@ -268,8 +268,10 @@ def library(folder: str | None, spec: Spec) -> str:
     try:
         manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
         readme = (root / "README.md").read_text(encoding="utf-8")
-    except (OSError, json.JSONDecodeError):
-        return ""
+    except (OSError, json.JSONDecodeError) as error:
+        return (
+            f"An asset library is mounted read-only at /assets, but its manifest could not be read ({error})."
+        )
     items = manifest.get("prvky", []) if isinstance(manifest, dict) else []
     words = set(re.findall(r"[a-zá-ž0-9]+", " ".join([spec.effect, spec.task, *spec.criteria]).lower()))
 
