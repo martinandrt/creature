@@ -85,9 +85,17 @@ def perceive(source: str, folder: Path, ledger: Ledger, *, limits: workshop.Limi
         caption, transcript, author = _text(meta.get("caption")), _text(meta.get("transcript")), ""
         ledger.record("perceive_local", source=str(local), sidecar=sidecar.is_file())
     else:
-        item = fetch_reel(source)
+        try:
+            item = fetch_reel(source)
+        except PerceiveError as error:
+            # Apify bills the start even when nothing usable comes back: paid means recorded
+            ledger.record(
+                "perceive_apify", source=source, actor=ACTOR, ok=False, error=str(error)[:300],
+                cost_usd=APIFY_COST_USD,
+            )  # fmt: skip
+            raise
         ledger.record(
-            "perceive_apify", source=source, actor=ACTOR, cost_usd=APIFY_COST_USD,
+            "perceive_apify", source=source, actor=ACTOR, ok=True, cost_usd=APIFY_COST_USD,
             caption_chars=len(_text(item.get("caption"))), has_transcript=bool(_transcript(item)),
         )  # fmt: skip
         video = folder / "reel.mp4"
@@ -139,15 +147,30 @@ def fetch_reel(url: str) -> dict[str, Any]:
     return items[0]
 
 
-def download(url: str, target: Path) -> None:
-    """The reel video, from Instagram's CDN only, at most MAX_VIDEO_BYTES."""
-    host = urllib.parse.urlparse(url).hostname or ""
-    if urllib.parse.urlparse(url).scheme != "https" or not (
-        host.endswith(".cdninstagram.com") or host.endswith(".fbcdn.net")
-    ):
+def _check_cdn(url: str) -> None:
+    parts = urllib.parse.urlparse(url)
+    host = parts.hostname or ""
+    if parts.scheme != "https" or not (host.endswith(".cdninstagram.com") or host.endswith(".fbcdn.net")):
         raise PerceiveError(f"video host not allowed: {host or url[:60]}")
+
+
+class RedirectWithinCdn(urllib.request.HTTPRedirectHandler):
+    """Follows a redirect only to another allowed CDN host, so the allowlist survives a 302."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # type: ignore[override]
+        _check_cdn(newurl)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+def _open(url: str):
+    return urllib.request.build_opener(RedirectWithinCdn()).open(url, timeout=60)
+
+
+def download(url: str, target: Path) -> None:
+    """The reel video, from Instagram's CDN only (redirects included), at most MAX_VIDEO_BYTES."""
+    _check_cdn(url)
     try:
-        with urllib.request.urlopen(url, timeout=60) as response, target.open("wb") as out:
+        with _open(url) as response, target.open("wb") as out:
             size = 0
             while chunk := response.read(1 << 16):
                 size += len(chunk)
