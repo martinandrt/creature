@@ -118,3 +118,17 @@ def test_a_broken_seal_hides_the_skill_but_not_the_registry(root, ref):
     (root / "counter-roll" / "1" / "skill.py").write_text("# edited by hand")
     assert [s.slug for s in registry.skills(root)] == ["typewriter-reveal"]
     assert len(registry.broken(root)) == 1 and "counter-roll" in registry.broken(root)[0]
+
+
+def test_compose_flattens_designs_and_adds_skills_in_order(root, ref):
+    registry.install(root, _spec("typewriter-reveal"), "# a", origin=ORIGIN, cost=COST, reference=ref)
+    registry.install(root, _spec("counter-roll"), "# b", origin=ORIGIN, cost=COST, reference=ref)
+    registry.save_design(root, "intro", [{"skill": "counter-roll", "version": 1}], origin=ORIGIN)
+    made = registry.compose(root, "promo", ["typewriter-reveal", "intro"], origin={"by": "test"})
+    assert [s["skill"] for s in made["steps"]] == ["typewriter-reveal", "counter-roll"]
+    assert made["steps"][0]["params"] == {"blinks": 8}
+    assert made["origin"]["parts"] == ["typewriter-reveal", "intro"]
+    with pytest.raises(ValueError):
+        registry.compose(root, "solo", ["intro"], origin={})
+    with pytest.raises(KeyError):
+        registry.compose(root, "ghost", ["intro", "nothing"], origin={})

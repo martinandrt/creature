@@ -31,6 +31,38 @@ IMAGE = "creature-workshop:v1"
 FILE_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,99}")
 STDERR_TAIL = 4000
 
+# Fixed helpers (ours) prepended to the reel's and the clip's frame code: frames become sheets of
+# 270x480 tiles, 6 per row, 4 rows per sheet, grey gutters, each tile's time printed under it.
+SHEET_CODE = r"""
+import subprocess
+from PIL import Image, ImageDraw, ImageFont
+
+TILE_W, TILE_H, LABEL_H, GAP, COLUMNS, PER_SHEET = 270, 480, 30, 8, 6, 24
+FIT = (f"scale={TILE_W}:{TILE_H}:force_original_aspect_ratio=decrease,"
+       f"pad={TILE_W}:{TILE_H}:(ow-iw)/2:(oh-ih)/2")
+LABEL_FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf"
+
+def sheets(tiles, times, prefix):
+    font = ImageFont.truetype(LABEL_FONT, 22)
+    names = []
+    for start in range(0, len(tiles), PER_SHEET):
+        chunk = tiles[start:start + PER_SHEET]
+        rows, cols = -(-len(chunk) // COLUMNS), min(COLUMNS, len(chunk))
+        sheet = Image.new("RGB", (GAP + cols * (TILE_W + GAP), GAP + rows * (TILE_H + LABEL_H + GAP)),
+                          (127, 127, 127))
+        draw = ImageDraw.Draw(sheet)
+        for j, path in enumerate(chunk):
+            x, y = GAP + (j % COLUMNS) * (TILE_W + GAP), GAP + (j // COLUMNS) * (TILE_H + LABEL_H + GAP)
+            with Image.open(path) as tile:
+                sheet.paste(tile.convert("RGB"), (x, y))
+            draw.rectangle((x, y + TILE_H, x + TILE_W - 1, y + TILE_H + LABEL_H - 1), fill=(0, 0, 0))
+            draw.text((x + 8, y + TILE_H + 3), f"{times[start + j]:.2f} s", fill=(255, 255, 255), font=font)
+        name = prefix + ("" if start == 0 else f"-{start // PER_SHEET + 1}") + ".png"
+        sheet.save(name)
+        names.append(name)
+    return names
+"""
+
 # Fixed runner (ours, not generated). Unpacks the input archive into /work, calls run(input, "/work"),
 # and writes /work/out plus result.json back as one tar archive. Skill prints cannot break the protocol.
 RUNNER = r"""

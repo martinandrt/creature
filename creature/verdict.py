@@ -17,15 +17,14 @@ from creature import workshop
 from creature.criteria import Spec
 from creature.llm import Model
 
-CLIP_FRAMES = 18  # dense enough that a blink or flicker shows up between samples
+CLIP_PER_S, CLIP_MAX = 6, 36  # frames shown per second of clip, at most: a blink still shows up
 BLACK_LUMA = 8  # brightest pixel (0-255) at or below this on every sampled frame means a black clip
 
 # Fixed code (ours) that runs in the workshop on the attempt's clip.
-PROBE_CODE = r"""
-import json, subprocess
-
-FIT = "scale=180:320:force_original_aspect_ratio=decrease,pad=180:320:(ow-iw)/2:(oh-ih)/2"
-GRID = "margin=8:padding=8:color=0x7f7f7f"  # grey borders keep cells apart
+PROBE_CODE = (
+    workshop.SHEET_CODE
+    + r"""
+import json
 
 def run(input, work):
     clip = f"{work}/in/{input['file']}"
@@ -44,24 +43,24 @@ def run(input, work):
     fps = float(num) / float(den) if float(den) else 0.0
     frames = int(v.get("nb_read_frames") or 0)
     # frames picked by index, first to last inclusive, so the judge sees how the clip starts and ends
-    count = input["count"]
+    count = min(input["max"], max(2, round(frames / fps * input["per_s"]))) if fps else 2
     picks = sorted({round(i * (frames - 1) / (count - 1)) for i in range(count)}) if frames > 1 else [0]
     times = [round(n / fps, 3) if fps else 0.0 for n in picks]
     select = "+".join(f"eq(n\\,{n})" for n in picks)
     subprocess.run(["ffmpeg", "-v", "error", "-i", clip, "-vf", f"select='{select}',{FIT}", "-vsync", "vfr",
-                    f"{work}/frame_%02d.png"], check=True)
+                    f"{work}/frame_%03d.png"], check=True)
+    tiles = [f"{work}/frame_{i:03d}.png" for i in range(1, len(picks) + 1)]
     luma = []
-    for i in range(1, len(picks) + 1):
-        gray = subprocess.run(["ffmpeg", "-v", "error", "-i", f"{work}/frame_{i:02d}.png", "-f", "rawvideo",
-                               "-pix_fmt", "gray", "-"], capture_output=True, check=True).stdout
-        luma.append(max(gray) if gray else 0)  # brightest pixel: a small glyph on black is not black
-    subprocess.run(["ffmpeg", "-v", "error", "-start_number", "1", "-i", f"{work}/frame_%02d.png",
-                    "-vf", f"tile=6x{-(-count // 6)}:{GRID}", "-frames:v", "1",
-                    f"{work}/out/strip.png"], check=True)
+    for path in tiles:
+        with Image.open(path) as tile:
+            # brightest pixel: a small glyph on black is not black
+            luma.append(max(tile.convert("L").getdata()))
+    sheets(tiles, times, f"{work}/out/strip")
     return {"readable": True, "video": True, "codec": v.get("codec_name"), "pix_fmt": v.get("pix_fmt"),
             "width": v.get("width"), "height": v.get("height"), "fps": fps, "frames": frames,
             "duration_s": frames / fps if fps else 0.0, "luma": luma, "times": times}
 """
+)
 
 JUDGE_SCHEMA = {
     "type": "object",
@@ -86,11 +85,12 @@ JUDGE_SCHEMA = {
 
 JUDGE_SYSTEM = """You judge whether a rendered clip reproduces the TECHNIQUE of a motion design effect
 shown in a reference reel. Compare technique only: ignore the words, fonts, colours and layout. The
-reference reel is a tutorial, so many of its frames show an editing app; use the frames that show the
-effect. Each image is a grid of frames in time order, 6 per row: 12 from the reel, and 18 from the
-clip running from its first frame to its last. Every frame is its own cell, separated by grey borders:
-read positions inside each cell, never across cells, and never take a cell's place in the grid for
-movement.
+reference reel is often a tutorial, so some of its frames may show an editing app; use the frames that
+show the effect. Each image is a grid of frames in time order, 6 per row, each with its time in seconds
+under it: up to 24 from the reel (half of them from the middle of its shots), then the clip's frames at
+about 6 per second from its first frame to its last, over one or two images. Every frame is its own
+cell, separated by grey borders: read positions inside each cell, never across cells, and never take a
+cell's place in the grid for movement.
 Judge each criterion from the clip's frames alone. Answer every criterion, in the order given, copying
 its text exactly. pass is true only if the frames clearly show it; when unsure, false. Evidence
 describes the frames only: never mention or quote another criterion."""
@@ -101,6 +101,7 @@ class Checked:
     problems: tuple[str, ...]  # empty when every check passed
     probe: dict[str, Any]
     strip: bytes | None  # the clip's frames, for the judge and the side-by-side page
+    more: tuple[bytes, ...] = ()  # further sheets of a long clip's frames
 
 
 @dataclass(frozen=True)
@@ -129,13 +130,15 @@ def check(
     clip = folder / name
     clip.write_bytes(outputs[name])
     result = workshop.run(
-        PROBE_CODE, {"file": name, "count": CLIP_FRAMES}, {name: clip}, limits=limits, image=image
-    )
+        PROBE_CODE, {"file": name, "per_s": CLIP_PER_S, "max": CLIP_MAX}, {name: clip}, limits=limits,
+        image=image,
+    )  # fmt: skip
     probe = result.value if result.ok and isinstance(result.value, dict) else {}
     problems = list(dict.fromkeys(p for c in checks if (p := _evaluate(c, outputs[name], probe))))
     if not result.ok:
         problems = [f"the clip cannot be read: {result.error}"]
-    return Checked(tuple(problems), probe, result.outputs.get("strip.png"))
+    more = tuple(result.outputs[n] for n in sorted(result.outputs) if n.startswith("strip-"))
+    return Checked(tuple(problems), probe, result.outputs.get("strip.png"), more)
 
 
 KINDS = ("exists", "max_bytes", "video_stream", "resolution", "fps", "duration", "frames", "not_black")
@@ -188,11 +191,23 @@ def _near(kind: str, value: Any, check: dict[str, Any]) -> str | None:
     return f"{kind}: got {value}, need {check['expect']} ± {check['tolerance']}"
 
 
-def judge(model: Model, spec: Spec, reel_strip: Path, clip_strip: Path, *, cap_usd: float) -> Judged:
+def judge(
+    model: Model,
+    spec: Spec,
+    reel_strip: Path,
+    clip_strip: Path,
+    *,
+    cap_usd: float,
+    more: tuple[Path, ...] = (),
+) -> Judged:
     """Ask the judge about every criterion, visible and held out; decide pass here."""
     sent = list(spec.criteria) + list(spec.held_out)
     prompt = "Criteria:\n" + "\n".join(f"{i + 1}. {c}" for i, c in enumerate(sent))
-    images = (("reference reel", reel_strip), ("clip to judge", clip_strip))
+    images = (
+        ("reference reel", reel_strip),
+        ("clip to judge", clip_strip),
+        *(("clip to judge, continued", path) for path in more),
+    )
     data = model.ask("judge", JUDGE_SYSTEM, prompt, JUDGE_SCHEMA, cap_usd=cap_usd, images=images)
     answers = [a for a in data.get("criteria", []) if isinstance(a, dict)]
     by_text = {str(a.get("criterion", "")).strip(): a for a in answers}

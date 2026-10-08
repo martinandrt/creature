@@ -9,6 +9,9 @@ for tests and for reels saved earlier.
 from __future__ import annotations
 
 import json
+import os
+import shutil
+import subprocess
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
@@ -25,37 +28,94 @@ APIFY_MAX_CHARGE_USD = 0.10
 APIFY_TIMEOUT_S = 180
 MAX_VIDEO_BYTES = 100_000_000
 MAX_APIFY_BYTES = 5_000_000
-FRAMES = 12  # one strip: 6 columns x 2 rows, in time order
+FRAMES = 24  # one sheet, 6 x 4: half picked by cuts (one per shot), the rest spread evenly
+CUT_SCORE = 0.3  # ffmpeg scene score above which a frame starts a new shot
+PALETTE = 6
+WHISPER_MODEL = "~/whisper-models/ggml-large-v3-turbo-q5_0.bin"  # or $CREATURE_WHISPER_MODEL
+WHISPER_TIMEOUT_S = 120
+MIN_WORDS = 4  # Whisper "hears" a word or two in music ("you"): that is not speech
+AUDIO_MAX_S = 120
 
 # Fixed code (ours, not generated) that runs in the workshop on the downloaded video.
-STRIP_CODE = r"""
-import json, subprocess
+STRIP_CODE = (
+    workshop.SHEET_CODE
+    + r"""
+import json, re
+import numpy as np
 
-FIT = "scale=180:320:force_original_aspect_ratio=decrease,pad=180:320:(ow-iw)/2:(oh-ih)/2"
-GRID = "margin=8:padding=8:color=0x7f7f7f"  # grey borders keep cells apart
+def cuts_of(video, score):
+    found = subprocess.run(["ffmpeg", "-v", "info", "-i", video, "-vf",
+                            f"select='gt(scene,{score})',showinfo", "-an", "-f", "null", "-"],
+                           capture_output=True, text=True)
+    return sorted({round(float(t), 3) for t in re.findall(r"pts_time:([0-9.]+)", found.stderr)})
+
+def pick(duration, cuts, count):
+    # half the frames: first to (nearly) last, evenly, so start and end are both seen; the other half:
+    # the middle of shots none of those landed in, spread over the reel, so short shots are seen too
+    last = max(0.0, duration - 0.2)
+    even = [round(last * i / max(1, count // 2 - 1), 3) for i in range(count // 2)]
+    bounds = [0.0, *[c for c in cuts if 0.0 < c < duration], duration]
+    shots = [(a, b) for a, b in zip(bounds, bounds[1:]) if b - a > 0.05]
+    unseen = [round((a + b) / 2, 3) for a, b in shots if not any(a <= t < b for t in even)]
+    want = count - len(even)
+    if len(unseen) > want:
+        unseen = [unseen[round(i * (len(unseen) - 1) / max(1, want - 1))] for i in range(want)]
+    times = sorted(set(even) | set(unseen))
+    times = [t for i, t in enumerate(times) if i == 0 or t - times[i - 1] > 0.02]
+    while len(times) < count and len(times) > 1:  # fill the widest gap
+        i = max(range(len(times) - 1), key=lambda k: times[k + 1] - times[k])
+        times.insert(i + 1, round((times[i] + times[i + 1]) / 2, 3))
+    return times[:count]
+
+def palette(paths, size):
+    pixels = np.concatenate([np.asarray(Image.open(p).convert("RGB")).reshape(-1, 3)[::37] for p in paths])
+    pixels = pixels.astype(np.float32)
+    order = np.argsort(pixels.sum(axis=1))
+    centers = pixels[order[np.linspace(0, len(order) - 1, size).astype(int)]]
+    for _ in range(12):
+        nearest = np.argmin(((pixels[:, None, :] - centers[None]) ** 2).sum(axis=2), axis=1)
+        centers = np.array([pixels[nearest == k].mean(axis=0) if (nearest == k).any() else centers[k]
+                            for k in range(size)])
+    shares = np.bincount(nearest, minlength=size) / len(pixels)
+    found = []
+    for k in np.argsort(-shares):
+        color = centers[k]
+        if shares[k] < 0.02 or any(np.abs(color - np.array(c)).sum() < 40 for c, _ in found):
+            continue
+        found.append((color.round().astype(int).tolist(), float(shares[k])))
+    return [{"hex": "#%02x%02x%02x" % tuple(c), "share": round(sh, 3)} for c, sh in found]
 
 def run(input, work):
     video = f"{work}/in/reel.mp4"
     probe = subprocess.run(
-        ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
-         "stream=width,height,avg_frame_rate:format=duration", "-of", "json", video],
+        ["ffprobe", "-v", "error", "-show_entries",
+         "stream=codec_type,width,height,avg_frame_rate,duration:format=duration", "-of", "json", video],
         capture_output=True, text=True, check=True)
     info = json.loads(probe.stdout)
-    stream, duration = info["streams"][0], float(info["format"]["duration"])
+    streams = info.get("streams", [])
+    stream = [s for s in streams if s.get("codec_type") == "video"][0]
+    duration = float(info["format"]["duration"])
+    if float(stream.get("duration") or 0) > 0:  # the audio may run longer than the picture
+        duration = min(duration, float(stream["duration"]))
     num, den = stream["avg_frame_rate"].split("/")
-    # same rule as the clip's strip: first frame to (nearly) last, so start and end are both seen
-    last = max(0.0, duration - 0.2)
-    times = [round(last * i / (input["frames"] - 1), 3) for i in range(input["frames"])]
+    cuts = cuts_of(video, input["cut_score"])
+    times = pick(duration, cuts, input["frames"])
+    tiles = []
     for i, t in enumerate(times):
-        subprocess.run(["ffmpeg", "-v", "error", "-ss", str(t), "-i", video, "-frames:v", "1",
-                        "-vf", FIT,
-                        f"{work}/frame_{i:02d}.png"], check=True)
-    subprocess.run(["ffmpeg", "-v", "error", "-i", f"{work}/frame_%02d.png",
-                    "-vf", f"tile={input['columns']}x{input['rows']}:{GRID}", "-frames:v", "1",
-                    f"{work}/out/strip.png"], check=True)
+        path = f"{work}/frame_{i:03d}.png"
+        subprocess.run(["ffmpeg", "-v", "error", "-ss", str(t), "-i", video, "-frames:v", "1", "-vf", FIT,
+                        path], check=True)
+        tiles.append(path)
+    sheets(tiles, times, f"{work}/out/strip")
+    audio = any(s.get("codec_type") == "audio" for s in streams)
+    if audio:
+        subprocess.run(["ffmpeg", "-v", "error", "-i", video, "-vn", "-ac", "1", "-ar", "16000",
+                        "-t", str(input["audio_max_s"]), f"{work}/out/audio.wav"], check=True)
     return {"duration_s": duration, "width": stream["width"], "height": stream["height"],
-            "fps": round(float(num) / float(den), 3) if float(den) else 0.0, "times": times}
+            "fps": round(float(num) / float(den), 3) if float(den) else 0.0, "times": times,
+            "cuts": cuts, "palette": palette(tiles, input["palette"]), "audio": audio}
 """
+)
 
 
 @dataclass(frozen=True)
@@ -65,12 +125,14 @@ class Reel:
     transcript: str
     author: str
     video: Path
-    strip: Path  # 12 frames in time order, 6 per row
+    strip: Path  # 24 frames in time order, 6 per row, each with its time
     times: tuple[float, ...]  # seconds at which the strip's frames were taken
     duration_s: float
     width: int
     height: int
     fps: float
+    cuts: tuple[float, ...] = ()  # seconds at which a new shot starts
+    palette: tuple[dict[str, Any], ...] = ()  # measured colours, {hex, share}, most used first
 
 
 class PerceiveError(Exception):
@@ -108,7 +170,7 @@ def perceive(source: str, folder: Path, ledger: Ledger, *, limits: workshop.Limi
         author = _text(item.get("ownerUsername"))
     result = workshop.run(
         STRIP_CODE,
-        {"frames": FRAMES, "columns": 6, "rows": 2},
+        {"frames": FRAMES, "cut_score": CUT_SCORE, "palette": PALETTE, "audio_max_s": AUDIO_MAX_S},
         {"reel.mp4": video},
         limits=limits,
         image=image,
@@ -118,16 +180,45 @@ def perceive(source: str, folder: Path, ledger: Ledger, *, limits: workshop.Limi
     strip = folder / "reel-strip.png"
     strip.write_bytes(result.outputs["strip.png"])
     info = result.value
+    # local Whisper first (free); the transcript from Apify or the sidecar only when it hears no speech
+    heard, engine = "", "none"
+    if "audio.wav" in result.outputs:
+        (folder / "audio.wav").write_bytes(result.outputs["audio.wav"])
+        heard = transcribe(folder / "audio.wav")
+    if heard:
+        transcript, engine = heard, "whisper"
+    elif transcript:
+        engine = "apify" if author else "sidecar"
     reel = Reel(
         source=source, caption=caption, transcript=transcript, author=author, video=video, strip=strip,
         times=tuple(info["times"]), duration_s=float(info["duration_s"]), width=int(info["width"]),
-        height=int(info["height"]), fps=float(info["fps"]),
+        height=int(info["height"]), fps=float(info["fps"]), cuts=tuple(info.get("cuts", ())),
+        palette=tuple(info.get("palette", ())),
     )  # fmt: skip
     ledger.record(
         "perceived", source=source, duration_s=reel.duration_s, width=reel.width, height=reel.height,
-        fps=reel.fps, transcript_chars=len(transcript), seconds=result.duration_s,
+        fps=reel.fps, transcript_chars=len(transcript), transcript_from=engine, cuts=len(reel.cuts),
+        palette=[c.get("hex") for c in reel.palette], seconds=result.duration_s,
     )  # fmt: skip
     return reel
+
+
+def transcribe(wav: Path) -> str:
+    """Speech in the reel's audio, by local Whisper. Empty when Whisper is missing or hears no speech.
+    The audio was cut out of the untrusted video in the workshop; here only a plain WAV is read."""
+    binary = shutil.which("whisper-cli")
+    model = Path(os.environ.get("CREATURE_WHISPER_MODEL", WHISPER_MODEL)).expanduser()
+    if not binary or not model.is_file():
+        return ""
+    try:
+        done = subprocess.run(
+            [binary, "-m", str(model), "-f", str(wav), "-l", "auto", "-nt", "-np", "-sns"],
+            capture_output=True, text=True, timeout=WHISPER_TIMEOUT_S,
+        )  # fmt: skip
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    text = " ".join(done.stdout.split()) if done.returncode == 0 else ""
+    return text if len(text.split()) >= MIN_WORDS else ""
 
 
 def fetch_reel(url: str) -> dict[str, Any]:

@@ -204,3 +204,22 @@ def test_recorded_apify_reel_replays_offline(monkeypatch, secrets_file):
     item = perceive.fetch_reel(items[0]["url"])
     assert "typewriter" in perceive._transcript(item).lower() and item["type"] == "Video"
     assert "TYPEWRITER" in perceive._text(item["caption"])
+
+
+def test_whisper_missing_or_hearing_music_gives_no_transcript(monkeypatch, tmp_path):
+    wav = tmp_path / "audio.wav"
+    wav.write_bytes(b"RIFF")
+    monkeypatch.setattr(perceive.shutil, "which", lambda name: None)
+    assert perceive.transcribe(wav) == ""
+    model = tmp_path / "model.bin"
+    model.write_bytes(b"x")
+    monkeypatch.setenv("CREATURE_WHISPER_MODEL", str(model))
+    monkeypatch.setattr(perceive.shutil, "which", lambda name: "/bin/whisper-cli")
+
+    def heard(text):
+        return lambda *a, **k: perceive.subprocess.CompletedProcess(a, 0, stdout=text, stderr="")
+
+    monkeypatch.setattr(perceive.subprocess, "run", heard(" you\n"))
+    assert perceive.transcribe(wav) == ""  # a word heard in music is not speech
+    monkeypatch.setattr(perceive.subprocess, "run", heard(" Apply the typewriter\n transition here.\n"))
+    assert perceive.transcribe(wav) == "Apply the typewriter transition here."

@@ -237,6 +237,7 @@ def _strips(folder: Path, attempt: Path | None) -> str:
     for label, path in (
         ("Reel frames", folder / "reel-strip.png"),
         ("Clip frames", attempt and attempt / "strip.png"),
+        ("Clip frames, continued", attempt and attempt / "strip-2.png"),
     ):
         src = _rel(path, folder) if path else None
         if src:

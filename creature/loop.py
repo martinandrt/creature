@@ -98,7 +98,10 @@ class Creature:
             detail = {"stage": "checks", "problems": list(checked.problems)}
             return Outcome(False, verdict.feedback(checked, None), detail), clip if clip.exists() else None
         (attempt / "strip.png").write_bytes(checked.strip)
-        judged = verdict.judge(self.model, spec, reference, attempt / "strip.png", cap_usd=self.cap("judge"))
+        more = _sheets(attempt, checked.more)
+        judged = verdict.judge(
+            self.model, spec, reference, attempt / "strip.png", cap_usd=self.cap("judge"), more=more
+        )
         (attempt / "judge.json").write_text(
             json.dumps(judged.results, indent=1, ensure_ascii=False), encoding="utf-8"
         )
@@ -248,8 +251,9 @@ class Creature:
                 (folder / "strip.png").write_bytes(checked.strip)
                 reference = skill.path / registry.REFERENCE
                 judged = verdict.judge(
-                    self.model, spec, reference, folder / "strip.png", cap_usd=self.cap("judge")
-                )
+                    self.model, spec, reference, folder / "strip.png", cap_usd=self.cap("judge"),
+                    more=_sheets(folder, checked.more),
+                )  # fmt: skip
                 ok = judged.ok
             self.ledger.record(
                 "design_step", step=number, skill=skill.slug, version=skill.version, ok=ok,
@@ -309,6 +313,16 @@ def run(input, work):
                     "-c", "copy", f"{work}/out/joined.mp4"], check=True)
     return {"parts": len(input["parts"])}
 """
+
+
+def _sheets(folder: Path, sheets: tuple[bytes, ...]) -> tuple[Path, ...]:
+    """Further sheets of a long clip's frames, next to its strip.png."""
+    paths = []
+    for number, data in enumerate(sheets, start=2):
+        path = folder / f"strip-{number}.png"
+        path.write_bytes(data)
+        paths.append(path)
+    return tuple(paths)
 
 
 def _inside(path: Path | None, folder: Path) -> str | None:
