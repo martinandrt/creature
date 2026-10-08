@@ -114,7 +114,7 @@ def test_bad_costs_are_refused(log, cost):
     assert _lines(log) == before
 
 
-@pytest.mark.parametrize("bad", ["", "Run", "run-start", "1st", "run start"])
+@pytest.mark.parametrize("bad", ["", "Run", "run-start", "1st", "run start", "run_end\n"])
 def test_bad_event_types_are_refused(log, bad):
     with pytest.raises(ValueError, match="event type"):
         log.record(bad)
@@ -132,3 +132,32 @@ def test_events_have_the_schema_fields(log):
     schema = json.loads(resources.files("creature").joinpath("schemas/ledger_event.json").read_text())
     for event in ledger.read(log.path):
         assert set(schema["required"]) <= event.keys()
+
+
+def test_unicode_line_separators_in_data_keep_the_chain(home):
+    # reel captions carry U+2028 / U+0085; ensure_ascii=False writes them raw, so the reader
+    # must split on "\n" only, never str.splitlines()
+    run = Ledger.start(home, run_id="unicode")
+    run.record("note", text="first\u2028second\u0085third\u2029end")
+    run.record("run_end")
+    assert ledger.verify(run.path) is None
+    assert len(ledger.read(run.path)) == 2
+    assert Ledger(run.path).spent_usd == 0
+
+
+def test_reopen_refuses_a_cost_that_record_would_refuse(home):
+    # a self-consistent chain is not proof the spine wrote it; the read path holds the same line
+    path = home / "runs" / "forged.jsonl"
+    path.parent.mkdir(exist_ok=True)
+    event = {
+        "seq": 0,
+        "ts": "2026-10-08T00:00:00.000+00:00",
+        "run": "forged",
+        "type": "model_call",
+        "cost_usd": -5.0,
+        "prev_hash": GENESIS,
+    }
+    event["hash"] = ledger._digest(event)
+    path.write_text(json.dumps(event) + "\n")
+    with pytest.raises(ValueError, match="cost_usd"):
+        Ledger(path)

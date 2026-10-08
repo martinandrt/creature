@@ -38,7 +38,8 @@ Deliverables: public GitHub repo + unlisted YouTube video of at most 90 s, "show
 | Docker sandbox: `--network none --read-only --tmpfs /tmp --memory 256m --cpus 1 --pids-limit 64 --cap-drop ALL --user 65534` | network and writes outside `/tmp` blocked, start + run **0.2 s** |
 | Isolated `claude -p` (own system prompt, no tools, no MCP, no user settings) | ~630 input tokens instead of ~183k; Haiku 4.5 **$0.0018** per small call |
 | `--json-schema` + `--output-format json` | clean object in `structured_output`, cost in `total_cost_usd` (list-price equivalent) |
-| `--max-budget-usd`, `--fallback-model` | present in CLI 2.1.289 |
+| `--max-budget-usd`, `--fallback-model`, `--json-schema` | same in 2.1.289 and 2.1.294. `--max-budget-usd` is checked **after** the turn: a call over budget still costs, then ends `error_max_budget_usd` with no output. Our own pre-call refusal is the real cap |
+| Start overhead | `npx …@2.1.294` adds **0.8 s** per call; the cached binary it resolves to starts in 0.01 s, so `llm.py` resolves it once per run |
 | Haiku 5.5 | needs CLI ≥ 2.1.294 (2.1.289 returns `unrecognized_model`); pinned via `npx @anthropic-ai/claude-code@2.1.294`, `haiku` alias resolves to `claude-haiku-5-5`. Same structured call: 5.5 **$0.00042 / 3.2 s**, 4.5 $0.0030 / 4.4 s (n=1) |
 | Apify `apify~instagram-reel-scraper`, sync call | one reel in ~20 s; accepts direct reel URLs; caption, `videoUrl`, `audioUrl` |
 | Apify prices (free tier) | reel $0.0026, start $0.001, transcript add-on $0.048, video add-on $0.02 |

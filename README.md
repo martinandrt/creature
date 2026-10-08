@@ -34,6 +34,8 @@ Filled in honestly as features land.
 
 - The run ledger is a hash chain: editing, removing or reordering a line is detected. Cutting lines off
   the end leaves a valid shorter chain; only the `run_end` event shows that a run finished.
+  The chain proves the file was not altered, not who wrote it: it has no secret key. Generated code never
+  touches `runs/`, so for our threat model that is enough.
 - The static gate is a filter, not a wall. Code can reach further through a public attribute of an
   allowed module; the container (no network, read-only filesystem, no secrets) is what makes that harmless.
 - The gate rejects `__` anywhere, including inside strings, so a skill that writes Markdown bold as

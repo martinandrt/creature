@@ -72,7 +72,7 @@ class Ledger:
 
     def record(self, event_type: str, /, **data: Any) -> dict[str, Any]:
         """Append one event and return it. Nothing is written if the event is invalid."""
-        if not TYPE.match(event_type):
+        if not TYPE.fullmatch(event_type):
             raise ValueError(f"bad event type {event_type!r}")
         clash = RESERVED & data.keys()
         if clash:
@@ -99,7 +99,11 @@ class Ledger:
 def read(path: str | Path) -> list[dict[str, Any]]:
     """All events of a ledger file. Raises ValueError on a line that is not a JSON object."""
     events = []
-    for number, line in enumerate(Path(path).read_text(encoding="utf-8").splitlines(), start=1):
+    # split on "\n" only: captions may hold U+2028 or U+0085, which splitlines() would also cut on
+    lines = Path(path).read_text(encoding="utf-8").split("\n")
+    if lines and lines[-1] == "":
+        lines.pop()
+    for number, line in enumerate(lines, start=1):
         try:
             event = json.loads(line)
         except json.JSONDecodeError:
@@ -118,6 +122,13 @@ def verify_events(events: list[dict[str, Any]]) -> str | None:
             return f"line {index + 1}: seq {event.get('seq')!r}, expected {index}"
         if event.get("prev_hash") != prev:
             return f"line {index + 1}: prev_hash does not match line {index}"
+        if not isinstance(event.get("type"), str) or not TYPE.fullmatch(event["type"]):
+            return f"line {index + 1}: bad event type {event.get('type')!r}"
+        if "cost_usd" in event:
+            try:
+                _check_cost(event["cost_usd"])
+            except ValueError as error:
+                return f"line {index + 1}: {error}"
         try:
             digest = _digest(event)
         except (TypeError, ValueError):

@@ -47,6 +47,12 @@ def test_missing_files_are_marked_and_count(state, code_root):
     assert authority.fingerprint(state, code_root).digest != without.digest
 
 
+def test_missing_authority_file_is_refused(home, code_root):
+    # "unchanged" must never be vacuously true: no authority.json, no fingerprint
+    with pytest.raises(FileNotFoundError, match=AUTHORITY_FILE):
+        authority.fingerprint(home, code_root)
+
+
 def test_default_code_root_is_the_package(state):
     print_ = authority.fingerprint(state)
     assert print_.parts["sandbox.py"] != MISSING

@@ -1,9 +1,10 @@
 """The creature's authority: a human-edited file plus the code that enforces it.
 
-The fingerprint covers authority.json and every module that enforces it: the gate, the sandbox, the
-broker, the model call (spend caps), the forge loop (attempt caps) and the registry (install only after
-passing tests). A run takes it at the start and at the end; any difference means authority changed
-while the creature ran. A module that starts enforcing a rule must be added to ENFORCERS.
+The fingerprint covers authority.json and every module that enforces or proves it: this checker, the
+ledger, the gate, the sandbox, the broker, the model call (spend caps), the forge loop (attempt caps)
+and the registry (install only after passing tests). A run takes it at the start and at the end; any
+difference means authority changed while the creature ran. A module that starts enforcing a rule must
+be added to ENFORCERS.
 """
 
 from __future__ import annotations
@@ -15,7 +16,16 @@ from importlib.resources.abc import Traversable
 from pathlib import Path
 
 AUTHORITY_FILE = "authority.json"
-ENFORCERS = ("gate.py", "sandbox.py", "broker.py", "llm.py", "forge.py", "registry.py")
+ENFORCERS = (
+    "authority.py",
+    "ledger.py",
+    "gate.py",
+    "sandbox.py",
+    "broker.py",
+    "llm.py",
+    "forge.py",
+    "registry.py",
+)
 MISSING = "missing"
 
 
@@ -32,7 +42,11 @@ class Fingerprint:
 def fingerprint(home: str | Path, code_root: Traversable | Path | None = None) -> Fingerprint:
     """sha256 over the per-file hashes of authority.json and the enforcers, in a fixed order."""
     code = code_root if code_root is not None else resources.files("creature")
-    parts = {AUTHORITY_FILE: _file_digest(Path(home) / AUTHORITY_FILE)}
+    authority_path = Path(home) / AUTHORITY_FILE
+    if not authority_path.is_file():
+        # without the file "unchanged" would be vacuously true
+        raise FileNotFoundError(f"no {AUTHORITY_FILE} in {home}")
+    parts = {AUTHORITY_FILE: _file_digest(authority_path)}
     for name in ENFORCERS:
         parts[name] = _file_digest(code / name)
     combined = hashlib.sha256()
