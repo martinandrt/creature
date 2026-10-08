@@ -39,7 +39,7 @@ Deliverables: public GitHub repo + unlisted YouTube video of at most 90 s, "show
 | Isolated `claude -p` (own system prompt, no tools, no MCP, no user settings) | ~630 input tokens instead of ~183k; Haiku 4.5 **$0.0018** per small call |
 | `--json-schema` + `--output-format json` | clean object in `structured_output`, cost in `total_cost_usd` (list-price equivalent) |
 | `--max-budget-usd`, `--fallback-model` | present in CLI 2.1.289 |
-| "Haiku 5.5" from a web report | **not available**: CLI returns `unrecognized_model` |
+| Haiku 5.5 | needs CLI ≥ 2.1.294 (2.1.289 returns `unrecognized_model`); pinned via `npx @anthropic-ai/claude-code@2.1.294`, `haiku` alias resolves to `claude-haiku-5-5`. Same structured call: 5.5 **$0.00042 / 3.2 s**, 4.5 $0.0030 / 4.4 s (n=1) |
 | Apify `apify~instagram-reel-scraper`, sync call | one reel in ~20 s; accepts direct reel URLs; caption, `videoUrl`, `audioUrl` |
 | Apify prices (free tier) | reel $0.0026, start $0.001, transcript add-on $0.048, video add-on $0.02 |
 | Direct video download + ffmpeg + local Whisper | 1.6 s + 2 s, $0; music-only reels produce hallucinated lyrics → filter |
@@ -54,7 +54,7 @@ creature/
   authority.json        what the creature may do; edited by a human only; fingerprinted
   creature/             the spine (written tonight, by us)
     cli.py              run · list · approve · deny · rollback
-    authority.py        load, validate, fingerprint
+    authority.py        load, validate, fingerprint (authority.json + every enforcing module)
     ledger.py           append-only run log (JSONL) with costs
     llm.py              isolated claude -p, JSON schema, cost, caps
     perceive.py         reel → caption, transcript, frames (Apify + download + Whisper)

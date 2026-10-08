@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ledger_event.json",
+  "title": "Ledger event",
+  "description": "One line of runs/<run>.jsonl. Event-specific fields sit next to the fixed ones.",
+  "type": "object",
+  "required": ["seq", "ts", "run", "type", "prev_hash", "hash"],
+  "properties": {
+    "seq": {"type": "integer", "minimum": 0},
+    "ts": {"type": "string", "description": "UTC, ISO 8601 with milliseconds"},
+    "run": {"type": "string", "minLength": 1},
+    "type": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+    "cost_usd": {"type": "number", "minimum": 0},
+    "prev_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  },
+  "additionalProperties": true
+}
