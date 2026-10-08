@@ -250,6 +250,24 @@ def designs(root: Path) -> list[str]:
     return sorted(_index(root)["designs"])
 
 
+def compose(root: Path, name: str, parts: list[str], *, origin: dict[str, Any]) -> dict[str, Any]:
+    """A new design from known parts, in order: a design adds its steps, a skill adds its active
+    version with the values it was learned with. Data only, no model."""
+    if len(parts) < 2:
+        raise ValueError("a composed design needs at least two parts")
+    known = _index(root)["designs"]
+    steps: list[dict[str, Any]] = []
+    for part in parts:
+        if part in known:
+            steps.extend(design(root, part)["steps"])
+        else:
+            skill = get(root, part)  # KeyError for an unknown name, ValueError for a broken seal
+            steps.append(
+                {"skill": skill.slug, "version": skill.version, "params": skill.capability.get("params", {})}
+            )
+    return save_design(root, name, steps, origin={**origin, "parts": list(parts)})
+
+
 def search(root: Path, words: str) -> list[Skill]:
     """Skills whose name or effect shares a word with `words`, best match first."""
     wanted = set(re.findall(r"[a-z0-9]+", words.lower()))

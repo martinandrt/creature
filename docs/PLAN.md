@@ -122,7 +122,7 @@ is built by the creature itself, from a task.
 - **Downloading a package or a model at run time:** ASK (not built tonight).
 - **Caps per run:** 3 forge attempts per gap, $1.00 model spend, 5 new skills.
 - **Always REFUSE:** sending messages, payments, deleting, credentials, publishing in someone's name, changing
-  authority, gate, workshop or registry code.
+  authority, workshop, verdict or registry code.
 - **ASK:** anything else outside the above (network for skills, new tools, more budget). A human edits
   `authority.json`; the new fingerprint is logged.
 - **Install** is automatic after passing file checks and the judge. In the recorded run Martin approves one install

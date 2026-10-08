@@ -181,6 +181,14 @@ class Creature:
         if not built.ok:
             report.status, report.gap = "FAILED", built.gap
             return self.finish(report)
+        # authority, image and enforcing code must be what they were at the start, right before install
+        now = authority.fingerprint(self.home, image_id=workshop.image_id(self.authority.image) or "missing")
+        if now.digest != self.start.digest:
+            changed = authority.changed(self.start, now)
+            self.ledger.record("install_refused", changed=changed)
+            report.status = "FAILED"
+            report.gap = f"not installed: the authority fingerprint changed mid-run ({', '.join(changed)})"
+            return self.finish(report)
         origin = {"reel": source, "run": self.ledger.run_id, "author": self.reel.author if self.reel else ""}
         cost = {"learn_usd": round(self.ledger.spent_usd - before, 6), "forge_attempts": built.attempts}
         skill = registry.install(
@@ -199,16 +207,26 @@ class Creature:
         report.status, report.skill = "BUILT", f"{skill.slug}@v{skill.version}"
         return self.finish(report)
 
-    def run_design(self, name: str, text: str, *, judge: bool = False) -> Report:
+    def run_design(self, name: str, text: str | list[str], *, judge: bool = False) -> Report:
         """Run a saved design on new text: its skills in order, no planner, no forge. With judge=False
-        (the default) no model is called at all: only the workshop and the fixed file checks run."""
+        (the default) no model is called at all: only the workshop and the fixed file checks run.
+        One text goes to every step; a list gives each step its own."""
         report = Report(self.ledger.run_id, "FAILED", self.folder, skill=f"design:{name}")
         recipe = registry.design(self.registry, name)
-        self.ledger.record("design_task", design=name, text=text, steps=len(recipe["steps"]), judge=judge)
+        texts = [text] if isinstance(text, str) else list(text)
+        self.ledger.record(
+            "design_task", design=name, text=" | ".join(texts), texts=texts, steps=len(recipe["steps"]),
+            judge=judge,
+        )  # fmt: skip
+        if len(texts) not in (1, len(recipe["steps"])):
+            report.gap = f"design {name} has {len(recipe['steps'])} steps: give one text or one per step"
+            return self.finish(report)
         clips: list[Path] = []
+        frames = 0
         for number, step in enumerate(recipe["steps"], start=1):
             skill = registry.get(self.registry, step["skill"], step["version"])  # sealed tests checked here
-            spec = dataclasses.replace(registry.spec_of(skill, text), params=step.get("params", {}))
+            step_text = texts[0] if len(texts) == 1 else texts[number - 1]
+            spec = dataclasses.replace(registry.spec_of(skill, step_text), params=step.get("params", {}))
             folder = self.folder / f"step-{number}-{skill.slug}"
             folder.mkdir(parents=True, exist_ok=True)
             ran = workshop.run(
@@ -244,24 +262,42 @@ class Creature:
                 )
                 return self.finish(report)
             clips.append(folder / spec.output["file"])
-        report.clip = clips[0] if len(clips) == 1 else self.join(clips)
+            frames += round(spec.output["duration_s"] * spec.output["fps"])
+        if len(clips) == 1:
+            report.clip = clips[0]
+        else:
+            joined, problems = self.join(clips, frames)
+            self.ledger.record(
+                "design_join", parts=len(clips), frames=frames, checks=problems or "all passed"
+            )
+            if problems:
+                report.gap = "joining the steps: " + "; ".join(problems)
+                return self.finish(report)
+            report.clip = joined
         report.status = "DONE"
         return self.finish(report)
 
-    def join(self, clips: list[Path]) -> Path:
-        """Clips of a design share one format, so they are joined without re-encoding."""
-        files = {f"part{i}.mp4": clip for i, clip in enumerate(clips)}
+    def join(self, clips: list[Path], frames: int) -> tuple[Path | None, list[str]]:
+        """Clips of a design share one format, so they are joined without re-encoding. The result
+        must hold exactly the steps' frames together, checked by the same fixed file checks."""
+        files = {f"part{i:02d}.mp4": clip for i, clip in enumerate(clips)}
         ran = workshop.run(
             JOIN_CODE, {"parts": sorted(files)}, files, limits=self.authority.workshop, image=self.image
         )
-        if not ran.ok or "joined.mp4" not in ran.outputs:
-            raise RuntimeError(f"joining clips failed: {ran.error}")
-        out = self.folder / "joined.mp4"
-        out.write_bytes(ran.outputs["joined.mp4"])
-        return out
+        if not ran.ok or JOINED not in ran.outputs:
+            return None, [f"the join failed: {ran.error}"]
+        fps = criteria.FPS
+        output = {"file": JOINED, "width": criteria.WIDTH, "height": criteria.HEIGHT, "fps": fps,
+                  "duration_s": frames / fps}  # fmt: skip
+        checked = verdict.check(  # also writes the joined clip into the run's folder
+            ran.outputs, tuple(criteria.checks_for(output)), limits=self.authority.workshop,
+            image=self.image, folder=self.folder,
+        )  # fmt: skip
+        return self.folder / JOINED, list(checked.problems)
 
 
 # Fixed code (ours) that runs in the workshop: concatenates same-format clips.
+JOINED = "joined.mp4"
 JOIN_CODE = r"""
 import subprocess
 

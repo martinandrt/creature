@@ -39,6 +39,8 @@ Contract:
 - Return a small JSON-serialisable dict about what you rendered.
 - Every param is optional: use the given value if present, else a sensible default, so the skill works
   on any text.
+- The skill runs later on texts you have not seen: take every word from input["text"] and derive
+  anything that depends on the words from them; never hardcode words of one text.
 
 Available, and nothing else: no network, no installs, no files outside work and /tmp.
 - Python 3.12 standard library, Pillow 11.3 (PIL), numpy 2.5.
@@ -79,6 +81,7 @@ def prompt(spec: Spec, last_code: str | None, feedback: str | None) -> str:
     lines = [
         f"Effect: {spec.effect}",
         f"Task: {spec.task}",
+        f"Input text this time: {spec.text!r}",
         f"Params from the tutorial: {spec.params}",
         f"Output: {spec.output}",
         "Success criteria (judged from frames of your clip):",

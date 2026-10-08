@@ -1,4 +1,4 @@
-"""Command line: creature try · list · show · design · queue.
+"""Command line: creature try · design · compose · list · show · queue · page · overview.
 
 The state root is --home or $CREATURE_HOME. Keys come from the file named by $CREATURE_SECRETS.
 """
@@ -22,8 +22,13 @@ def main(argv: list[str] | None = None) -> int:
     tried.add_argument("--text", required=True, help="my input text")
     designed = sub.add_parser("design", help="run a learned design on new text (no model calls by default)")
     designed.add_argument("name")
-    designed.add_argument("--text", required=True, help="my input text")
+    designed.add_argument(
+        "--text", required=True, action="append", help="my input text; repeat it to give each step its own"
+    )
     designed.add_argument("--judge", action="store_true", help="also ask the judge (a paid model call)")
+    composed = sub.add_parser("compose", help="a new design from designs and skills, in order (no model)")
+    composed.add_argument("name")
+    composed.add_argument("parts", nargs="+", help="design or skill names, in the order they play")
     sub.add_parser("list", help="learned skills and designs")
     shown = sub.add_parser("show", help="one skill: manifest and tests")
     shown.add_argument("slug")
@@ -64,6 +69,12 @@ def main(argv: list[str] | None = None) -> int:
             print(f"clip: {report.clip}")
         print(f"run: {report.folder}")
         return 0 if report.status == "DONE" else 1
+    if args.command == "compose":
+        made = registry.compose(root / "registry", args.name, args.parts, origin={"composed_by": "compose"})
+        for number, step in enumerate(made["steps"], start=1):
+            print(f"{number}. {step['skill']} v{step['version']}")
+        print(f"design: {args.name}  (run it: creature design {args.name} --text ...)")
+        return 0
     if args.command == "list":
         for skill in registry.skills(root / "registry"):
             learned = skill.capability.get("cost", {}).get("learn_usd", 0)

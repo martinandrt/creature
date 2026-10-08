@@ -168,6 +168,8 @@ def _describe(e: dict[str, Any]) -> str:
         "have_try": ("skill", "version", "ok"),
         "evolve": ("skill", "from_version"),
         "design_step": ("skill", "version", "checks"),
+        "design_join": ("parts", "frames", "checks"),
+        "install_refused": ("changed",),
         "run_end": ("status", "fingerprint_same", "changed"),
     }.get(kind, ())
     return ", ".join(f"{k}={e[k]}" for k in keys if k in e)[:220]
@@ -192,9 +194,9 @@ def _replay(report: Any, events: list[dict[str, Any]]) -> str:
     lines = []
     name = installed["design"] if installed else (report.skill or "").split("@")[0].removeprefix("design:")
     if name:
-        lines.append(
-            f"python -m creature design {name} --text {shlex.quote(task.get('text', ''))}   # no model, $0"
-        )
+        texts = task.get("texts") or [task.get("text", "")]
+        given = " ".join(f"--text {shlex.quote(t)}" for t in texts)
+        lines.append(f"python -m creature design {name} {given}   # no model, $0")
         lines.append(
             f"python -m creature show {name.split(':')[-1]}   # its sealed tests: file checks + criteria"
         )

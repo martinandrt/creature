@@ -42,7 +42,7 @@
     "delete anything outside the work folder",
     "read or use credentials",
     "publish in someone's name",
-    "change authority, gate, workshop or registry code"
+    "change authority, workshop, verdict or registry code"
   ],
   "ask": [
     "network for skills",
