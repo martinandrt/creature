@@ -41,7 +41,7 @@ def timeline(
     frames = max(criteria.FPS, min(round(criteria.MAX_S * criteria.FPS), int(frames)))
     every = max(MIN_EVERY, int(every))
     scenes, cues = [], []
-    for number, start in enumerate(range(0, frames, every)):
+    for number, start in enumerate(range(0, frames, every) if order else ()):  # no source: no scenes
         scene = {
             "id": f"s{number + 1:02d}",
             "source": order[number % len(order)],
@@ -67,6 +67,13 @@ def problems(t: dict[str, Any]) -> list[str]:
     """What is wrong with a timeline, before anything renders. Empty when it can be rendered."""
     found = []
     sources, scenes = t.get("sources") or {}, t.get("scenes") or []
+    frames = t.get("frames")
+    if not isinstance(frames, int) or not criteria.FPS <= frames <= round(criteria.MAX_S * criteria.FPS):
+        found.append(
+            f"frames must be a whole number from {criteria.FPS} to {round(criteria.MAX_S * criteria.FPS)}"
+        )
+    if not scenes:
+        found.append("a montage needs at least one scene")
     if not 1 <= len(sources) <= MAX_SOURCES:
         found.append(f"a montage needs 1 to {MAX_SOURCES} sources")
     at = 0
@@ -82,7 +89,7 @@ def problems(t: dict[str, Any]) -> list[str]:
     if len(t.get("layers") or []) > MAX_LAYERS:
         found.append(f"at most {MAX_LAYERS} layers")
     for layer in t.get("layers") or []:
-        if not MARK_HEIGHT[0] <= float(layer.get("height", 0)) <= MARK_HEIGHT[1]:
+        if not MARK_HEIGHT[0] <= _number(layer.get("height"), 0.0) <= MARK_HEIGHT[1]:
             found.append(f"layer {layer.get('id')}: height must be {MARK_HEIGHT[0]} to {MARK_HEIGHT[1]}")
     return found
 
@@ -171,6 +178,14 @@ def render(
     return workshop.run(MONTAGE_CODE, job, files, limits=limits, image=image)
 
 
+def _number(value: Any, default: float) -> float:
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return default
+    return number if math.isfinite(number) else default
+
+
 def _is_hex(value: Any) -> bool:
     return isinstance(value, str) and len(value) == 7 and value[0] == "#" and _hexdigits(value[1:])
 
@@ -245,7 +260,7 @@ def run(input, work):
     scene_of = []
     for scene in input["scenes"]:
         scene_of += [scene] * scene["dur"]
-    chosen = []
+    chosen, ink = [], {}
     for t in range(total):
         frames = {}
         for sid, reader in readers.items():
@@ -259,9 +274,10 @@ def run(input, work):
             region = frame[y0:y0 + h, x0:x0 + w]
             if t == scene["start"]:  # the ink is chosen once per scene, by the brightness behind the layer
                 luma = float((region @ np.array([0.299, 0.587, 0.114], dtype=np.float32)).mean())
+                ink[index] = "dark" if luma > 140 else "light"
                 if index == 0:
-                    chosen.append("dark" if luma > 140 else "light")
-            color = dark if chosen[-1] == "dark" else light
+                    chosen.append(ink[index])
+            color = dark if ink[index] == "dark" else light
             frame[y0:y0 + h, x0:x0 + w] = region * (1 - alpha) + color * alpha
         writer.stdin.write(frame.clip(0, 255).astype(np.uint8).tobytes())
     writer.stdin.close()

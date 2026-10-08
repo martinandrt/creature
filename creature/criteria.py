@@ -57,6 +57,7 @@ SCHEMA = {
         },
         "criteria": {"type": "array", "items": {"type": "string"}, "minItems": 3, "maxItems": 6},
         "kind": {"type": "string", "enum": ["effect", "montage"]},
+        "look_matters": {"type": "boolean"},
         "surfaces": {
             "type": "array",
             "maxItems": 4,
@@ -102,9 +103,15 @@ transcript may be song lyrics: then set transcript_is_speech to false and ignore
 
 Criteria describe the TECHNIQUE that makes this effect what it is: what moves, in which order, how
 things appear or disappear, what stays. One property per criterion, never two joined by "and".
-Never exact words, fonts, colours or sizes, and nothing the tutorial lets you tune (those go in
-params). The output will be judged from frames sampled at about 6 per second (at most 36) from its
-first to its last frame, so each criterion must be visible in such frames: no counts of repetitions,
+Never exact words or fonts, and nothing the tutorial lets you tune (those go in params).
+look_matters: true when the reel shows a finished piece whose look is the point (a brand film, a
+poster, a showcase), false when it teaches a technique inside an app. When true, also write criteria
+for the look a copy must have: layout, density, how much of the frame a pattern fills, the size of
+one thing against another (a small mark, an oversized title); the spine itself measures the colours
+and the cut rhythm against the reel, so leave those out. Every criterion must be achievable from the
+user's input: a photo, 3D render or footage the user did not supply is a gap, never a criterion.
+The output will be judged from frames sampled at about 6 per second (at most 36) from its first to
+its last frame, so each criterion must be visible in such frames: no counts of repetitions,
 no rates, no exact timings, nothing that happens between two samples. Every criterion must be
 achievable with the user's text: never require more words, lines or characters than it has. Write 4 to 6.
 Some reels are not one effect but a montage: many short shots cut together (the measured cuts below
@@ -191,8 +198,13 @@ def write(
         params["palette"] = palette
         sources["palette"] = "measured from the reel's frames"
     output = clip_format(data["duration_s"])
-    kind = "montage" if data.get("kind") == "montage" and data.get("surfaces") else "effect"
-    parts = _surfaces(data.get("surfaces") or [], text, seed, palette, reel) if kind == "montage" else ()
+    look = look_checks(reel, output["file"]) if data.get("look_matters") is True else []
+    kind = "montage" if data.get("kind") == "montage" else "effect"
+    parts = (
+        _surfaces(data.get("surfaces") or [], text, seed, palette, reel, look=bool(look))
+        if kind == "montage"
+        else ()
+    )
     gaps = tuple(
         {"what": str(g.get("what", ""))[:200], "needs": str(g.get("needs", ""))[:200]}
         for g in data.get("gaps") or []
@@ -209,7 +221,7 @@ def write(
         output=output,
         criteria=tuple(visible),
         held_out=tuple(held_out),
-        checks=tuple(checks_for(output)),
+        checks=tuple(checks_for(output)) + tuple(look),
         transcript_is_speech=data["transcript_is_speech"] is True,
         param_sources=sources,
         kind=kind,
@@ -226,7 +238,30 @@ def _rhythm(reel: Reel) -> str:
     return f"{len(reel.cuts)} cuts, {shots} shots, a shot lasts about {frames:.0f} frames"
 
 
-def _surfaces(raw: list[Any], text: str, seed: str, palette: list[str], reel: Reel) -> tuple[Spec, ...]:
+LOOK_SHARE = 0.03  # reel colours below this share are noise, not palette
+PALETTE_DISTANCE = 90  # summed RGB distance (0-765) within which two colours count as the same
+RHYTHM_TOLERANCE = 0.5
+MIN_CUTS = 6  # fewer cuts than this and the reel has no rhythm worth matching
+
+
+def look_checks(reel: Reel, file: str, *, rhythm: bool = True) -> list[dict[str, Any]]:
+    """Look, measured by the spine against the reel: the clip's main colours come from the reel's palette,
+    and its shots last about as long as the reel's. Data, evaluated by fixed code like any check."""
+    found: list[dict[str, Any]] = []
+    colors = [c["hex"] for c in reel.palette if isinstance(c, dict) and c.get("share", 0) >= LOOK_SHARE]
+    if colors:
+        found.append({"kind": "palette", "file": file, "colors": colors, "distance": PALETTE_DISTANCE})
+    if rhythm and len(reel.cuts) >= MIN_CUTS and reel.fps:
+        per_shot = round(reel.duration_s * reel.fps / (len(reel.cuts) + 1), 1)
+        found.append(
+            {"kind": "rhythm", "file": file, "frames_per_shot": per_shot, "tolerance": RHYTHM_TOLERANCE}
+        )
+    return found
+
+
+def _surfaces(
+    raw: list[Any], text: str, seed: str, palette: list[str], reel: Reel, *, look: bool = False
+) -> tuple[Spec, ...]:
     """A montage's surfaces as specs of their own: own criteria, own held-out part, own reference frames."""
     found: list[Spec] = []
     for item in raw[:4]:
@@ -254,7 +289,9 @@ def _surfaces(raw: list[Any], text: str, seed: str, palette: list[str], reel: Re
                 output=output,
                 criteria=tuple(visible),
                 held_out=tuple(held_out),
-                checks=tuple(checks_for(output)),
+                # one surface is one screen: its colours must be the reel's, its rhythm is the montage's
+                checks=tuple(checks_for(output))
+                + tuple(look_checks(reel, output["file"], rhythm=False) if look else ()),
                 param_sources={"palette": "measured from the reel's frames"} if palette else {},
                 frames=tuple(nearest),
             )

@@ -188,6 +188,16 @@ class Creature:
             return self.finish(report)
         if spec.kind == "montage" and spec.parts:
             return self.learn_montage(report, spec, source, text, mark=mark)
+        if spec.kind == "montage":  # nothing a script can draw: what it would need is a request, not a try
+            report.status = "ASK" if spec.gaps else "FAILED"
+            report.gap = (
+                "; ".join(f"{g['what']} (needs {g['needs']})" for g in spec.gaps) or "no usable surface"
+            )
+            if spec.gaps:
+                _queue_ask(
+                    self.home, self.ledger.run_id, source, dataclasses.replace(spec, reason=report.gap)
+                )
+            return self.finish(report)
         return self.learn(report, spec, source, self.reel.strip)
 
     def learn(self, report: Report, spec: criteria.Spec, source: str, reference: Path) -> Report:
@@ -291,6 +301,11 @@ class Creature:
                 self.model, self.reel, spec, catalog, cap_usd=self.cap("planner"), feedback=feedback
             )
             t = composer.timeline(spec.slug, choice, catalog)
+            wrong = montage.problems(t)
+            if wrong:
+                self.ledger.record("composed", attempt=attempt, ok=False, unknown=unknown, problems=wrong)
+                feedback = "; ".join(wrong) + f". Use only these names: {', '.join(s.slug for s in catalog)}"
+                continue
             self.ledger.record(
                 "composed", attempt=attempt, sources=[v["skill"] for v in t["sources"].values()],
                 every=t["scenes"][0]["dur"] if t["scenes"] else 0, frames=t["frames"],
@@ -394,6 +409,8 @@ class Creature:
         recipe = registry.design(self.registry, name)
         if "timeline" in recipe:
             t = recipe["timeline"]
+            if judge:
+                report.notes.append("--judge is not used for a montage design yet: its fixed checks run")
             words = text if isinstance(text, str) else " ".join(text)
             self.ledger.record(
                 "design_task", design=name, text=words, kind="timeline", sources=len(t["sources"]),
@@ -528,7 +545,7 @@ def _inside(path: Path | None, folder: Path) -> str | None:
 
 
 def _spec_dict(spec: criteria.Spec) -> dict[str, Any]:
-    return {key: value for key, value in spec.__dict__.items()}
+    return dataclasses.asdict(spec)  # a montage's surfaces are specs too
 
 
 def _queue_ask(home: Path, run_id: str, source: str, spec: criteria.Spec) -> None:

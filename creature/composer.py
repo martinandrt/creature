@@ -94,19 +94,19 @@ def timeline(name: str, choice: dict[str, Any], catalog: list[Skill]) -> dict[st
         sid = chr(97 + len(sources))
         sources[sid] = {"skill": skill.slug, "version": skill.version, "params": {}}
         order.append(sid)
-    mark = choice.get("mark") or {}
+    mark = choice.get("mark") if isinstance(choice.get("mark"), dict) else {}
     layers = []
-    if mark.get("use"):
+    if mark.get("use") is True:
         low, high = montage.MARK_HEIGHT
         layers.append(
             {
                 "id": "mark",
-                "x": min(0.9, max(0.1, float(mark.get("x", 0.5)))),
-                "y": min(0.9, max(0.1, float(mark.get("y", 0.5)))),
-                "height": min(high, max(low, float(mark.get("height", 0.06)))),
+                "x": min(0.9, max(0.1, montage._number(mark.get("x"), 0.5))),
+                "y": min(0.9, max(0.1, montage._number(mark.get("y"), 0.5))),
+                "height": min(high, max(low, montage._number(mark.get("height"), 0.06))),
             }
         )
     return montage.timeline(
-        name, sources, order, every=int(choice.get("every_frames") or 4),
-        frames=montage.frames_for(float(choice.get("seconds") or 6)), layers=layers,
+        name, sources, order, every=round(montage._number(choice.get("every_frames"), 4)),
+        frames=montage.frames_for(montage._number(choice.get("seconds"), 6)), layers=layers,
     )  # fmt: skip

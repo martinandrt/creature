@@ -32,9 +32,12 @@ FILE_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,99}")
 STDERR_TAIL = 4000
 
 # Fixed helpers (ours) prepended to the reel's and the clip's frame code: frames become sheets of
-# 270x480 tiles, 6 per row, 4 rows per sheet, grey gutters, each tile's time printed under it.
+# 270x480 tiles, 6 per row, 4 rows per sheet, grey gutters, each tile's time printed under it; cuts
+# and the palette are measured the same way on a reel and on a clip, so the two can be compared.
 SHEET_CODE = r"""
+import re
 import subprocess
+import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 TILE_W, TILE_H, LABEL_H, GAP, COLUMNS, PER_SHEET = 270, 480, 30, 8, 6, 24
@@ -61,6 +64,35 @@ def sheets(tiles, times, prefix):
         sheet.save(name)
         names.append(name)
     return names
+
+def cuts_of(video, score):
+    found = subprocess.run(["ffmpeg", "-v", "info", "-i", video, "-vf",
+                            f"select='gt(scene,{score})',showinfo", "-an", "-f", "null", "-"],
+                           capture_output=True, text=True)
+    return sorted({round(float(t), 3) for t in re.findall(r"pts_time:([0-9.]+)", found.stderr)})
+
+def palette(paths, size, width, height):
+    # only the picture: the tiles are padded to 270x480, and the padding is not a colour of the reel
+    scale = min(TILE_W / width, TILE_H / height)
+    w, h = max(1, int(width * scale)), max(1, int(height * scale))
+    x0, y0 = (TILE_W - w) // 2 + 1, (TILE_H - h) // 2 + 1
+    crops = [np.asarray(Image.open(p).convert("RGB"))[y0:y0 + h - 2, x0:x0 + w - 2] for p in paths]
+    pixels = np.concatenate([c.reshape(-1, 3)[::37] for c in crops])
+    pixels = pixels.astype(np.float32)
+    order = np.argsort(pixels.sum(axis=1))
+    centers = pixels[order[np.linspace(0, len(order) - 1, size).astype(int)]]
+    for _ in range(12):
+        nearest = np.argmin(((pixels[:, None, :] - centers[None]) ** 2).sum(axis=2), axis=1)
+        centers = np.array([pixels[nearest == k].mean(axis=0) if (nearest == k).any() else centers[k]
+                            for k in range(size)])
+    shares = np.bincount(nearest, minlength=size) / len(pixels)
+    found = []
+    for k in np.argsort(-shares):
+        color = centers[k]
+        if shares[k] < 0.02 or any(np.abs(color - np.array(c)).sum() < 40 for c, _ in found):
+            continue
+        found.append((color.round().astype(int).tolist(), float(shares[k])))
+    return [{"hex": "#%02x%02x%02x" % tuple(c), "share": round(sh, 3)} for c, sh in found]
 """
 
 # Fixed runner (ours, not generated). Unpacks the input archive into /work, calls run(input, "/work"),

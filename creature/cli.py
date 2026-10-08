@@ -32,7 +32,7 @@ def main(argv: list[str] | None = None) -> int:
     composed = sub.add_parser("compose", help="a new design from designs and skills, in order (no model)")
     composed.add_argument("name")
     composed.add_argument("parts", nargs="+", help="design or skill names, in the order they play")
-    composed.add_argument("--every", type=int, help="a montage instead: cut every N frames through the parts")
+    composed.add_argument("--every", type=int, help="a montage of skill names instead: a cut every N frames")
     composed.add_argument("--seconds", type=float, default=7.0, help="the montage's length")
     sub.add_parser("list", help="learned skills and designs")
     shown = sub.add_parser("show", help="one skill: manifest and tests")

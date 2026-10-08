@@ -8,6 +8,7 @@ here: every criterion sent must come back passed; the model's own verdict is log
 
 from __future__ import annotations
 
+import itertools
 import math
 from dataclasses import dataclass
 from pathlib import Path
@@ -67,7 +68,11 @@ def run(input, work):
         import numpy as np
         grey = np.frombuffer(small, dtype=np.uint8).reshape(-1, 240, 135).astype(np.int16)
         diffs = [round(float(d), 3) for d in np.abs(np.diff(grey, axis=0)).mean(axis=(1, 2))]
-    return {"diffs": diffs, "readable": True, "video": True, "codec": v.get("codec_name"),
+    look = {}
+    if input.get("look") and tiles:  # measured exactly as on the reel, so the two can be compared
+        look = {"palette": palette(tiles, 6, v.get("width") or TILE_W, v.get("height") or TILE_H),
+                "cuts": cuts_of(clip, 0.3)}
+    return {**look, "diffs": diffs, "readable": True, "video": True, "codec": v.get("codec_name"),
             "pix_fmt": v.get("pix_fmt"), "width": v.get("width"), "height": v.get("height"), "fps": fps,
             "frames": frames, "duration_s": frames / fps if fps else 0.0, "luma": luma, "times": times,
             "sampled": len(picks), "decoded": len(tiles)}
@@ -95,8 +100,9 @@ JUDGE_SCHEMA = {
     },
 }
 
-JUDGE_SYSTEM = """You judge whether a rendered clip reproduces the TECHNIQUE of a motion design effect
-shown in a reference reel. Compare technique only: ignore the words, fonts, colours and layout. The
+JUDGE_SYSTEM = """You judge whether a rendered clip reproduces what a reference reel shows, criterion by
+criterion. Judge exactly what each criterion names: its technique, or its look when it speaks of
+layout, density or size. Ignore the words themselves and the fonts; colours are measured elsewhere. The
 reference reel is often a tutorial, so some of its frames may show an editing app; use the frames that
 show the effect. Each image is a grid of frames in time order, 6 per row, each with its time in seconds
 under it: up to 24 from the reel (half of them from the middle of its shots), then the clip's frames at
@@ -148,6 +154,7 @@ def check(
             "per_s": CLIP_PER_S,
             "max": CLIP_MAX,
             "diffs": any(c.get("kind") == "smooth" for c in checks),
+            "look": any(c.get("kind") in ("palette", "rhythm") for c in checks),
         },
         {name: clip},
         limits=limits,
@@ -167,8 +174,9 @@ def check(
 
 KINDS = (
     "exists", "max_bytes", "video_stream", "resolution", "fps", "duration", "frames", "not_black", "smooth",
-    "safe_zone",
+    "safe_zone", "palette", "rhythm",
 )  # fmt: skip
+MAIN_SHARE = 0.10  # a clip colour covering at least this share must come from the reel's palette
 STILL = 1.0  # mean grey change per frame below which nothing is moving (encoder noise)
 JUMP = 25.0  # above this a frame changes at once (a flip, a cut inside a source): not motion
 
@@ -210,30 +218,71 @@ def _evaluate(check: dict[str, Any], data: bytes, probe: dict[str, Any]) -> str 
         return None if got == check["expect"] else f"frames: got {got}, need exactly {check['expect']}"
     if kind == "smooth":
         return _smooth(probe.get("diffs") or [], set(check["cuts"]), check["max_ratio"])
+    if kind == "palette":
+        return _palette(probe.get("palette") or [], check["colors"], check["distance"])
+    if kind == "rhythm":
+        return _rhythm(probe, check)
     luma = probe.get("luma") or []  # the one kind left: not_black
     return None if luma and max(luma) > BLACK_LUMA else "not_black: every sampled frame is black"
 
 
 def _smooth(diffs: list[float], cuts: set[int], max_ratio: float) -> str | None:
-    """While something moves, a frame's change may be at most `max_ratio` times the change next to it:
-    a stutter or a sudden change of speed fails. diffs[i] is the change from frame i to i + 1. Only pairs
-    where both steps move count: a pair touching a cut, a still frame (an element appearing) or a jump
-    (a flip of the whole frame) is not motion and is skipped."""
+    """No stutter while something moves. diffs[i] is the change from frame i to i + 1. An ease is
+    monotone (each step lies between its neighbours), a stutter is a local extreme: a step more than
+    `max_ratio` times both neighbours (a dropped frame) or below both by that factor (a frame held).
+    Judged only where both neighbours move, so a typewriter's pauses or a blink stay out; steps across
+    a cut and jumps (a flip of the whole frame) are not motion."""
     if not diffs:
         return "smooth: the clip's motion could not be measured"
-    worst, at = 0.0, 0
-    for i in range(1, len(diffs)):
-        if i in cuts or i + 1 in cuts:
+    for i in range(1, len(diffs) - 1):
+        if cuts & {i, i + 1, i + 2}:  # one of the three steps crosses a cut
             continue
-        a, b = diffs[i - 1], diffs[i]
-        if min(a, b) <= STILL or max(a, b) >= JUMP:
+        before, step, after = diffs[i - 1], diffs[i], diffs[i + 1]
+        if min(before, after) <= STILL or max(before, step, after) >= JUMP:
             continue
-        ratio = max(a, b) / min(a, b)
-        if ratio > worst:
-            worst, at = ratio, i
-    if worst <= max_ratio:
+        if step > max_ratio * max(before, after):
+            jump = step / max(before, after)
+            return f"smooth: the change at frame {i + 1} is {jump:.1f}x its neighbours (a dropped frame)"
+        if step * max_ratio < min(before, after):
+            return f"smooth: frame {i + 1} holds in the middle of a movement (a repeated frame)"
+    return None
+
+
+def _palette(measured: list[dict[str, Any]], colors: list[str], distance: float) -> str | None:
+    """Every main colour of the clip must be close to one of the reel's (or the user's style's)."""
+    if not measured:
+        return "palette: the clip's colours could not be measured"
+    allowed = [_rgb(c) for c in colors]
+    for color in measured:
+        if color.get("share", 0) < MAIN_SHARE:
+            continue
+        rgb = _rgb(color["hex"])
+        nearest = min(sum(abs(a - b) for a, b in zip(rgb, other, strict=True)) for other in allowed)
+        if nearest > distance:
+            return (
+                f"palette: {color['hex']} covers {color['share']:.0%} of the clip but is not one of the "
+                f"reel's colours ({', '.join(colors)})"
+            )
+    return None
+
+
+def _rhythm(probe: dict[str, Any], check: dict[str, Any]) -> str | None:
+    """Shots last about as long as the reel's: the median shot within the tolerance of the reel's."""
+    cuts = sorted(probe.get("cuts") or [])
+    fps, frames = probe.get("fps") or 0, probe.get("frames") or 0
+    if not fps or not frames:
+        return "rhythm: the clip's cuts could not be measured"
+    bounds = [0.0, *[c for c in cuts if 0 < c * fps < frames], frames / fps]
+    shots = sorted((b - a) * fps for a, b in itertools.pairwise(bounds) if b > a)
+    median = shots[len(shots) // 2] if shots else frames
+    want, tolerance = check["frames_per_shot"], check["tolerance"]
+    if abs(median - want) <= want * tolerance:
         return None
-    return f"smooth: motion jumps {worst:.1f}x from one frame to the next at frame {at} (at most {max_ratio})"
+    return f"rhythm: a shot lasts about {median:.0f} frames, in the reel about {want:.0f} (± {tolerance:.0%})"
+
+
+def _rgb(color: str) -> tuple[int, int, int]:
+    return int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
 
 
 def _safe(check: dict[str, Any]) -> str | None:

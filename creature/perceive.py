@@ -43,12 +43,6 @@ STRIP_CODE = (
 import json, re
 import numpy as np
 
-def cuts_of(video, score):
-    found = subprocess.run(["ffmpeg", "-v", "info", "-i", video, "-vf",
-                            f"select='gt(scene,{score})',showinfo", "-an", "-f", "null", "-"],
-                           capture_output=True, text=True)
-    return sorted({round(float(t), 3) for t in re.findall(r"pts_time:([0-9.]+)", found.stderr)})
-
 def pick(duration, cuts, count):
     # half the frames: first to (nearly) last, evenly, so start and end are both seen; the other half:
     # the middle of shots none of those landed in, spread over the reel, so short shots are seen too
@@ -66,29 +60,6 @@ def pick(duration, cuts, count):
         i = max(range(len(times) - 1), key=lambda k: times[k + 1] - times[k])
         times.insert(i + 1, round((times[i] + times[i + 1]) / 2, 3))
     return times[:count]
-
-def palette(paths, size, width, height):
-    # only the picture: the tiles are padded to 270x480, and the padding is not a colour of the reel
-    scale = min(TILE_W / width, TILE_H / height)
-    w, h = max(1, int(width * scale)), max(1, int(height * scale))
-    x0, y0 = (TILE_W - w) // 2 + 1, (TILE_H - h) // 2 + 1
-    crops = [np.asarray(Image.open(p).convert("RGB"))[y0:y0 + h - 2, x0:x0 + w - 2] for p in paths]
-    pixels = np.concatenate([c.reshape(-1, 3)[::37] for c in crops])
-    pixels = pixels.astype(np.float32)
-    order = np.argsort(pixels.sum(axis=1))
-    centers = pixels[order[np.linspace(0, len(order) - 1, size).astype(int)]]
-    for _ in range(12):
-        nearest = np.argmin(((pixels[:, None, :] - centers[None]) ** 2).sum(axis=2), axis=1)
-        centers = np.array([pixels[nearest == k].mean(axis=0) if (nearest == k).any() else centers[k]
-                            for k in range(size)])
-    shares = np.bincount(nearest, minlength=size) / len(pixels)
-    found = []
-    for k in np.argsort(-shares):
-        color = centers[k]
-        if shares[k] < 0.02 or any(np.abs(color - np.array(c)).sum() < 40 for c, _ in found):
-            continue
-        found.append((color.round().astype(int).tolist(), float(shares[k])))
-    return [{"hex": "#%02x%02x%02x" % tuple(c), "share": round(sh, 3)} for c, sh in found]
 
 def run(input, work):
     video = f"{work}/in/reel.mp4"
