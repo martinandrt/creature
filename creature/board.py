@@ -17,6 +17,7 @@ from creature import ledger
 
 REFRESH_S = 10
 STEPS_SHOWN = 8
+STALE_S = 900  # a run with no end and nothing new for this long was stopped
 
 STYLE = """
 :root{--bg:#f6f5f2;--fg:#1b1d22;--mute:#6b6f78;--line:#dddad3;--card:#fff;--ok:#1f7a45;--bad:#b3261e;--run:#9a6700}
@@ -32,7 +33,7 @@ border-radius:8px;padding:8px 12px}.sum b{font-size:18px;display:block}
 display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.2fr);gap:12px}
 @media (max-width:900px){.run{grid-template-columns:1fr}}
 .head{grid-column:1/-1;display:flex;gap:12px;flex-wrap:wrap;align-items:baseline}
-.st{font-weight:700}.BUILT,.HAVE,.DONE{color:var(--ok)}.FAILED,.REFUSE{color:var(--bad)}.RUNNING,.ASK{color:var(--run)}
+.st{font-weight:700}.BUILT,.HAVE,.DONE{color:var(--ok)}.FAILED,.REFUSE,.STOPPED{color:var(--bad)}.RUNNING,.ASK{color:var(--run)}
 .mute{color:var(--mute)}img,video{max-width:100%;max-height:360px;border-radius:6px;background:#000;display:block}
 ol{margin:4px 0 0 18px;padding:0}li{margin:0 0 2px}a{color:inherit}
 """
@@ -100,7 +101,9 @@ def runs(homes: list[Path]) -> list[dict[str, Any]]:
                     "folder": folder,
                     "start": _when(events[0]["ts"]),
                     "last": _when(events[-1]["ts"]),
-                    "status": end["status"] if end else "RUNNING",
+                    "status": end["status"]
+                    if end
+                    else ("RUNNING" if time.time() - _when(events[-1]["ts"]) < STALE_S else "STOPPED"),
                     "source": Path(
                         str(task.get("source") or task.get("design") or task.get("wish") or task["type"])
                     ).name,

@@ -30,6 +30,7 @@ from creature.ledger import Ledger
 from creature.llm import BudgetRefused, Model, ModelError
 
 PAIRS = 12  # frame pairs per preview sheet
+WORSE = 1.10  # a round scoring more than 10 % worse than the best goes back to the best
 MAX_FILES, MAX_FILE_BYTES, MAX_TOTAL_BYTES = 8, 16_000, 48_000  # a round resends every file
 FILE = re.compile(r"[a-z][a-z0-9_]{0,30}\.(py|json)")
 MEASURE_CHARS = 3000
@@ -424,7 +425,9 @@ def build(
     feedback, measured = "", ""
     shelf = library(assets, spec)
     said: list[str] = []
-    best: tuple[float, int, dict[str, str], tuple[tuple[str, Path], ...]] = (float("inf"), 0, {}, ())
+    # the version the next round starts from (round, files, images), and the lowest score seen
+    base: tuple[int, dict[str, str], tuple[tuple[str, Path], ...]] = (0, {}, ())
+    lowest = float("inf")
     looks: list[dict[str, Any]] = []
     images: tuple[tuple[str, Path], ...] = (("reel frames", reel.strip),)
     for number in range(1, rounds + 1):
@@ -474,15 +477,20 @@ def build(
             continue
         images = preview.images
         score = f"Score {preview.score:.2f} (lower is better; {preview.detail})"
-        if preview.score < best[0]:
-            best = (preview.score, number, dict(space.files), preview.images)
-            feedback += f"\n{score}: your best so far."
-        else:  # the next round starts from the best version, and sees its frames
-            feedback += (
-                f"\n{score}: worse than round {best[1]} ({best[0]:.2f}); back to round {best[1]}'s files."
+        if preview.score <= lowest * WORSE:  # within the margin: a fix the judge asked for may cost a little
+            mine = (
+                "your best so far"
+                if preview.score < lowest
+                else f"kept, within 10 % of your best {lowest:.2f}"
             )
-            space.files, images = dict(best[2]), best[3]
-        ledger.record("round_score", round=number, score=preview.score, best=best[0], best_round=best[1])
+            base, lowest = (number, dict(space.files), preview.images), min(lowest, preview.score)
+            feedback += f"\n{score}: {mine}."
+        else:  # the next round starts again from the kept version, and sees its frames
+            feedback += (
+                f"\n{score}: worse than round {base[0]} by over 10 %; back to round {base[0]}'s files."
+            )
+            space.files, images = dict(base[1]), base[2]
+        ledger.record("round_score", round=number, score=preview.score, best=lowest, best_round=base[0])
         if reply.get("done") is True or number == rounds:
             outcome = finish(skill_code(space.files), number)
             if outcome.ok:
