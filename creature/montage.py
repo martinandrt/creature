@@ -8,6 +8,8 @@ only expands that choice into a timeline, the single source of time, and renders
 
 from __future__ import annotations
 
+import collections
+import itertools
 import math
 from typing import Any
 
@@ -56,6 +58,67 @@ def timeline(
         "name": name,
         "fps": criteria.FPS,
         "width": criteria.HEIGHT if landscape else criteria.WIDTH,  # the sources' orientation
+        "height": criteria.WIDTH if landscape else criteria.HEIGHT,
+        "frames": frames,
+        "sources": sources,
+        "scenes": scenes,
+        "layers": layers,
+        "cues": cues,
+    }
+
+
+def follow(
+    name: str,
+    served: list[tuple[tuple[float, ...], str, int]],
+    duration_s: float,
+    cuts: tuple[float, ...],
+    *,
+    layers: list[dict[str, Any]],
+    landscape: bool = False,
+) -> dict[str, Any] | None:
+    """The reel's own shots as the montage: each shot shows the learned screen the reel shows at that
+    time. `served` is (reel times of a screen, skill, version) per learned screen. A shot showing no
+    learned screen gets the one nearest in time that differs from the shot before, so the cut stays
+    a cut. Without cuts, a shot ends halfway between two times that show different screens."""
+    sources: dict[str, dict[str, Any]] = {}
+    ids: dict[str, str] = {}
+    times: list[tuple[float, str]] = []
+    for part_times, slug, version in served:
+        if slug not in ids:
+            ids[slug] = chr(97 + len(sources))
+            sources[ids[slug]] = {"skill": slug, "version": version, "params": {}}
+        times += [(float(t), ids[slug]) for t in part_times]
+    if not times or len(sources) > MAX_SOURCES:
+        return None
+    frames = frames_for(duration_s)
+    end = frames / criteria.FPS
+    if cuts:
+        bounds = [0.0, *sorted(c for c in cuts if 0 < c < end), end]
+    else:
+        ordered = sorted(times)
+        changes = [(a + b) / 2 for (a, sa), (b, sb) in itertools.pairwise(ordered) if sa != sb]
+        bounds = [0.0, *changes, end]
+    scenes: list[dict[str, Any]] = []
+    cues: list[dict[str, Any]] = []
+    previous, at = None, 0
+    for a, b in itertools.pairwise(bounds):
+        stop = frames if b >= end else round(b * criteria.FPS)
+        if stop <= at:
+            continue
+        inside = collections.Counter(s for t, s in times if a <= t < b)
+        if inside:
+            source = inside.most_common(1)[0][0]
+        else:
+            ranked = sorted(times, key=lambda ts: abs(ts[0] - (a + b) / 2))
+            source = next((s for _, s in ranked if s != previous), ranked[0][1])
+        scene = {"id": f"s{len(scenes) + 1:02d}", "source": source, "start": at, "dur": stop - at}
+        scenes.append(scene)
+        cues.append({"frame": at, "kind": "cut", "scene": scene["id"]})
+        previous, at = source, stop
+    return {
+        "name": name,
+        "fps": criteria.FPS,
+        "width": criteria.HEIGHT if landscape else criteria.WIDTH,
         "height": criteria.WIDTH if landscape else criteria.HEIGHT,
         "frames": frames,
         "sources": sources,

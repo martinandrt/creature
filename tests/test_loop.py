@@ -647,10 +647,12 @@ def test_a_saved_timeline_replays_with_the_users_style_at_no_cost(montage_world,
     assert report.clip == creature.folder / "montage" / "montage.mp4"
 
 
-def test_a_choice_naming_no_known_skill_is_fed_back_not_rendered(montage_world, fake_model):
+def test_a_choice_naming_no_known_skill_is_fed_back_not_rendered(montage_world, fake_model, monkeypatch):
     # the composer's first choice names nothing in the catalog: the spine must say so and ask again,
-    # never crash and never send an empty timeline to the workshop
+    # never crash and never send an empty timeline to the workshop (no reel-following first try here:
+    # it does not depend on the composer)
     home, calls = montage_world
+    monkeypatch.setattr(loop.montage, "follow", lambda *a, **k: None)
     fake_model.queue("criteria", MONTAGE_REPLY).queue("forge", {"code": CODE, "approach": "a"})
     fake_model.queue("judge", _judge_of(SURFACE, True, True, True))
     fake_model.queue("compose", {**CHOICE, "sources": ["ghost"]})

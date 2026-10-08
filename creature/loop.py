@@ -409,6 +409,7 @@ class Creature:
         composes them; the spine renders, measures and the judge compares the montage with the reel."""
         assert self.reel is not None
         learned: list[str] = []
+        served: list[tuple[tuple[float, ...], str, int]] = []  # (reel times of a screen, skill, version)
         library = bool(self.authority.workshop.assets)
         for part in spec.parts:
             reference = perceive.frames_at(
@@ -432,6 +433,7 @@ class Creature:
                 )  # fmt: skip
                 if outcome.ok:
                     learned.append(have.slug)
+                    served.append((tuple(part.frames), have.slug, have.version))
                     continue
             skill, built, _ = self.learn_one(part, source, reference, prefix=f"{part.slug}-")
             report.attempts += built.attempts if built else 0
@@ -441,6 +443,7 @@ class Creature:
             )  # fmt: skip
             if skill:
                 learned.append(skill.slug)
+                served.append((tuple(part.frames), skill.slug, skill.version))
             else:
                 report.notes.append(f"surface {part.slug} skipped: {(built.gap if built else 'cap')[:160]}")
         for gap in spec.gaps:
@@ -461,10 +464,19 @@ class Creature:
             choice, unknown = composer.choose(
                 self.model, self.reel, spec, catalog, cap_usd=self.cap("planner"), feedback=feedback
             )
-            t = composer.timeline(
-                spec.slug, choice, catalog, landscape=spec.output["width"] > spec.output["height"],
-                reel=self.reel,
+            landscape = spec.output["width"] > spec.output["height"]
+            t = composer.timeline(spec.slug, choice, catalog, landscape=landscape, reel=self.reel)
+            # first the reel's own shots, each showing the screen learned for it; then the composer's order
+            followed = (
+                montage.follow(
+                    spec.slug, served, self.reel.duration_s, self.reel.cuts, layers=t["layers"],
+                    landscape=landscape,
+                )
+                if attempt == 1 and served
+                else None
             )  # fmt: skip
+            if followed is not None and not montage.problems(followed):
+                t, choice = followed, {**choice, "reason": "follows the reel's shots"}
             wrong = montage.problems(t)
             if wrong:
                 self.ledger.record("composed", attempt=attempt, ok=False, unknown=unknown, problems=wrong)

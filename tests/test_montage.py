@@ -233,3 +233,24 @@ def test_a_landscape_timeline_has_its_sources_orientation_everywhere():
     assert (wide["width"], wide["height"]) == (1920, 1080) and montage.problems(wide) == []
     tall = composer.timeline("tall", choice, [_skill("grid-cards")])
     assert (tall["width"], tall["height"]) == (1080, 1920)
+
+
+def test_follow_gives_each_reel_shot_the_screen_learned_for_it():
+    # cuts at 1 s and 2 s; screen x shows at 0.5 s, y at 1.5 s, nothing learned for 2–3 s
+    t = montage.follow("m", [((0.5,), "x", 1), ((1.5,), "y", 2)], 3.0, (1.0, 2.0), layers=[], landscape=False)
+    assert t is not None and montage.problems(t) == []
+    assert [(s["source"], s["start"], s["dur"]) for s in t["scenes"]] == [
+        ("a", 0, 30),
+        ("b", 30, 30),
+        ("a", 60, 30),
+    ]
+    assert t["sources"] == {
+        "a": {"skill": "x", "version": 1, "params": {}},
+        "b": {"skill": "y", "version": 2, "params": {}},
+    }
+
+
+def test_follow_without_cuts_changes_screen_halfway_between_their_times():
+    t = montage.follow("m", [((0.5, 1.0), "x", 1), ((3.0,), "y", 1)], 4.0, (), layers=[])
+    assert [(s["source"], s["start"], s["dur"]) for s in t["scenes"]] == [("a", 0, 60), ("b", 60, 60)]
+    assert montage.follow("m", [((), "x", 1)], 4.0, (), layers=[]) is None  # nothing to place
