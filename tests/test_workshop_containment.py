@@ -11,7 +11,10 @@ start from the shipped authority and override one field at a time, never from co
 """
 
 import dataclasses
+import hashlib
+import itertools
 import subprocess
+import uuid
 
 import pytest
 
@@ -34,9 +37,26 @@ def _run(code: str, **overrides):
     return workshop.run(code, {}, limits=limits)
 
 
+_OWN = {"prefix": "creature-ws-"}
+
+
+@pytest.fixture(autouse=True)
+def _own_containers(request, monkeypatch):
+    """Containers of this test get a name with a prefix of their own, so the leftover check sees only
+    them: a creature run of a parallel session shares the Docker daemon and must not count."""
+    prefix = hashlib.sha256(request.node.nodeid.encode()).hexdigest()[:8]
+    counter = itertools.count()
+
+    def own_uuid():
+        return uuid.UUID(hex=f"{prefix}{next(counter):04x}" + "0" * 20)
+
+    monkeypatch.setattr(workshop.uuid, "uuid4", own_uuid)
+    _OWN["prefix"] = f"creature-ws-{prefix}"
+
+
 def _leftover_containers() -> list[str]:
     out = subprocess.run(
-        ["docker", "ps", "-a", "--filter", "name=creature-", "--format", "{{.Names}}"],
+        ["docker", "ps", "-a", "--filter", f"name={_OWN['prefix']}", "--format", "{{.Names}}"],
         capture_output=True,
         text=True,
     )
