@@ -14,7 +14,7 @@ from typing import Any
 
 from creature.criteria import Spec
 from creature.ledger import Ledger
-from creature.llm import BudgetRefused, Model
+from creature.llm import BudgetRefused, Model, ModelError
 
 SCHEMA = {
     "type": "object",
@@ -124,6 +124,11 @@ def build(
         except BudgetRefused as error:
             # keep what the earlier attempts showed: the report says why the build stopped
             return Build(False, code, number - 1, tuple(outcomes), f"budget: {error}")
+        except ModelError as error:  # paid, but no usable answer: a failed attempt, not a crash
+            outcome = Outcome(False, feedback or "", {"stage": "forge", "error": str(error)[:300]})
+            outcomes.append(outcome)
+            ledger.record("attempt_result", attempt=number, ok=False, detail=outcome.detail)
+            continue
         code = clean(reply["code"])
         ledger.record(
             "forge_attempt",

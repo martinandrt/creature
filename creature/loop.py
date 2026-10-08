@@ -29,7 +29,7 @@ from creature import (
 )
 from creature.forge import Outcome
 from creature.ledger import Ledger
-from creature.llm import ClaudeCLI, Model, Transport
+from creature.llm import ClaudeCLI, Model, ModelError, Transport
 
 
 @dataclass
@@ -112,9 +112,12 @@ class Creature:
             return Outcome(False, verdict.feedback(checked, None), detail), clip if clip.exists() else None
         (attempt / "strip.png").write_bytes(checked.strip)
         more = _sheets(attempt, checked.more)
-        judged = verdict.judge(
-            self.model, spec, reference, attempt / "strip.png", cap_usd=self.cap("judge"), more=more
-        )
+        try:
+            judged = verdict.judge(
+                self.model, spec, reference, attempt / "strip.png", cap_usd=self.cap("judge"), more=more
+            )
+        except ModelError as error:  # no answer is not a pass; a refused budget stops the next forge call
+            return Outcome(False, "", {"stage": "judge", "error": str(error)[:300]}), clip
         (attempt / "judge.json").write_text(
             json.dumps(judged.results, indent=1, ensure_ascii=False), encoding="utf-8"
         )
@@ -126,6 +129,15 @@ class Creature:
 
     def try_reel(self, source: str, text: str, *, mark: Path | None = None) -> Report:
         report = Report(self.ledger.run_id, "FAILED", self.folder)
+        try:
+            return self._try_reel(report, source, text, mark)
+        except ModelError as error:
+            # a paid call that gave no usable answer (over its cap, refused, malformed): the run ends
+            # cleanly with what it has, its page and its ledger, instead of a traceback
+            report.status, report.gap = "FAILED", f"a model call failed: {error}"
+            return self.finish(report)
+
+    def _try_reel(self, report: Report, source: str, text: str, mark: Path | None) -> Report:
         self.ledger.record("task", source=source, text=text)
         self.reel = perceive.perceive(
             source, self.folder, self.ledger, limits=self.authority.workshop, image=self.image
