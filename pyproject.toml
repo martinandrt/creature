@@ -9,6 +9,7 @@ dependencies = []
 [dependency-groups]
 dev = [
     "jsonschema>=4",
+    "numpy>=2",
     "pytest>=8",
     "ruff>=0.6",
 ]
