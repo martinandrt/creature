@@ -17,6 +17,7 @@ from creature import (
     authority,
     composer,
     criteria,
+    deep,
     forge,
     ledger,
     montage,
@@ -233,10 +234,13 @@ class Creature:
             return outcome
 
         before = self.ledger.spent_usd
-        built = forge.build(
-            self.model, spec, self.ledger, attempts=self.authority.caps.forge_attempts,
-            cap_usd=self.cap("forge"), try_code=try_code,
-        )  # fmt: skip
+        if "forge" in self.authority.models:  # a home that names a forge model gets the round forge
+            built = self._rounds(spec, reference, prefix, clips)
+        else:
+            built = forge.build(
+                self.model, spec, self.ledger, attempts=self.authority.caps.forge_attempts,
+                cap_usd=self.cap("forge"), try_code=try_code,
+            )  # fmt: skip
         clip = clips.get(built.attempts)
         if not built.ok:
             return None, built, clip
@@ -261,6 +265,50 @@ class Creature:
         self.installed += 1
         self.ledger.record("installed", skill=skill.slug, version=skill.version, design=spec.slug, **cost)
         return skill, built, clip
+
+    def _rounds(
+        self, spec: criteria.Spec, reference: Path, prefix: str, clips: dict[int, Path | None]
+    ) -> forge.Build:
+        """The round forge (deep.py) for one skill; its whole clip is checked and judged like any other,
+        and it must also render at another length (the layout is data, so a shorter cut is free)."""
+        assert self.reel is not None
+        reel = self.reel
+        if spec.frames:  # a surface: its own reel frames are the reference
+            reel = dataclasses.replace(self.reel, strip=reference, times=spec.frames)
+
+        def finish(code: str, number: int) -> Outcome:
+            outcome, clips[number] = self.run_skill(
+                code, spec, self.folder / f"{prefix}attempt-{number}", reference
+            )
+            if not outcome.ok:
+                return outcome
+            return self._other_length(code, spec, self.folder / f"{prefix}attempt-{number}")
+
+        result = deep.build(
+            self.model, spec, self.ledger, reel=reel, rounds=self.authority.caps.forge_attempts,
+            cap_usd=self.cap("forge"), model_name=self.model_for("forge"), limits=self.authority.workshop,
+            image=self.image, folder=self.folder / f"{prefix}rounds", finish=finish,
+        )  # fmt: skip
+        last = max(clips) if clips else result.rounds
+        return forge.Build(result.ok, deep.skill_code(result.files), last, (), result.gap)
+
+    def _other_length(self, code: str, spec: criteria.Spec, folder: Path) -> Outcome:
+        """The same skill 2 s shorter (at least 1 s) must still pass the file checks: "my input, shorter"."""
+        seconds = max(criteria.MIN_S, spec.output["duration_s"] - 2.0)
+        output = criteria.clip_format(seconds)
+        other = dataclasses.replace(spec, output=output, checks=tuple(criteria.checks_for(output)))
+        ran = workshop.run(code, forge.skill_input(other), limits=self.authority.workshop, image=self.image)
+        problems = [f"the script failed: {ran.error}"] if not ran.ok else list(
+            verdict.check(ran.outputs, other.checks, limits=self.authority.workshop, image=self.image,
+                          folder=folder / "shorter").problems
+        )  # fmt: skip
+        self.ledger.record("other_length", seconds=seconds, ok=not problems, problems=problems[:4])
+        if problems:
+            text = "; ".join(problems)
+            asked = spec.output["duration_s"]
+            return Outcome(False, f"At {seconds:.2f} s instead of {asked} s it fails: {text}",
+                           {"stage": "other_length", "problems": problems})  # fmt: skip
+        return Outcome(True, "", {"stage": "other_length", "seconds": seconds})
 
     def learn_montage(
         self, report: Report, spec: criteria.Spec, source: str, text: str, *, mark: Path | None
