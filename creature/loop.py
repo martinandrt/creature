@@ -147,12 +147,8 @@ class Creature:
             report.status, report.gap = "FAILED", f"{type(error).__name__}: {error}"
             return self.finish(report)
 
-    def _try_reel(self, report: Report, source: str, text: str, mark: Path | None) -> Report:
-        self.ledger.record("task", source=source, text=text)
-        self.reel = perceive.perceive(
-            source, self.folder, self.ledger, limits=self.authority.workshop, image=self.image
-        )
-        # does an installed skill do this already? Then it is judged by its own stored tests
+    def _match_whole(self, report: Report, source: str, text: str) -> Report | None:
+        """The whole reel against the installed skills: a match is run and judged by its own stored tests."""
         skill, why = planner.match(
             self.model, self.reel, registry.skills(self.registry), cap_usd=self.cap("planner"),
             library=bool(self.authority.workshop.assets),
@@ -180,7 +176,23 @@ class Creature:
                 f"{skill.slug} v{skill.version} failed its own tests here: learning v{skill.version + 1}"
             )
             return self.learn(report, spec, source, reference)
+        return None
 
+    def _try_reel(self, report: Report, source: str, text: str, mark: Path | None) -> Report:
+        self.ledger.record("task", source=source, text=text)
+        self.reel = perceive.perceive(
+            source, self.folder, self.ledger, limits=self.authority.workshop, image=self.image
+        )
+        cuts = len(self.reel.cuts)
+        if cuts < criteria.MIN_CUTS:
+            done = self._match_whole(report, source, text)
+            if done:
+                return done
+        else:
+            # a montage: one installed skill covers one of its screens, so matching waits for the parts
+            self.ledger.record(
+                "plan", skill=None, reason=f"{cuts} cuts: matched part by part, after decomposition"
+            )
         spec = criteria.write(
             self.model, self.reel, text, cap_usd=self.cap("criteria"), seed=self.ledger.run_id,
             refuse=self.authority.refuse, ask=self.authority.ask, model_name=self.model_for("criteria"),
@@ -212,6 +224,10 @@ class Creature:
                     self.home, self.ledger.run_id, source, dataclasses.replace(spec, reason=report.gap)
                 )
             return self.finish(report)
+        if cuts >= criteria.MIN_CUTS:  # many cuts, yet one effect: the whole-reel match it waited with
+            done = self._match_whole(report, source, text)
+            if done:
+                return done
         return self.learn(report, spec, source, self.reel.strip)
 
     def learn(self, report: Report, spec: criteria.Spec, source: str, reference: Path) -> Report:

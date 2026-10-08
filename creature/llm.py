@@ -74,6 +74,13 @@ class BudgetRefused(ModelError):
     """The call was not made: the run's remaining budget does not cover the reserve."""
 
 
+class LimitReached(BudgetRefused):
+    """The account's usage limit: no call can succeed until it resets, so the run stops, never retries."""
+
+
+LIMIT_SIGNS = ("hit your session limit", "hit your weekly limit", "hit your usage limit")
+
+
 class Model:
     """The only way the spine reaches a model. Enforces the run budget and logs every call."""
 
@@ -95,6 +102,7 @@ class Model:
         self.ledger = ledger
         self.budget_usd = budget_usd
         self.reserve_usd = reserve_usd
+        self.limited = ""  # set by the first usage-limit error: later calls are refused without trying
         self.model = model
 
     @property
@@ -118,6 +126,9 @@ class Model:
         images = tuple((label, Path(path)) for label, path in images)
         for _, path in images:
             _check_image(path)
+        if self.limited:
+            self.ledger.record("model_refused", step=step, reason="usage limit")
+            raise LimitReached(f"{step}: {self.limited}")
         remaining = self.remaining_usd
         if remaining < self.reserve_usd:
             self.ledger.record("model_refused", step=step, reason="budget", remaining_usd=round(remaining, 6))
@@ -131,6 +142,8 @@ class Model:
                 "model_call", step=step, model=call.model, ok=False, error=str(error)[:500],
                 max_usd=call.max_usd, cost_usd=error.cost_usd,
             )  # fmt: skip
+            if isinstance(error, LimitReached):
+                self.limited = str(error)  # every later call would hit the same wall
             raise
         problem = _shape_problem(reply.data, schema)
         self.ledger.record(
@@ -203,6 +216,8 @@ def parse(stdout: str, call: ModelCall, *, stderr: str = "") -> ModelReply:
         raise ModelError(f"CLI gave no result: {(stdout or stderr).strip()[-300:]}")
     cost = _cost(result.get("total_cost_usd"), call)
     if result.get("is_error") or result.get("subtype") != "success":
+        if any(sign in str(result.get("result")).lower() for sign in LIMIT_SIGNS):
+            raise LimitReached(f"usage limit: {str(result.get('result'))[:200]}", cost)
         raise ModelError(f"CLI error: {result.get('subtype')}: {str(result.get('result'))[:300]}", cost)
     data = result.get("structured_output")
     if not isinstance(data, dict):

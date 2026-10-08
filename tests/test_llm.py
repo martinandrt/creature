@@ -339,3 +339,27 @@ def test_live_call_sees_an_image(run, tmp_path):
         cap_usd=0.05, images=(("image", image),),
     )  # fmt: skip
     assert "red" in answer["color"].lower()
+
+
+def test_a_usage_limit_stops_every_later_call_without_reaching_the_model(run):
+    # 9. 10. 2026: the CLI said "You've hit your session limit" 110 times and each answer was retried as malformed
+    stdout = _cli_result(
+        subtype="success", is_error=True, structured_output=None,
+        result="You've hit your session limit · resets 2:10am (Europe/Prague)",
+    )  # fmt: skip
+    with pytest.raises(llm.LimitReached):
+        llm.parse(stdout, CALL)
+
+    class Limited:
+        calls = 0
+
+        def complete(self, call):
+            Limited.calls += 1
+            return llm.parse(stdout, call)
+
+    model = Model(Limited(), run, budget_usd=1.0, reserve_usd=RESERVE)
+    for _ in range(3):
+        with pytest.raises(BudgetRefused):  # the forge and the spine already stop on a refused budget
+            model.ask("forge", "s", "p", SCHEMA, cap_usd=0.05)
+    assert Limited.calls == 1
+    assert [e["reason"] for e in _events(run, "model_refused")] == ["usage limit", "usage limit"]
