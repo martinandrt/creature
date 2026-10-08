@@ -816,3 +816,13 @@ def test_a_skill_that_needs_the_library_is_refused_cleanly_where_there_is_none(l
     assert report.status == "FAILED" and "asset library" in report.gap and "/assets/" in report.gap
     assert len(calls["renders"]) == before  # nothing rendered
     assert _kinds(creature)[-1] == "run_end"
+
+
+def test_a_style_on_a_step_design_is_named_as_not_applied(world, fake_model):
+    # "replay with my style" on a plain (step) design changes nothing: the style belongs to a montage.
+    # Saying nothing would let a recording claim a style that was never used
+    _build(world, fake_model)
+    style = {"colors": {"night": "#1B2135"}, "fonts": {"title": "Barlow"}}
+    report = _creature(world, FakeModel()).run_design("typewriter-reveal", "Replay this.", style=style)
+    assert report.status == "DONE"
+    assert any("style" in note and "montage" in note for note in report.notes), report.notes
