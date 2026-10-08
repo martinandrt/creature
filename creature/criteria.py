@@ -56,8 +56,33 @@ SCHEMA = {
             },
         },
         "criteria": {"type": "array", "items": {"type": "string"}, "minItems": 3, "maxItems": 6},
+        "kind": {"type": "string", "enum": ["effect", "montage"]},
+        "surfaces": {
+            "type": "array",
+            "maxItems": 4,
+            "items": {
+                "type": "object",
+                "required": ["slug", "effect", "task", "frames", "criteria"],
+                "properties": {
+                    "slug": {"type": "string", "pattern": "^[a-z][a-z0-9-]{2,40}$"},
+                    "effect": {"type": "string"},
+                    "task": {"type": "string"},
+                    "frames": {"type": "array", "items": {"type": "number"}},
+                    "criteria": {"type": "array", "items": {"type": "string"}, "minItems": 3, "maxItems": 5},
+                },
+            },
+        },
+        "gaps": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["what", "needs"],
+                "properties": {"what": {"type": "string"}, "needs": {"type": "string"}},
+            },
+        },
     },
 }
+SURFACE_S = 3.0  # a surface is learned on a short clip; a montage renders it at its own length
 
 SYSTEM = """You study a short tutorial reel about a motion design effect and write down, before anyone
 tries it, what success looks like.
@@ -82,10 +107,22 @@ params). The output will be judged from frames sampled at about 6 per second (at
 first to its last frame, so each criterion must be visible in such frames: no counts of repetitions,
 no rates, no exact timings, nothing that happens between two samples. Every criterion must be
 achievable with the user's text: never require more words, lines or characters than it has. Write 4 to 6.
+Some reels are not one effect but a montage: many short shots cut together (the measured cuts below
+say how many), often with one element fixed on top while the backgrounds change. Then set kind
+"montage"; otherwise kind "effect". For a montage, effect, task and criteria describe how the shots are
+put together (the cut rhythm, what stays fixed on top, how the backgrounds alternate), judged on the
+finished montage, and you split the reel:
+- surfaces: up to 4 kinds of flat graphic screen that recur in its shots and a script can draw from
+  scratch (patterns, grids, cards, typographic layouts), each with a slug, its effect, a task, 3 to 5
+  criteria for that screen alone, and frames: the times (as printed under the cells) that show it.
+  Draw the user's text on a surface only where the reel has text there.
+- gaps: what a script cannot draw (photos, 3D renders, footage, product mockups), each with what it
+  would need. A montage is "try" when at least one surface can be drawn.
 task: one sentence applying the effect to the user's text. duration_s: a good length for the effect on
-that text, 1 to 8 seconds. params: each value the tutorial names (timing, blinks, sizes), with the
-exact transcript sentence it comes from as quote (empty if it only shows on screen), units in the key
-names. slug: a short lowercase name for the effect, words joined by hyphens."""
+that text, 1 to 8 seconds; for a montage, the reel's own length. params: each value the tutorial names
+(timing, blinks, sizes), with the exact transcript sentence it comes from as quote (empty if it only
+shows on screen), units in the key names. slug: a short lowercase name for the effect, words joined by
+hyphens."""
 
 
 @dataclass(frozen=True)
@@ -103,6 +140,10 @@ class Spec:
     checks: tuple[dict[str, Any], ...] = field(default=())
     transcript_is_speech: bool = True  # False for lyrics: nothing downstream may use the transcript
     param_sources: dict[str, str] = field(default_factory=dict)  # param name -> transcript sentence
+    kind: str = "effect"  # effect · montage
+    parts: tuple[Spec, ...] = ()  # a montage's surfaces, each learned and judged on its own
+    gaps: tuple[dict[str, str], ...] = ()  # what a montage shows that no script can draw
+    frames: tuple[float, ...] = ()  # a surface: the reel times that show it (its reference)
 
 
 def write(
@@ -121,7 +162,9 @@ def write(
         raise ValueError("the user's input text is empty")
     prompt = (
         f"<reel>\nCaption: {reel.caption or '(none)'}\nTranscript: {reel.transcript or '(none)'}\n</reel>\n"
-        f"Reel: {reel.duration_s:.1f} s, frames taken at {', '.join(f'{t:.1f}' for t in reel.times)} s\n"
+        f"Reel: {reel.duration_s:.1f} s, frames taken at {', '.join(f'{t:.2f}' for t in reel.times)} s\n"
+        f"Measured: {_rhythm(reel)}; colours most used first: "
+        f"{', '.join(c.get('hex', '') for c in reel.palette) or 'not measured'}\n"
         f"User's text: {text}"
     )
     data = model.ask(
@@ -143,7 +186,18 @@ def write(
         raise ValueError("the criteria step gave fewer than 3 usable criteria")
     visible, held_out = hold_out(criteria, seed)
     params, sources = read_params(data["params"])
+    palette = [c["hex"] for c in reel.palette if isinstance(c, dict) and c.get("hex")]
+    if palette and "palette" not in params:  # measured, not named: a user's style may replace it
+        params["palette"] = palette
+        sources["palette"] = "measured from the reel's frames"
     output = clip_format(data["duration_s"])
+    kind = "montage" if data.get("kind") == "montage" and data.get("surfaces") else "effect"
+    parts = _surfaces(data.get("surfaces") or [], text, seed, palette, reel) if kind == "montage" else ()
+    gaps = tuple(
+        {"what": str(g.get("what", ""))[:200], "needs": str(g.get("needs", ""))[:200]}
+        for g in data.get("gaps") or []
+        if isinstance(g, dict)
+    )
     return Spec(
         effect=str(data["effect"]).strip(),
         slug=slug,
@@ -158,7 +212,54 @@ def write(
         checks=tuple(checks_for(output)),
         transcript_is_speech=data["transcript_is_speech"] is True,
         param_sources=sources,
+        kind=kind,
+        parts=parts,
+        gaps=gaps,
     )
+
+
+def _rhythm(reel: Reel) -> str:
+    shots = len(reel.cuts) + 1
+    if shots < 2:
+        return "one shot, no cuts"
+    frames = reel.duration_s * reel.fps / shots if reel.fps else 0
+    return f"{len(reel.cuts)} cuts, {shots} shots, a shot lasts about {frames:.0f} frames"
+
+
+def _surfaces(raw: list[Any], text: str, seed: str, palette: list[str], reel: Reel) -> tuple[Spec, ...]:
+    """A montage's surfaces as specs of their own: own criteria, own held-out part, own reference frames."""
+    found: list[Spec] = []
+    for item in raw[:4]:
+        if not isinstance(item, dict) or not SLUG.fullmatch(str(item.get("slug", ""))):
+            continue
+        criteria = list(
+            dict.fromkeys(c.strip() for c in item.get("criteria", []) if isinstance(c, str) and c.strip())
+        )
+        if len(criteria) < 3 or any(s.slug == item["slug"] for s in found):
+            continue
+        times = [t for t in item.get("frames", []) if isinstance(t, int | float)]
+        # the reel frames nearest to the times the model named: those cells are the surface's reference
+        nearest = sorted({min(reel.times, key=lambda r: abs(r - t)) for t in times}) if reel.times else []
+        visible, held_out = hold_out(criteria, f"{seed}:{item['slug']}")
+        output = clip_format(SURFACE_S)
+        found.append(
+            Spec(
+                effect=str(item.get("effect", "")).strip(),
+                slug=str(item["slug"]),
+                verdict="try",
+                reason="",
+                task=str(item.get("task", "")).strip(),
+                text=text,
+                params={"palette": palette} if palette else {},
+                output=output,
+                criteria=tuple(visible),
+                held_out=tuple(held_out),
+                checks=tuple(checks_for(output)),
+                param_sources={"palette": "measured from the reel's frames"} if palette else {},
+                frames=tuple(nearest),
+            )
+        )
+    return tuple(found)
 
 
 def system(refuse: tuple[str, ...], ask: tuple[str, ...]) -> str:

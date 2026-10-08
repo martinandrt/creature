@@ -6,7 +6,8 @@ registry/
   <slug>/<version>/capability.json   inputs, output clip format, origin, cost
   <slug>/<version>/skill.py     the script; it only ever runs in the workshop
   <slug>/<version>/tests.json   file checks and judge criteria, as data
-  designs/<name>.json           a recipe: which skills, in which order, with which values
+  designs/<name>.json           a recipe: which skills, in which order, with which values; or a
+                                timeline (sources, scenes, layers, cues) over several skills
 
 Only a creature run writes here, and only after a skill passed its checks and the judge. A skill
 learned again becomes a new version; older versions stay, so a skill can evolve and roll back.
@@ -240,6 +241,29 @@ def save_design(
     return design
 
 
+def save_timeline(
+    root: Path, name: str, t: dict[str, Any], *, origin: dict[str, Any], tests: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    """A montage design: the timeline is the only source of time; its tests are what it passed."""
+    from creature import montage
+
+    if not DESIGN_NAME.fullmatch(name):
+        raise ValueError(f"bad design name {name!r}")
+    index = _index(root)
+    for source in t.get("sources", {}).values():
+        entry = index["skills"].get(source.get("skill"))
+        if entry is None or source.get("version") not in entry["versions"]:
+            raise KeyError(f"timeline source uses an unknown skill: {source}")
+    found = montage.problems(t)
+    if found:
+        raise ValueError("bad timeline: " + "; ".join(found))
+    design = {"name": name, "timeline": {**t, "name": name}, "tests": tests or {}, "origin": origin}
+    _write_json(root / DESIGNS / f"{name}.json", design)
+    index["designs"][name] = {"steps": len(t["sources"]), "kind": "timeline", "origin": origin}
+    _write_json(root / INDEX, index)
+    return design
+
+
 def design(root: Path, name: str) -> dict[str, Any]:
     if not DESIGN_NAME.fullmatch(name) or name not in _index(root)["designs"]:
         raise KeyError(f"no design {name!r}")
@@ -250,11 +274,19 @@ def designs(root: Path) -> list[str]:
     return sorted(_index(root)["designs"])
 
 
+def taken(root: Path, name: str) -> None:
+    """A new design by hand never replaces a design, nor takes a skill's name (it would shadow it)."""
+    index = _index(root)
+    if name in index["designs"] or name in index["skills"]:
+        raise FileExistsError(f"{name!r} is already a design or a skill; pick another name")
+
+
 def compose(root: Path, name: str, parts: list[str], *, origin: dict[str, Any]) -> dict[str, Any]:
     """A new design from known parts, in order: a design adds its steps, a skill adds its active
     version with the values it was learned with. Data only, no model."""
     if len(parts) < 2:
         raise ValueError("a composed design needs at least two parts")
+    taken(root, name)
     known = _index(root)["designs"]
     steps: list[dict[str, Any]] = []
     for part in parts:

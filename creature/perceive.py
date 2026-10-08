@@ -67,8 +67,13 @@ def pick(duration, cuts, count):
         times.insert(i + 1, round((times[i] + times[i + 1]) / 2, 3))
     return times[:count]
 
-def palette(paths, size):
-    pixels = np.concatenate([np.asarray(Image.open(p).convert("RGB")).reshape(-1, 3)[::37] for p in paths])
+def palette(paths, size, width, height):
+    # only the picture: the tiles are padded to 270x480, and the padding is not a colour of the reel
+    scale = min(TILE_W / width, TILE_H / height)
+    w, h = max(1, int(width * scale)), max(1, int(height * scale))
+    x0, y0 = (TILE_W - w) // 2 + 1, (TILE_H - h) // 2 + 1
+    crops = [np.asarray(Image.open(p).convert("RGB"))[y0:y0 + h - 2, x0:x0 + w - 2] for p in paths]
+    pixels = np.concatenate([c.reshape(-1, 3)[::37] for c in crops])
     pixels = pixels.astype(np.float32)
     order = np.argsort(pixels.sum(axis=1))
     centers = pixels[order[np.linspace(0, len(order) - 1, size).astype(int)]]
@@ -113,7 +118,8 @@ def run(input, work):
                         "-t", str(input["audio_max_s"]), f"{work}/out/audio.wav"], check=True)
     return {"duration_s": duration, "width": stream["width"], "height": stream["height"],
             "fps": round(float(num) / float(den), 3) if float(den) else 0.0, "times": times,
-            "cuts": cuts, "palette": palette(tiles, input["palette"]), "audio": audio}
+            "cuts": cuts, "palette": palette(tiles, input["palette"], stream["width"], stream["height"]),
+            "audio": audio}
 """
 )
 
@@ -201,6 +207,37 @@ def perceive(source: str, folder: Path, ledger: Ledger, *, limits: workshop.Limi
         palette=[c.get("hex") for c in reel.palette], seconds=result.duration_s,
     )  # fmt: skip
     return reel
+
+
+# Fixed code (ours): the reel's frames at given times, as one sheet (a surface's reference).
+FRAMES_AT_CODE = (
+    workshop.SHEET_CODE
+    + r"""
+def run(input, work):
+    tiles = []
+    for i, t in enumerate(input["times"]):
+        path = f"{work}/frame_{i:03d}.png"
+        subprocess.run(["ffmpeg", "-v", "error", "-ss", str(t), "-i", f"{work}/in/reel.mp4", "-frames:v", "1",
+                        "-vf", FIT, path], check=True)
+        tiles.append(path)
+    sheets(tiles, input["times"], f"{work}/out/strip")
+    return len(tiles)
+"""
+)
+
+
+def frames_at(
+    reel: Reel, times: tuple[float, ...], target: Path, *, limits: workshop.Limits, image: str
+) -> Path:
+    """A sheet of the reel's frames at `times` (at most one sheet), written to `target`."""
+    picked = list(times[:24]) or list(reel.times)
+    result = workshop.run(
+        FRAMES_AT_CODE, {"times": picked}, {"reel.mp4": reel.video}, limits=limits, image=image
+    )
+    if not result.ok or "strip.png" not in result.outputs:
+        raise PerceiveError(f"could not take the frames: {result.error}")
+    target.write_bytes(result.outputs["strip.png"])
+    return target
 
 
 def transcribe(wav: Path) -> str:

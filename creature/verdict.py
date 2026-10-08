@@ -49,16 +49,28 @@ def run(input, work):
     select = "+".join(f"eq(n\\,{n})" for n in picks)
     subprocess.run(["ffmpeg", "-v", "error", "-i", clip, "-vf", f"select='{select}',{FIT}", "-vsync", "vfr",
                     f"{work}/frame_%03d.png"], check=True)
+    import os
     tiles = [f"{work}/frame_{i:03d}.png" for i in range(1, len(picks) + 1)]
+    tiles = [t for t in tiles if os.path.exists(t)]  # a stream that stops decoding writes fewer
+    times = times[:len(tiles)]
     luma = []
     for path in tiles:
         with Image.open(path) as tile:
             # brightest pixel: a small glyph on black is not black
             luma.append(max(tile.convert("L").getdata()))
-    sheets(tiles, times, f"{work}/out/strip")
-    return {"readable": True, "video": True, "codec": v.get("codec_name"), "pix_fmt": v.get("pix_fmt"),
-            "width": v.get("width"), "height": v.get("height"), "fps": fps, "frames": frames,
-            "duration_s": frames / fps if fps else 0.0, "luma": luma, "times": times}
+    if tiles:
+        sheets(tiles, times, f"{work}/out/strip")
+    diffs = []
+    if input.get("diffs"):  # how much each frame differs from the next, on a small grey copy
+        small = subprocess.run(["ffmpeg", "-v", "error", "-i", clip, "-vf", "scale=135:240", "-f", "rawvideo",
+                                "-pix_fmt", "gray", "-"], capture_output=True, check=True).stdout
+        import numpy as np
+        grey = np.frombuffer(small, dtype=np.uint8).reshape(-1, 240, 135).astype(np.int16)
+        diffs = [round(float(d), 3) for d in np.abs(np.diff(grey, axis=0)).mean(axis=(1, 2))]
+    return {"diffs": diffs, "readable": True, "video": True, "codec": v.get("codec_name"),
+            "pix_fmt": v.get("pix_fmt"), "width": v.get("width"), "height": v.get("height"), "fps": fps,
+            "frames": frames, "duration_s": frames / fps if fps else 0.0, "luma": luma, "times": times,
+            "sampled": len(picks), "decoded": len(tiles)}
 """
 )
 
@@ -130,18 +142,35 @@ def check(
     clip = folder / name
     clip.write_bytes(outputs[name])
     result = workshop.run(
-        PROBE_CODE, {"file": name, "per_s": CLIP_PER_S, "max": CLIP_MAX}, {name: clip}, limits=limits,
+        PROBE_CODE,
+        {
+            "file": name,
+            "per_s": CLIP_PER_S,
+            "max": CLIP_MAX,
+            "diffs": any(c.get("kind") == "smooth" for c in checks),
+        },
+        {name: clip},
+        limits=limits,
         image=image,
-    )  # fmt: skip
+    )
     probe = result.value if result.ok and isinstance(result.value, dict) else {}
     problems = list(dict.fromkeys(p for c in checks if (p := _evaluate(c, outputs[name], probe))))
+    if probe.get("decoded", 0) < probe.get("sampled", 0):
+        problems.append(
+            f"decodes: only {probe['decoded']} of {probe['sampled']} sampled frames decode (the stream stops)"
+        )
     if not result.ok:
         problems = [f"the clip cannot be read: {result.error}"]
     more = tuple(result.outputs[n] for n in sorted(result.outputs) if n.startswith("strip-"))
     return Checked(tuple(problems), probe, result.outputs.get("strip.png"), more)
 
 
-KINDS = ("exists", "max_bytes", "video_stream", "resolution", "fps", "duration", "frames", "not_black")
+KINDS = (
+    "exists", "max_bytes", "video_stream", "resolution", "fps", "duration", "frames", "not_black", "smooth",
+    "safe_zone",
+)  # fmt: skip
+STILL = 1.0  # mean grey change per frame below which nothing is moving (encoder noise)
+JUMP = 25.0  # above this a frame changes at once (a flip, a cut inside a source): not motion
 
 
 def _evaluate(check: dict[str, Any], data: bytes, probe: dict[str, Any]) -> str | None:
@@ -152,6 +181,8 @@ def _evaluate(check: dict[str, Any], data: bytes, probe: dict[str, Any]) -> str 
         return None if data else "exists: the clip is empty"
     if kind == "max_bytes":
         return None if len(data) <= check["expect"] else f"max_bytes: {len(data)} bytes > {check['expect']}"
+    if kind == "safe_zone":
+        return _safe(check)
     if not probe.get("readable"):
         return "the clip cannot be read"
     if kind == "video_stream":
@@ -177,8 +208,40 @@ def _evaluate(check: dict[str, Any], data: bytes, probe: dict[str, Any]) -> str 
     if kind == "frames":
         got = probe.get("frames")
         return None if got == check["expect"] else f"frames: got {got}, need exactly {check['expect']}"
+    if kind == "smooth":
+        return _smooth(probe.get("diffs") or [], set(check["cuts"]), check["max_ratio"])
     luma = probe.get("luma") or []  # the one kind left: not_black
     return None if luma and max(luma) > BLACK_LUMA else "not_black: every sampled frame is black"
+
+
+def _smooth(diffs: list[float], cuts: set[int], max_ratio: float) -> str | None:
+    """While something moves, a frame's change may be at most `max_ratio` times the change next to it:
+    a stutter or a sudden change of speed fails. diffs[i] is the change from frame i to i + 1. Only pairs
+    where both steps move count: a pair touching a cut, a still frame (an element appearing) or a jump
+    (a flip of the whole frame) is not motion and is skipped."""
+    if not diffs:
+        return "smooth: the clip's motion could not be measured"
+    worst, at = 0.0, 0
+    for i in range(1, len(diffs)):
+        if i in cuts or i + 1 in cuts:
+            continue
+        a, b = diffs[i - 1], diffs[i]
+        if min(a, b) <= STILL or max(a, b) >= JUMP:
+            continue
+        ratio = max(a, b) / min(a, b)
+        if ratio > worst:
+            worst, at = ratio, i
+    if worst <= max_ratio:
+        return None
+    return f"smooth: motion jumps {worst:.1f}x from one frame to the next at frame {at} (at most {max_ratio})"
+
+
+def _safe(check: dict[str, Any]) -> str | None:
+    safe = check["safe"]
+    for x0, y0, x1, y1 in check["boxes"]:
+        if x0 < safe["left"] or y0 < safe["top"] or x1 > 1 - safe["right"] or y1 > 1 - safe["bottom"]:
+            return f"safe_zone: a layer at {x0:.2f},{y0:.2f} to {x1:.2f},{y1:.2f} reaches the margins {safe}"
+    return None
 
 
 def _near(kind: str, value: Any, check: dict[str, Any]) -> str | None:

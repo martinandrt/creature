@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from pathlib import Path
 
 from creature import home as home_mod
 from creature import registry
@@ -26,9 +27,13 @@ def main(argv: list[str] | None = None) -> int:
         "--text", required=True, action="append", help="my input text; repeat it to give each step its own"
     )
     designed.add_argument("--judge", action="store_true", help="also ask the judge (a paid model call)")
+    designed.add_argument("--mark", help="an image (PNG) for a montage's fixed layer, e.g. a logo")
+    designed.add_argument("--style", help="a JSON file with my colours and fonts, used over the learned ones")
     composed = sub.add_parser("compose", help="a new design from designs and skills, in order (no model)")
     composed.add_argument("name")
     composed.add_argument("parts", nargs="+", help="design or skill names, in the order they play")
+    composed.add_argument("--every", type=int, help="a montage instead: cut every N frames through the parts")
+    composed.add_argument("--seconds", type=float, default=7.0, help="the montage's length")
     sub.add_parser("list", help="learned skills and designs")
     shown = sub.add_parser("show", help="one skill: manifest and tests")
     shown.add_argument("slug")
@@ -60,7 +65,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "design":
         from creature.loop import Creature
 
-        report = Creature(root).run_design(args.name, args.text, judge=args.judge)
+        style = json.loads(Path(args.style).read_text(encoding="utf-8")) if args.style else None
+        mark = Path(args.mark) if args.mark else None
+        report = Creature(root).run_design(args.name, args.text, judge=args.judge, mark=mark, style=style)
         print(f"{report.status}  {report.skill}")
         if report.gap:
             print(f"gap: {report.gap[:400]}")
@@ -69,6 +76,21 @@ def main(argv: list[str] | None = None) -> int:
             print(f"clip: {report.clip}")
         print(f"run: {report.folder}")
         return 0 if report.status == "DONE" else 1
+    if args.command == "compose" and args.every:
+        from creature import montage
+
+        registry.taken(root / "registry", args.name)
+        sources = {}
+        for number, part in enumerate(args.parts):
+            skill = registry.get(root / "registry", part)
+            sources[chr(97 + number)] = {"skill": skill.slug, "version": skill.version, "params": {}}
+        t = montage.timeline(
+            args.name, sources, list(sources), every=args.every, frames=montage.frames_for(args.seconds),
+            layers=[{"id": "mark", "x": 0.5, "y": 0.5, "height": 0.06}],
+        )  # fmt: skip
+        registry.save_timeline(root / "registry", args.name, t, origin={"composed_by": "compose"})
+        print(f"montage {args.name}: {len(t['scenes'])} cuts over {t['frames']} frames, mark on top")
+        return 0
     if args.command == "compose":
         made = registry.compose(root / "registry", args.name, args.parts, origin={"composed_by": "compose"})
         for number, step in enumerate(made["steps"], start=1):

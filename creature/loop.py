@@ -13,7 +13,20 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from creature import authority, criteria, forge, ledger, page, perceive, planner, registry, verdict, workshop
+from creature import (
+    authority,
+    composer,
+    criteria,
+    forge,
+    ledger,
+    montage,
+    page,
+    perceive,
+    planner,
+    registry,
+    verdict,
+    workshop,
+)
 from creature.forge import Outcome
 from creature.ledger import Ledger
 from creature.llm import ClaudeCLI, Model, Transport
@@ -111,7 +124,7 @@ class Creature:
         }  # fmt: skip
         return Outcome(judged.ok, "" if judged.ok else verdict.feedback(checked, judged), detail), clip
 
-    def try_reel(self, source: str, text: str) -> Report:
+    def try_reel(self, source: str, text: str, *, mark: Path | None = None) -> Report:
         report = Report(self.ledger.run_id, "FAILED", self.folder)
         self.ledger.record("task", source=source, text=text)
         self.reel = perceive.perceive(
@@ -150,7 +163,7 @@ class Creature:
         self.ledger.record(
             "spec", verdict=spec.verdict, slug=spec.slug, effect=spec.effect[:300], reason=spec.reason[:300],
             visible=len(spec.criteria), held_out=len(spec.held_out), duration_s=spec.output["duration_s"],
-            params=len(spec.params),
+            params=len(spec.params), kind=spec.kind, parts=[p.slug for p in spec.parts], gaps=len(spec.gaps),
         )  # fmt: skip
         (self.folder / "spec.json").write_text(
             json.dumps(_spec_dict(spec), indent=1, ensure_ascii=False), encoding="utf-8"
@@ -161,17 +174,38 @@ class Creature:
             if spec.verdict == "ask":
                 _queue_ask(self.home, self.ledger.run_id, source, spec)
             return self.finish(report)
+        if spec.kind == "montage" and spec.parts:
+            return self.learn_montage(report, spec, source, text, mark=mark)
         return self.learn(report, spec, source, self.reel.strip)
 
     def learn(self, report: Report, spec: criteria.Spec, source: str, reference: Path) -> Report:
         """Forge until the checks and the judge pass, then install (a new skill or its next version)."""
-        if self.installed >= self.authority.caps.new_skills_per_run:
-            report.status, report.gap = "FAILED", "cap: no more new skills in this run"
+        skill, built, clip = self.learn_one(spec, source, reference)
+        report.attempts = built.attempts if built else 0
+        report.clip = clip  # the last attempt's clip, kept on a failure too
+        if skill is None:
+            report.status, report.gap = (
+                "FAILED",
+                built.gap if built else "cap: no more new skills in this run",
+            )
             return self.finish(report)
+        steps = [{"skill": skill.slug, "version": skill.version, "params": spec.params}]
+        registry.save_design(self.registry, spec.slug, steps, origin=skill.capability["origin"])
+        report.status, report.skill = "BUILT", f"{skill.slug}@v{skill.version}"
+        return self.finish(report)
+
+    def learn_one(
+        self, spec: criteria.Spec, source: str, reference: Path, prefix: str = ""
+    ) -> tuple[registry.Skill | None, forge.Build | None, Path | None]:
+        """One skill: forge until its checks and its judge pass, then install. No skill on a failure."""
+        if self.installed >= self.authority.caps.new_skills_per_run:
+            self.ledger.record("cap_reached", cap="new_skills_per_run", skill=spec.slug)
+            return None, None, None
         clips: dict[int, Path | None] = {}
 
         def try_code(code: str, number: int) -> Outcome:
-            outcome, clips[number] = self.run_skill(code, spec, self.folder / f"attempt-{number}", reference)
+            folder = self.folder / f"{prefix}attempt-{number}"
+            outcome, clips[number] = self.run_skill(code, spec, folder, reference)
             return outcome
 
         before = self.ledger.spent_usd
@@ -179,19 +213,16 @@ class Creature:
             self.model, spec, self.ledger, attempts=self.authority.caps.forge_attempts,
             cap_usd=self.cap("forge"), try_code=try_code,
         )  # fmt: skip
-        report.attempts = built.attempts
-        report.clip = clips.get(built.attempts)  # the last attempt's clip, kept on a failure too
+        clip = clips.get(built.attempts)
         if not built.ok:
-            report.status, report.gap = "FAILED", built.gap
-            return self.finish(report)
+            return None, built, clip
         # authority, image and enforcing code must be what they were at the start, right before install
         now = authority.fingerprint(self.home, image_id=workshop.image_id(self.authority.image) or "missing")
         if now.digest != self.start.digest:
             changed = authority.changed(self.start, now)
             self.ledger.record("install_refused", changed=changed)
-            report.status = "FAILED"
-            report.gap = f"not installed: the authority fingerprint changed mid-run ({', '.join(changed)})"
-            return self.finish(report)
+            gap = f"not installed: the authority fingerprint changed mid-run ({', '.join(changed)})"
+            return None, dataclasses.replace(built, ok=False, gap=gap), clip
         origin = {"reel": source, "run": self.ledger.run_id, "author": self.reel.author if self.reel else ""}
         cost = {"learn_usd": round(self.ledger.spent_usd - before, 6), "forge_attempts": built.attempts}
         skill = registry.install(
@@ -204,18 +235,167 @@ class Creature:
             staging=self.folder,
         )
         self.installed += 1
-        steps = [{"skill": skill.slug, "version": skill.version, "params": spec.params}]
-        registry.save_design(self.registry, spec.slug, steps, origin=origin)
         self.ledger.record("installed", skill=skill.slug, version=skill.version, design=spec.slug, **cost)
-        report.status, report.skill = "BUILT", f"{skill.slug}@v{skill.version}"
+        return skill, built, clip
+
+    def learn_montage(
+        self, report: Report, spec: criteria.Spec, source: str, text: str, *, mark: Path | None
+    ) -> Report:
+        """A montage reel: learn each surface on its own (a stuck one is skipped), then the creature
+        composes them; the spine renders, measures and the judge compares the montage with the reel."""
+        assert self.reel is not None
+        learned: list[str] = []
+        for part in spec.parts:
+            have = next((s for s in registry.skills(self.registry) if s.slug == part.slug), None)
+            if have:
+                self.ledger.record("part", slug=part.slug, status="have", version=have.version)
+                learned.append(part.slug)
+                continue
+            reference = perceive.frames_at(
+                self.reel, part.frames, self.folder / f"part-{part.slug}.png",
+                limits=self.authority.workshop, image=self.image,
+            )  # fmt: skip
+            skill, built, _ = self.learn_one(part, source, reference, prefix=f"{part.slug}-")
+            report.attempts += built.attempts if built else 0
+            self.ledger.record(
+                "part", slug=part.slug, status="built" if skill else "skipped",
+                attempts=built.attempts if built else 0, gap=(built.gap if built and not skill else "")[:300],
+            )  # fmt: skip
+            if skill:
+                learned.append(skill.slug)
+            else:
+                report.notes.append(f"surface {part.slug} skipped: {(built.gap if built else 'cap')[:160]}")
+        for gap in spec.gaps:
+            report.notes.append(f"gap: {gap['what']} (needs {gap['needs']})")
+        if spec.gaps:
+            self.ledger.record("gaps", gaps=list(spec.gaps))
+        catalog = [s for s in registry.skills(self.registry) if s.slug in learned]
+        if not catalog:
+            report.status, report.gap = "FAILED", "no surface could be learned"
+            return self.finish(report)
+        feedback = ""
+        for attempt in range(1, 3):
+            choice, unknown = composer.choose(
+                self.model, self.reel, spec, catalog, cap_usd=self.cap("planner"), feedback=feedback
+            )
+            t = composer.timeline(spec.slug, choice, catalog)
+            self.ledger.record(
+                "composed", attempt=attempt, sources=[v["skill"] for v in t["sources"].values()],
+                every=t["scenes"][0]["dur"] if t["scenes"] else 0, frames=t["frames"],
+                layers=len(t["layers"]), unknown=unknown, reason=str(choice.get("reason", ""))[:300],
+            )  # fmt: skip
+            folder = self.folder / f"montage-{attempt}"
+            clip, problems, checked = self.render_timeline(t, text, folder, mark=mark, style=None)
+            report.clip = clip or report.clip
+            if problems or checked is None or not checked.strip:
+                feedback = "\n".join(f"Check failed: {p}" for p in problems)
+                continue
+            judged = verdict.judge(
+                self.model, spec, self.reel.strip, folder / "strip.png", cap_usd=self.cap("judge"),
+                more=tuple(sorted(folder.glob("strip-*.png"))),
+            )  # fmt: skip
+            (folder / "judge.json").write_text(json.dumps(judged.results, indent=1, ensure_ascii=False))
+            self.ledger.record(
+                "montage_judged", attempt=attempt, ok=judged.ok,
+                passed=sum(r["pass"] for r in judged.results), of=len(judged.results),
+            )  # fmt: skip
+            if judged.ok:
+                origin = {"reel": source, "run": self.ledger.run_id, "author": self.reel.author}
+                tests = {"criteria": list(spec.criteria), "held_out": list(spec.held_out)}
+                registry.save_timeline(self.registry, spec.slug, t, origin=origin, tests=tests)
+                report.status, report.skill = "BUILT", f"design:{spec.slug}"
+                return self.finish(report)
+            feedback = verdict.feedback(checked, judged)
+        report.status, report.gap = "FAILED", feedback or "the montage did not pass"
         return self.finish(report)
 
-    def run_design(self, name: str, text: str | list[str], *, judge: bool = False) -> Report:
+    def render_timeline(
+        self, t: dict[str, Any], text: str, folder: Path, *, mark: Path | None, style: dict[str, Any] | None
+    ) -> tuple[Path | None, list[str], verdict.Checked | None]:
+        """Each source once at the timeline's length (with the user's style over its own values), then
+        the montage, then the montage's fixed checks. No model. Returns the clip and what failed."""
+        extra, notes = montage.style_params(style)
+        for note in notes:
+            self.ledger.record("style_note", note=note)
+        clips = {}
+        for sid, source in sorted(t["sources"].items()):
+            skill = registry.get(self.registry, source["skill"], source["version"])  # seals checked here
+            base = registry.spec_of(skill, text)
+            output = {**base.output, "duration_s": t["frames"] / t["fps"]}
+            spec = dataclasses.replace(
+                base, params={**base.params, **source.get("params", {}), **extra}, output=output,
+                checks=tuple(criteria.checks_for(output)),
+            )  # fmt: skip
+            ran = workshop.run(
+                skill.code, forge.skill_input(spec), limits=self.authority.workshop, image=self.image
+            )
+            place = folder / f"source-{sid}"
+            place.mkdir(parents=True, exist_ok=True)
+            checked = (
+                verdict.check(ran.outputs, spec.checks, limits=self.authority.workshop, image=self.image,
+                              folder=place)
+                if ran.ok else None
+            )  # fmt: skip
+            problems = [f"the script failed: {ran.error}"] if not ran.ok else list(checked.problems)
+            self.ledger.record(
+                "montage_source", source=sid, skill=skill.slug, version=skill.version, ok=not problems,
+                checks=problems or "all passed", seconds=ran.duration_s,
+            )  # fmt: skip
+            if problems:
+                return None, [f"source {sid} ({skill.slug}): " + "; ".join(problems)], None
+            clips[sid] = place / output["file"]
+        ran = montage.render(
+            t, clips, text=text, mark=mark, style=style, limits=self.authority.workshop, image=self.image
+        )
+        if not ran.ok or montage.MONTAGE not in ran.outputs:
+            self.ledger.record("montage", ok=False, error=(ran.error or "")[:300])
+            return None, [f"the montage failed: {ran.error}"], None
+        checked = verdict.check(
+            ran.outputs, tuple(montage.checks(t, ran.value.get("layers", []))),
+            limits=self.authority.workshop, image=self.image, folder=folder,
+        )  # fmt: skip
+        if checked.strip:
+            (folder / "strip.png").write_bytes(checked.strip)
+            _sheets(folder, checked.more)
+        self.ledger.record(
+            "montage", ok=not checked.problems, frames=t["frames"], scenes=len(t["scenes"]),
+            sources=len(clips), inks=ran.value.get("inks", [])[:60], seconds=ran.duration_s,
+            checks=list(checked.problems) or "all passed",
+        )  # fmt: skip
+        return folder / montage.MONTAGE, list(checked.problems), checked
+
+    def run_design(
+        self,
+        name: str,
+        text: str | list[str],
+        *,
+        judge: bool = False,
+        mark: Path | None = None,
+        style: dict[str, Any] | None = None,
+    ) -> Report:
         """Run a saved design on new text: its skills in order, no planner, no forge. With judge=False
         (the default) no model is called at all: only the workshop and the fixed file checks run.
-        One text goes to every step; a list gives each step its own."""
+        One text goes to every step; a list gives each step its own. A timeline design is a montage:
+        `mark` is the user's image for its layer (else the text's first word), `style` the user's own
+        colours and fonts, which win over the values the sources were learned with."""
         report = Report(self.ledger.run_id, "FAILED", self.folder, skill=f"design:{name}")
         recipe = registry.design(self.registry, name)
+        if "timeline" in recipe:
+            t = recipe["timeline"]
+            words = text if isinstance(text, str) else " ".join(text)
+            self.ledger.record(
+                "design_task", design=name, text=words, kind="timeline", sources=len(t["sources"]),
+                frames=t["frames"], mark=bool(mark), style=bool(style),
+            )  # fmt: skip
+            clip, problems, _ = self.render_timeline(
+                t, words, self.folder / "montage", mark=mark, style=style
+            )
+            report.clip = clip
+            if problems:
+                report.gap = "; ".join(problems)
+                return self.finish(report)
+            report.status = "DONE"
+            return self.finish(report)
         texts = [text] if isinstance(text, str) else list(text)
         self.ledger.record(
             "design_task", design=name, text=" | ".join(texts), texts=texts, steps=len(recipe["steps"]),
