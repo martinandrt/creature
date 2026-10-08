@@ -302,7 +302,8 @@ def used_assets(files: dict[str, str], said: Any) -> list[str]:
     found = {m.rstrip(".,") for text in files.values() for m in USED.findall(text)}
     if isinstance(said, list):
         found |= {str(x) for x in said if isinstance(x, str) and x.startswith("/assets/")}
-    return sorted(found)
+    # a path that walks with "." or ".." could point anywhere: the record keeps plain paths only
+    return sorted(f for f in found if not {".", ".."} & set(f.split("/")[2:]))
 
 
 @dataclass

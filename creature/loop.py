@@ -329,7 +329,12 @@ class Creature:
         root = self.authority.workshop.assets
         if not root:
             return []
-        kept = [p for p in paths if (Path(root) / p.removeprefix(workshop.ASSETS + "/")).is_file()]
+        base = Path(root).resolve()
+        kept = []
+        for path in paths:
+            target = (base / path.removeprefix(workshop.ASSETS + "/")).resolve()
+            if target.is_relative_to(base) and target.is_file():
+                kept.append(path)
         if len(kept) < len(paths):
             self.ledger.record("assets_dropped", missing=sorted(set(paths) - set(kept))[:20])
         return kept
