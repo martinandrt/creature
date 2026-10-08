@@ -47,7 +47,14 @@ SCHEMA = {
         "transcript_is_speech": {"type": "boolean"},
         "task": {"type": "string"},
         "duration_s": {"type": "number"},
-        "params": {"type": "object"},
+        "params": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["name", "value", "quote"],
+                "properties": {"name": {"type": "string"}, "value": {}, "quote": {"type": "string"}},
+            },
+        },
         "criteria": {"type": "array", "items": {"type": "string"}, "minItems": 3, "maxItems": 6},
     },
 }
@@ -73,7 +80,8 @@ params). The output will be judged from 18 frames sampled evenly from its first 
 so each criterion must be visible in such frames: no counts of repetitions, no rates, no exact
 timings, nothing that happens between two samples. Write 4 to 6.
 task: one sentence applying the effect to the user's text. duration_s: a good length for the effect on
-that text, 1 to 8 seconds. params: values the tutorial names (timing, blinks, sizes), units in the key
+that text, 1 to 8 seconds. params: each value the tutorial names (timing, blinks, sizes), with the
+exact transcript sentence it comes from as quote (empty if it only shows on screen), units in the key
 names. slug: a short lowercase name for the effect, words joined by hyphens."""
 
 
@@ -91,6 +99,7 @@ class Spec:
     held_out: tuple[str, ...]  # only the judge sees these
     checks: tuple[dict[str, Any], ...] = field(default=())
     transcript_is_speech: bool = True  # False for lyrics: nothing downstream may use the transcript
+    param_sources: dict[str, str] = field(default_factory=dict)  # param name -> transcript sentence
 
 
 def write(
@@ -122,6 +131,7 @@ def write(
     if len(criteria) < 3:
         raise ValueError("the criteria step gave fewer than 3 usable criteria")
     visible, held_out = hold_out(criteria, seed)
+    params, sources = read_params(data["params"])
     output = clip_format(data["duration_s"])
     return Spec(
         effect=str(data["effect"]).strip(),
@@ -130,13 +140,29 @@ def write(
         reason=str(data["reason"]),
         task=str(data["task"]).strip(),
         text=text,
-        params=data["params"] if isinstance(data["params"], dict) else {},
+        params=params,
         output=output,
         criteria=tuple(visible),
         held_out=tuple(held_out),
         checks=tuple(checks_for(output)),
         transcript_is_speech=data["transcript_is_speech"] is True,
+        param_sources=sources,
     )
+
+
+def read_params(raw: Any) -> tuple[dict[str, Any], dict[str, str]]:
+    """Values the tutorial names, and the transcript sentence each comes from."""
+    if isinstance(raw, dict):  # a plain mapping carries no sources
+        return {str(k): v for k, v in raw.items()}, {}
+    params: dict[str, Any] = {}
+    sources: dict[str, str] = {}
+    for item in raw if isinstance(raw, list) else []:
+        if isinstance(item, dict) and isinstance(item.get("name"), str) and item["name"].strip():
+            name = item["name"].strip()
+            params[name] = item.get("value")
+            if isinstance(item.get("quote"), str) and item["quote"].strip():
+                sources[name] = item["quote"].strip()[:300]
+    return params, sources
 
 
 def clip_format(duration_s: Any) -> dict[str, Any]:

@@ -25,6 +25,7 @@ from typing import Any
 from creature.criteria import SLUG, Spec
 
 INDEX = "index.json"
+REFERENCE = "reference.png"
 DESIGNS = "designs"
 DESIGN_NAME = re.compile(r"[a-z][a-z0-9-]{2,40}")
 INPUTS = {
@@ -69,7 +70,9 @@ def _write_json(path: Path, data: Any) -> None:
     os.replace(tmp.name, path)
 
 
-def install(root: Path, spec: Spec, code: str, *, origin: dict[str, Any], cost: dict[str, Any]) -> Skill:
+def install(
+    root: Path, spec: Spec, code: str, *, origin: dict[str, Any], cost: dict[str, Any], reference: Path
+) -> Skill:
     """Install a skill that passed. A slug that exists gets the next version, which becomes active."""
     if not SLUG.fullmatch(spec.slug):
         raise ValueError(f"bad slug {spec.slug!r}")
@@ -87,6 +90,8 @@ def install(root: Path, spec: Spec, code: str, *, origin: dict[str, Any], cost: 
         "inputs": INPUTS,
         "input_files": [],
         "params": spec.params,
+        "param_sources": spec.param_sources,
+        "reason": spec.reason,
         "output": spec.output,
         "origin": origin,
         "cost": cost,
@@ -94,6 +99,8 @@ def install(root: Path, spec: Spec, code: str, *, origin: dict[str, Any], cost: 
     tests = {"checks": list(spec.checks), "criteria": list(spec.criteria), "held_out": list(spec.held_out)}
     staging = Path(tempfile.mkdtemp(dir=root, prefix=".install-"))
     (staging / "skill.py").write_text(code, encoding="utf-8")
+    # the reel frames this skill was judged against; later uses are judged against them again
+    (staging / REFERENCE).write_bytes(Path(reference).read_bytes())
     (staging / "SKILL.md").write_text(skill_md(spec, version, origin), encoding="utf-8")
     _write_json(staging / "capability.json", capability)
     _write_json(staging / "tests.json", tests)
@@ -135,6 +142,25 @@ def get(root: Path, slug: str, version: int | None = None) -> Skill:
         code=(folder / "skill.py").read_text(encoding="utf-8"),
         tests=json.loads((folder / "tests.json").read_text(encoding="utf-8")),
         path=folder,
+    )
+
+
+def spec_of(skill: Skill, text: str) -> Spec:
+    """The spec a skill was installed with, on new text: its own criteria, checks and clip format."""
+    cap, tests = skill.capability, skill.tests
+    return Spec(
+        effect=cap["effect"],
+        slug=skill.slug,
+        verdict="try",
+        reason=cap.get("reason", ""),
+        task=cap["summary"],
+        text=text,
+        params=cap.get("params", {}),
+        output=cap["output"],
+        criteria=tuple(tests["criteria"]),
+        held_out=tuple(tests["held_out"]),
+        checks=tuple(tests["checks"]),
+        param_sources=cap.get("param_sources", {}),
     )
 
 

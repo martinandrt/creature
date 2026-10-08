@@ -24,12 +24,22 @@ def root(home):
     return home / "registry"
 
 
-def test_install_writes_the_skill_folder(root):
-    skill = registry.install(root, _spec(), "def run(input, work):\n    return 1", origin=ORIGIN, cost=COST)
+@pytest.fixture
+def ref(tmp_path):
+    path = tmp_path / "reel-strip.png"
+    path.write_bytes(b"\x89PNG\r\n\x1a\nreel")
+    return path
+
+
+def test_install_writes_the_skill_folder(root, ref):
+    skill = registry.install(
+        root, _spec(), "def run(input, work):\n    return 1", origin=ORIGIN, cost=COST, reference=ref
+    )
     assert skill.slug == "typewriter-reveal" and skill.version == 1
     assert sorted(p.name for p in skill.path.iterdir()) == [
         "SKILL.md",
         "capability.json",
+        "reference.png",
         "skill.py",
         "tests.json",
     ]
@@ -39,9 +49,11 @@ def test_install_writes_the_skill_folder(root):
     assert md.startswith("---\nname: typewriter-reveal\ndescription: ")
 
 
-def test_learning_again_adds_a_version_and_keeps_the_old_one(root):
-    registry.install(root, _spec(), "# v1", origin=ORIGIN, cost=COST)
-    second = registry.install(root, _spec(text="Longer text"), "# v2", origin=ORIGIN, cost=COST)
+def test_learning_again_adds_a_version_and_keeps_the_old_one(root, ref):
+    registry.install(root, _spec(), "# v1", origin=ORIGIN, cost=COST, reference=ref)
+    second = registry.install(
+        root, _spec(text="Longer text"), "# v2", origin=ORIGIN, cost=COST, reference=ref
+    )
     assert second.version == 2 and registry.get(root, "typewriter-reveal").code == "# v2"
     assert registry.get(root, "typewriter-reveal", 1).code == "# v1"
     registry.activate(root, "typewriter-reveal", 1)
@@ -51,14 +63,14 @@ def test_learning_again_adds_a_version_and_keeps_the_old_one(root):
 
 
 @pytest.mark.parametrize("slug", ["../evil", "Typewriter", "a/b"])
-def test_bad_slug_never_becomes_a_folder(root, slug):
+def test_bad_slug_never_becomes_a_folder(root, slug, ref):
     with pytest.raises(ValueError):
-        registry.install(root, _spec(slug=slug), "# x", origin=ORIGIN, cost=COST)
+        registry.install(root, _spec(slug=slug), "# x", origin=ORIGIN, cost=COST, reference=ref)
     assert not any(root.iterdir())
 
 
-def test_design_is_data_over_known_skills(root):
-    registry.install(root, _spec(), "# v1", origin=ORIGIN, cost=COST)
+def test_design_is_data_over_known_skills(root, ref):
+    registry.install(root, _spec(), "# v1", origin=ORIGIN, cost=COST, reference=ref)
     steps = [{"skill": "typewriter-reveal", "version": 1, "params": {"blinks": 8}}]
     registry.save_design(root, "calm-intro", steps, origin=ORIGIN)
     assert registry.design(root, "calm-intro")["steps"] == steps and registry.designs(root) == ["calm-intro"]
@@ -69,10 +81,15 @@ def test_design_is_data_over_known_skills(root):
     json.loads((root / "designs" / "calm-intro.json").read_text())
 
 
-def test_search_ranks_by_shared_words(root):
-    registry.install(root, _spec("typewriter-reveal"), "# a", origin=ORIGIN, cost=COST)
+def test_search_ranks_by_shared_words(root, ref):
+    registry.install(root, _spec("typewriter-reveal"), "# a", origin=ORIGIN, cost=COST, reference=ref)
     registry.install(
-        root, _spec("counter-roll", effect="Digits roll up to a number"), "# b", origin=ORIGIN, cost=COST
+        root,
+        _spec("counter-roll", effect="Digits roll up to a number"),
+        "# b",
+        origin=ORIGIN,
+        cost=COST,
+        reference=ref,
     )
     assert registry.search(root, "typewriter caret reveal")[0].slug == "typewriter-reveal"
     assert registry.search(root, "particles") == []
@@ -83,3 +100,13 @@ def test_unknown_skill_or_design(root):
         registry.get(root, "nothing")
     with pytest.raises(KeyError):
         registry.design(root, "nothing")
+
+
+def test_installed_skill_keeps_its_reference_and_spec(root, ref):
+    skill = registry.install(root, _spec(), "# v1", origin=ORIGIN, cost=COST, reference=ref)
+    assert (skill.path / registry.REFERENCE).read_bytes().endswith(b"reel")
+    again = registry.spec_of(skill, "New text")
+    assert (
+        again.text == "New text" and again.criteria == _spec().criteria and again.held_out == _spec().held_out
+    )
+    assert again.checks == _spec().checks and again.output == _spec().output

@@ -7,13 +7,12 @@ Every step and every dollar goes to the run's ledger.
 
 from __future__ import annotations
 
-import dataclasses
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from creature import authority, criteria, forge, perceive, registry, verdict, workshop
+from creature import authority, criteria, forge, perceive, planner, registry, verdict, workshop
 from creature.forge import Outcome
 from creature.ledger import Ledger
 from creature.llm import ClaudeCLI, Model, Transport
@@ -72,7 +71,9 @@ class Creature:
         )  # fmt: skip
         return report
 
-    def run_skill(self, code: str, spec: criteria.Spec, attempt: Path) -> tuple[Outcome, Path | None]:
+    def run_skill(
+        self, code: str, spec: criteria.Spec, attempt: Path, reference: Path
+    ) -> tuple[Outcome, Path | None]:
         """Render with `code`, then check the file and ask the judge. Returns the outcome and the clip."""
         attempt.mkdir(parents=True, exist_ok=True)
         (attempt / "skill.py").write_text(code, encoding="utf-8")
@@ -90,9 +91,7 @@ class Creature:
             detail = {"stage": "checks", "problems": list(checked.problems)}
             return Outcome(False, verdict.feedback(checked, None), detail), clip if clip.exists() else None
         (attempt / "strip.png").write_bytes(checked.strip)
-        judged = verdict.judge(
-            self.model, spec, self.reel.strip, attempt / "strip.png", cap_usd=self.cap("judge")
-        )
+        judged = verdict.judge(self.model, spec, reference, attempt / "strip.png", cap_usd=self.cap("judge"))
         (attempt / "judge.json").write_text(
             json.dumps(judged.results, indent=1, ensure_ascii=False), encoding="utf-8"
         )
@@ -108,6 +107,31 @@ class Creature:
         self.reel = perceive.perceive(
             source, self.folder, self.ledger, limits=self.authority.workshop, image=self.image
         )
+        # does an installed skill do this already? Then it is judged by its own stored tests
+        skill, why = planner.match(
+            self.model, self.reel, registry.skills(self.registry), cap_usd=self.cap("planner")
+        )
+        self.ledger.record("plan", skill=skill.slug if skill else None, reason=why)
+        if skill:
+            spec = registry.spec_of(skill, text)
+            reference = skill.path / registry.REFERENCE
+            report.spec = spec
+            outcome, clip = self.run_skill(skill.code, spec, self.folder / f"have-{skill.slug}", reference)
+            self.ledger.record(
+                "have_try", skill=skill.slug, version=skill.version, ok=outcome.ok, detail=outcome.detail
+            )
+            if outcome.ok:
+                report.status, report.skill, report.clip = "HAVE", f"{skill.slug}@v{skill.version}", clip
+                return self.finish(report)
+            # it fails its own tests on this input: learn the next version against the same tests
+            self.ledger.record(
+                "evolve", skill=skill.slug, from_version=skill.version, why=outcome.feedback[:400]
+            )
+            report.notes.append(
+                f"{skill.slug} v{skill.version} failed its own tests here: learning v{skill.version + 1}"
+            )
+            return self.learn(report, spec, source, reference)
+
         spec = criteria.write(
             self.model, self.reel, text, cap_usd=self.cap("criteria"), seed=self.ledger.run_id,
             model_name=self.model_for("criteria"),
@@ -116,6 +140,7 @@ class Creature:
         self.ledger.record(
             "spec", verdict=spec.verdict, slug=spec.slug, effect=spec.effect[:300], reason=spec.reason[:300],
             visible=len(spec.criteria), held_out=len(spec.held_out), duration_s=spec.output["duration_s"],
+            params=len(spec.params),
         )  # fmt: skip
         (self.folder / "spec.json").write_text(
             json.dumps(_spec_dict(spec), indent=1, ensure_ascii=False), encoding="utf-8"
@@ -126,34 +151,17 @@ class Creature:
             if spec.verdict == "ask":
                 _queue_ask(self.home, self.ledger.run_id, source, spec)
             return self.finish(report)
+        return self.learn(report, spec, source, self.reel.strip)
 
-        # an installed skill for this effect? Try it first: using is cheaper than learning
-        for skill in registry.search(self.registry, f"{spec.slug} {spec.effect}")[:1]:
-            outcome, clip = self.run_skill(skill.code, spec, self.folder / f"have-{skill.slug}")
-            self.ledger.record(
-                "have_try", skill=skill.slug, version=skill.version, ok=outcome.ok, detail=outcome.detail
-            )
-            if outcome.ok:
-                report.status, report.skill, report.clip = "HAVE", f"{skill.slug}@v{skill.version}", clip
-                return self.finish(report)
-            # it falls short on this input: learn the next version of the same skill (evolve)
-            spec = dataclasses.replace(spec, slug=skill.slug)
-            report.spec = spec
-            self.ledger.record(
-                "evolve", skill=skill.slug, from_version=skill.version, why=outcome.feedback[:400]
-            )
-            report.notes.append(
-                f"{skill.slug} v{skill.version} fell short on this input: learning v{skill.version + 1}"
-            )
-
+    def learn(self, report: Report, spec: criteria.Spec, source: str, reference: Path) -> Report:
+        """Forge until the checks and the judge pass, then install (a new skill or its next version)."""
         if self.installed >= self.authority.caps.new_skills_per_run:
             report.status, report.gap = "FAILED", "cap: no more new skills in this run"
             return self.finish(report)
-
         clips: dict[int, Path | None] = {}
 
         def try_code(code: str, number: int) -> Outcome:
-            outcome, clips[number] = self.run_skill(code, spec, self.folder / f"attempt-{number}")
+            outcome, clips[number] = self.run_skill(code, spec, self.folder / f"attempt-{number}", reference)
             return outcome
 
         before = self.ledger.spent_usd
@@ -165,18 +173,17 @@ class Creature:
         if not built.ok:
             report.status, report.gap = "FAILED", built.gap
             return self.finish(report)
-        origin = {"reel": source, "run": self.ledger.run_id, "author": self.reel.author}
+        origin = {"reel": source, "run": self.ledger.run_id, "author": self.reel.author if self.reel else ""}
         cost = {"learn_usd": round(self.ledger.spent_usd - before, 6), "forge_attempts": built.attempts}
-        skill = registry.install(self.registry, spec, built.code, origin=origin, cost=cost)
+        skill = registry.install(
+            self.registry, spec, built.code, origin=origin, cost=cost, reference=reference
+        )
         self.installed += 1
         steps = [{"skill": skill.slug, "version": skill.version, "params": spec.params}]
         registry.save_design(self.registry, spec.slug, steps, origin=origin)
         self.ledger.record("installed", skill=skill.slug, version=skill.version, design=spec.slug, **cost)
-        report.status, report.skill, report.clip = (
-            "BUILT",
-            f"{skill.slug}@v{skill.version}",
-            clips.get(built.attempts),
-        )
+        report.status, report.skill = "BUILT", f"{skill.slug}@v{skill.version}"
+        report.clip = clips.get(built.attempts)
         return self.finish(report)
 
 
