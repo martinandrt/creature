@@ -18,7 +18,7 @@
     "new_skills_per_run": 5,
     "step_cap_usd": {
       "perceive": 0.05,
-      "criteria": 0.1,
+      "criteria": 0.2,
       "planner": 0.03,
       "forge": 0.05,
       "judge": 0.03
