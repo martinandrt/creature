@@ -28,6 +28,9 @@ def main(argv: list[str] | None = None) -> int:
     shown = sub.add_parser("show", help="one skill: manifest and tests")
     shown.add_argument("slug")
     sub.add_parser("queue", help="ASK requests waiting for a human")
+    sub.add_parser("overview", help="write the page with every run of the night")
+    paged = sub.add_parser("page", help="write one run's side-by-side page again, from its ledger")
+    paged.add_argument("run", help="run id (the name of its folder in runs/)")
     args = parser.parse_args(argv)
     root = home_mod.resolve(args.home)
 
@@ -47,6 +50,7 @@ def main(argv: list[str] | None = None) -> int:
         if report.clip:
             print(f"clip: {report.clip}")
         print(f"run: {report.folder}")
+        print(f"page: {report.folder / 'page.html'}")
         return 0 if report.status in ("HAVE", "BUILT") else 1
     if args.command == "design":
         from creature.loop import Creature
@@ -75,6 +79,16 @@ def main(argv: list[str] | None = None) -> int:
         print(
             json.dumps({"capability": skill.capability, "tests": skill.tests}, indent=1, ensure_ascii=False)
         )
+        return 0
+    if args.command == "page":
+        from creature import page
+
+        print(page.rebuild(root, args.run))
+        return 0
+    if args.command == "overview":
+        from creature import page
+
+        print(page.overview(root))
         return 0
     if args.command == "queue":
         for path in sorted((root / "queue").glob("*.json")):

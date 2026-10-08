@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from creature import authority, criteria, forge, perceive, planner, registry, verdict, workshop
+from creature import authority, criteria, forge, ledger, page, perceive, planner, registry, verdict, workshop
 from creature.forge import Outcome
 from creature.ledger import Ledger
 from creature.llm import ClaudeCLI, Model, Transport
@@ -71,7 +71,11 @@ class Creature:
             "run_end", status=report.status, skill=report.skill, attempts=report.attempts,
             spent_usd=round(report.spent_usd, 6), fingerprint=end.digest,
             fingerprint_same=report.fingerprint_same, changed=authority.changed(self.start, end),
+            gap=report.gap[:1000], clip=_inside(report.clip, self.folder),
         )  # fmt: skip
+        events = ledger.read(self.ledger.path)
+        page.render(self.folder, report, events)
+        page.overview(self.home)
         return report
 
     def run_skill(
@@ -269,6 +273,16 @@ def run(input, work):
                     "-c", "copy", f"{work}/out/joined.mp4"], check=True)
     return {"parts": len(input["parts"])}
 """
+
+
+def _inside(path: Path | None, folder: Path) -> str | None:
+    """A path inside the run's folder, written relative so the ledger never holds a home path."""
+    if path is None:
+        return None
+    try:
+        return str(Path(path).resolve().relative_to(folder.resolve()))
+    except ValueError:
+        return None
 
 
 def _spec_dict(spec: criteria.Spec) -> dict[str, Any]:
