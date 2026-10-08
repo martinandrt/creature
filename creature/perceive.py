@@ -42,7 +42,9 @@ def run(input, work):
     info = json.loads(probe.stdout)
     stream, duration = info["streams"][0], float(info["format"]["duration"])
     num, den = stream["avg_frame_rate"].split("/")
-    times = [round(duration * (i + 0.5) / input["frames"], 3) for i in range(input["frames"])]
+    # same rule as the clip's strip: first frame to (nearly) last, so start and end are both seen
+    last = max(0.0, duration - 0.2)
+    times = [round(last * i / (input["frames"] - 1), 3) for i in range(input["frames"])]
     for i, t in enumerate(times):
         subprocess.run(["ffmpeg", "-v", "error", "-ss", str(t), "-i", video, "-frames:v", "1",
                         "-vf", FIT,

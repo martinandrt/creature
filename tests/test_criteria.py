@@ -120,3 +120,39 @@ def test_missing_fields_fail_like_any_bad_reply(fake_model, model, reel):
     fake_model.queue("criteria", ModelError("CLI result has no structured_output", cost_usd=0.001))
     with pytest.raises(ModelError):
         criteria.write(model, reel, "Stay curious.", cap_usd=0.05, seed="s")
+
+
+@pytest.mark.parametrize("slug", ["../evil", "Typewriter Reveal", "a", "x" * 50, "typewriter/reveal"])
+def test_slug_is_validated_in_code_not_only_in_the_schema(fake_model, model, reel, slug):
+    # the slug becomes a registry directory name: a path from model output is refused here,
+    # not left to a schema engine with different regex semantics
+    fake_model.queue("criteria", {**REPLY, "slug": slug})
+    with pytest.raises(ValueError, match="slug"):
+        criteria.write(model, reel, "Stay curious.", cap_usd=0.05, seed="s")
+
+
+def test_criteria_must_be_a_list_of_strings(fake_model, model, reel):
+    # a string iterates as characters and would pass the "at least 3" rule with single letters
+    fake_model.queue("criteria", {**REPLY, "criteria": "one long string of criteria text"})
+    with pytest.raises(ValueError, match="criteria"):
+        criteria.write(model, reel, "Stay curious.", cap_usd=0.05, seed="s")
+
+
+def test_duplicate_criteria_are_merged(fake_model, model, reel):
+    fake_model.queue("criteria", {**REPLY, "criteria": ["Same.", "Same.", "Other.", "Third."]})
+    spec = criteria.write(model, reel, "Stay curious.", cap_usd=0.05, seed="s")
+    assert sorted(spec.criteria + spec.held_out) == ["Other.", "Same.", "Third."]
+
+
+def test_transcript_is_speech_reaches_the_spec(fake_model, model, reel):
+    # a music-only reel: the forge must know to drop the lyrics, so the flag travels with the spec
+    fake_model.queue("criteria", {**REPLY, "transcript_is_speech": False})
+    spec = criteria.write(model, reel, "Stay curious.", cap_usd=0.05, seed="s")
+    assert spec.transcript_is_speech is False
+
+
+@pytest.mark.parametrize("verdict", ["ask", "refuse", "skip"])
+def test_ask_refuse_skip_survive_untouched(fake_model, model, reel, verdict):
+    # the demo shows one ASK and one REFUSE; the spec must carry them exactly as the model said
+    fake_model.queue("criteria", {**REPLY, "verdict": verdict})
+    assert criteria.write(model, reel, "Stay curious.", cap_usd=0.05, seed="s").verdict == verdict

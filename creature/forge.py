@@ -14,7 +14,7 @@ from typing import Any
 
 from creature.criteria import Spec
 from creature.ledger import Ledger
-from creature.llm import Model
+from creature.llm import BudgetRefused, Model
 
 SCHEMA = {
     "type": "object",
@@ -50,7 +50,7 @@ Available, and nothing else: no network, no installs, no files outside work and 
 
 Write clean, short code (under 150 lines). Only the code field is run."""
 
-FENCE = re.compile(r"^```(?:python)?\s*\n(.*?)\n?```\s*$", re.DOTALL)
+FENCE = re.compile(r"```[a-z]*[ \t]*\n(.*?)\n?```", re.DOTALL)
 
 
 @dataclass(frozen=True)
@@ -112,7 +112,11 @@ def build(
     feedback: str | None = None
     outcomes: list[Outcome] = []
     for number in range(1, attempts + 1):
-        reply = model.ask("forge", SYSTEM, prompt(spec, code, feedback), SCHEMA, cap_usd=cap_usd)
+        try:
+            reply = model.ask("forge", SYSTEM, prompt(spec, code, feedback), SCHEMA, cap_usd=cap_usd)
+        except BudgetRefused as error:
+            # keep what the earlier attempts showed: the report says why the build stopped
+            return Build(False, code, number - 1, tuple(outcomes), f"budget: {error}")
         code = clean(reply["code"])
         ledger.record(
             "forge_attempt",
@@ -121,9 +125,13 @@ def build(
             chars=len(code),
             approach=str(reply["approach"])[:300],
         )
-        outcome = try_code(code, number)
+        if not code:
+            outcome = Outcome(False, "The reply had no code: return the whole script in the code field.")
+        else:
+            outcome = try_code(code, number)
         outcomes.append(outcome)
-        ledger.record("attempt_result", attempt=number, ok=outcome.ok, **outcome.detail)
+        # detail is nested: costs are written only by whoever spends, and its keys cannot clash
+        ledger.record("attempt_result", attempt=number, ok=outcome.ok, detail=outcome.detail)
         if outcome.ok:
             return Build(True, code, number, tuple(outcomes), "")
         feedback = outcome.feedback
@@ -131,7 +139,8 @@ def build(
 
 
 def clean(code: Any) -> str:
-    """The script itself, without a Markdown fence around it."""
-    text = str(code).strip()
-    match = FENCE.match(text)
-    return match.group(1) if match else text
+    """The script itself: the first fenced block if there is one (prose around it dropped), else the text."""
+    if not isinstance(code, str):
+        return ""
+    match = FENCE.search(code)
+    return (match.group(1) if match else code).strip()
