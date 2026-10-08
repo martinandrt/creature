@@ -236,6 +236,7 @@ def render(
         "mark_text": (text.split() or ["?"])[0].strip(".,;:!?").upper()[:12],
         "mark_font": FONT_FILES["Barlow Black"],
         "inks": inks(style),
+        "safe": SAFE,
         "out": MONTAGE,
     }
     return workshop.run(MONTAGE_CODE, job, files, limits=limits, image=image)
@@ -313,11 +314,18 @@ def run(input, work):
                                         stdout=subprocess.PIPE)
     layers = []
     for layer in input["layers"]:
+        safe = input.get("safe") or {"left": 0, "right": 0, "top": 0, "bottom": 0}
+        left, right = round(safe["left"] * W), W - round(safe["right"] * W)
+        top, bottom = round(safe["top"] * H), H - round(safe["bottom"] * H)
         alpha = mark_alpha(input, work, max(8, round(layer["height"] * H)))
+        if alpha.shape[1] > right - left:  # a long word: smaller, never wider than the safe zone
+            ratio = (right - left) / alpha.shape[1]
+            alpha = mark_alpha(input, work, max(8, int(alpha.shape[0] * ratio)))
+            alpha = alpha[:, : right - left]
         h, w = alpha.shape
         x0 = int(round(layer.get("x", 0.5) * W - w / 2))
         y0 = int(round(layer.get("y", 0.5) * H - h / 2))
-        x0, y0 = max(0, min(W - w, x0)), max(0, min(H - h, y0))
+        x0, y0 = max(left, min(right - w, x0)), max(top, min(max(top, bottom - h), y0))
         layers.append((alpha[..., None], x0, y0, w, h))
     dark, light = hex_rgb(input["inks"]["dark"]), hex_rgb(input["inks"]["light"])
     path = f"{work}/out/{input['out']}"
