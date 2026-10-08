@@ -169,3 +169,18 @@ def test_ask_refuse_skip_survive_untouched(fake_model, model, reel, verdict):
         criteria.write(model, reel, "Stay curious.", cap_usd=0.05, seed="s", refuse=(), ask=()).verdict
         == verdict
     )
+
+
+def test_rhythm_check_is_in_house_frames_whatever_the_reels_frame_rate(reel):
+    # the clip is checked at the house 30 fps, so the reel's shot length must be converted: a 60 fps
+    # reel cut every 0.5 s has 30 reel frames per shot and 15 house frames; the clip's median shot of
+    # 15 frames is the same rhythm and must pass, not fail by a factor of two
+    import dataclasses
+
+    fast = dataclasses.replace(
+        reel, fps=60.0, duration_s=6.0, cuts=tuple(0.5 * i for i in range(1, 12)),
+        palette=({"hex": "#112233", "share": 0.6}, {"hex": "#445566", "share": 0.02}),
+    )  # fmt: skip
+    checks = {c["kind"]: c for c in criteria.look_checks(fast, "clip.mp4")}
+    assert checks["palette"]["colors"] == ["#112233"]  # 2 % is noise
+    assert checks["rhythm"]["frames_per_shot"] == pytest.approx(15, abs=0.5)

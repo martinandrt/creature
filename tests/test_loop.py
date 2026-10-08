@@ -609,3 +609,60 @@ def test_a_choice_naming_no_known_skill_is_fed_back_not_rendered(montage_world, 
     assert len(calls["montages"]) == 1  # the empty choice never reached the workshop
     assert "Your last montage failed" in fake_model.calls[4].prompt
     assert _kinds(creature).count("composed") == 2 and _kinds(creature)[-1] == "run_end"
+
+
+# --- a run always ends: run_end and a page, whatever went wrong after the task ----------
+
+
+def test_a_bad_criteria_answer_after_the_paid_call_ends_the_run_not_the_process(world, fake_model):
+    # the criteria model answered (and was paid) but gave too few usable criteria: that is a FAILED run
+    # with its ledger closed and its page, not a ValueError traceback with the money unaccounted for
+    fake_model.queue("criteria", {**REPLY, "criteria": ["only one", "and two"]})
+    creature = _creature(world, fake_model)
+    report = creature.try_reel("reel.mp4", "Stay curious.")
+    assert report.status == "FAILED" and "criteria" in report.gap
+    kinds = _kinds(creature)
+    assert "model_call" in kinds and kinds[-1] == "run_end" and (report.folder / page.PAGE).exists()
+
+
+def test_a_reel_that_cannot_be_read_ends_the_run_with_its_page(world, fake_model, monkeypatch):
+    def unreadable(*args, **kwargs):
+        raise loop.perceive.PerceiveError("not a video reel")
+
+    monkeypatch.setattr(loop.perceive, "perceive", unreadable)
+    creature = _creature(world, fake_model)
+    report = creature.try_reel("https://www.instagram.com/p/X/", "Stay curious.")
+    assert report.status == "FAILED" and "not a video reel" in report.gap and fake_model.calls == []
+    kinds = _kinds(creature)
+    assert kinds[-1] == "run_end" and (report.folder / page.PAGE).exists()
+
+
+def test_a_montage_is_checked_for_the_reels_rhythm_and_palette(montage_world, fake_model, monkeypatch):
+    # look_matters: the spine measures colours and cut rhythm against the reel. The rhythm is a property
+    # of the MONTAGE (the surfaces are single screens), so the montage render must carry the rhythm
+    # check, and every render from this reel the palette check
+    home, _ = montage_world
+    strip = home / "cut-reel-strip.png"
+    strip.write_bytes(PNG)
+    cut_reel = Reel(
+        source="reel.mp4", caption="Brand film", transcript="", author="anet", video=home / "reel.mp4",
+        strip=strip, times=(0.5, 1.5), duration_s=6.0, width=1080, height=1920, fps=30.0,
+        cuts=tuple(0.5 * i for i in range(1, 12)),  # 11 cuts: a shot lasts 15 frames
+        palette=({"hex": "#1b2135", "share": 0.7}, {"hex": "#ebedf2", "share": 0.25}),
+    )  # fmt: skip
+    monkeypatch.setattr(loop.perceive, "perceive", lambda *a, **k: cut_reel)
+    seen = {}
+
+    def check(outputs, checks, *, folder, **kwargs):
+        seen[folder.name] = sorted({c["kind"] for c in checks})
+        return PASSED
+
+    monkeypatch.setattr(loop.verdict, "check", check)
+    fake_model.queue("criteria", {**MONTAGE_REPLY, "look_matters": True})
+    fake_model.queue("forge", {"code": CODE, "approach": "pillow"})
+    fake_model.queue("judge", _judge_of(SURFACE, True, True, True))
+    fake_model.queue("compose", CHOICE).queue("judge", _judge(True, True, True))
+    report = _creature(home, fake_model).try_reel("reel.mp4", "Stay curious.")
+    assert report.status == "BUILT", report.gap
+    assert "palette" in seen["grid-cards-attempt-1"] and "rhythm" not in seen["grid-cards-attempt-1"]
+    assert {"palette", "rhythm", "smooth", "frames"} <= set(seen["montage-1"]), seen["montage-1"]

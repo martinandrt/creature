@@ -146,3 +146,14 @@ def test_compose_never_overwrites_a_design_or_takes_a_skills_name(root, ref):
         registry.compose(root, "counter-roll", ["typewriter-reveal", "intro"], origin={})
     assert registry.design(root, "intro")["steps"] == [{"skill": "counter-roll", "version": 1}]
     assert registry.designs(root) == ["intro"]
+
+
+def test_a_tool_is_never_a_step_of_a_design(root, ref):
+    # a tool returns data, not a clip: the planner and the composer skip it, and so must compose
+    registry.install(root, _spec("typewriter-reveal"), "# a", origin=ORIGIN, cost=COST, reference=ref)
+    registry.install(root, _spec("count-cuts"), "# t", origin=ORIGIN, cost=COST, reference=ref, kind="tool")
+    with pytest.raises(ValueError, match="tool"):
+        registry.compose(root, "promo", ["typewriter-reveal", "count-cuts"], origin={})
+    with pytest.raises(ValueError, match="tool"):
+        registry.save_design(root, "solo", [{"skill": "count-cuts", "version": 1}], origin={})
+    assert registry.designs(root) == []
