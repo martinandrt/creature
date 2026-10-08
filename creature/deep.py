@@ -2,12 +2,13 @@
 
 Every round is one capped model call without history. It sees the task, the visible criteria, the
 skill's current files, a one-line note per earlier round, the last failures and measurements, and
-images: frame pairs (reel | its output, same moments) and full-resolution crops it asked for. It answers
-with only what changes: new files or find/replace edits. The spine applies them, renders preview frames
-in the workshop (a frame is a pure function of its number, so only those frames render), and when the
-forge says done, renders the whole clip, runs the fixed checks and asks the separate judge. The forge
-never sees held-out criteria or what the judge said about them. Measuring scripts the forge writes run
-on the reel in the workshop; their answers come back as data.
+images: frame pairs (reel | its output, same moments) and full-resolution crops it asked for; the first
+round also gets a contact sheet of the library items picked for it. It answers with only what changes:
+new files or find/replace edits. The spine applies them, renders preview frames in the workshop (a frame
+is a pure function of its number, so only those frames render), and when the forge says done, renders
+the whole clip, runs the fixed checks and asks the separate judge. The forge never sees held-out criteria
+or what the judge said about them. Measuring scripts the forge writes run on the reel in the workshop;
+their answers come back as data.
 
 A skill is files: frame.py with frame(n, ctx) and layout.json (timing, positions, colours, texts as
 data), plus helpers. It installs as one skill.py: fixed wrapper code (ours) with the files inside, so
@@ -19,7 +20,8 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
+from itertools import zip_longest
 from pathlib import Path
 from typing import Any
 
@@ -27,7 +29,7 @@ from creature import forge, workshop
 from creature.criteria import Spec
 from creature.forge import Outcome
 from creature.ledger import Ledger
-from creature.llm import BudgetRefused, Model, ModelError
+from creature.llm import MAX_IMAGE_BYTES, BudgetRefused, Model, ModelError
 
 PAIRS = 12  # frame pairs per preview sheet
 WORSE = 1.10  # a round scoring more than 10 % worse than the best goes back to the best
@@ -98,6 +100,8 @@ believe your frames match the reel's). Optional: measure (a script defining run(
 input["clip"] is the reel's path; return a small JSON object: positions, colours, timings you measured)
 and look (up to 2 crops for the next round: time in seconds and box [x0, y0, x1, y1] as shares of the
 frame).
+When an asset library is mounted at /assets (described in the task), textures, photos, icons and fonts
+come from it, and geometry is drawn by the code itself.
 Available in the sandbox, nothing else: Python 3.12, Pillow 11.3, numpy 2.5, scipy 1.18, ffmpeg.
 Fonts: {forge.FONTS}."""
 
@@ -255,46 +259,250 @@ def run(input, work):
 )
 
 
-LIBRARY_SHOWN = 30  # items from the asset manifest shown to the forge, picked by tags
+LIBRARY_SHOWN = 30  # items from the asset manifest shown to the forge, picked by material
+FONTS_SHOWN = 8  # fonts shown on top of those when the clip draws type
 USED = re.compile(r"/assets/[A-Za-z0-9_./-]+")
 
+# What the reel is made of, in the words a criterion or a gap uses  ->  the library tags those words stand
+# for (a category name is a tag too). Material only: a texture, a photo, an icon, a figure, type. Shapes,
+# arrows, frames, numbers and sounds are not material (the code draws geometry itself), so nothing here
+# picks them.
+MATERIAL_TAGS: tuple[tuple[re.Pattern[str], tuple[str, ...]], ...] = tuple(
+    (re.compile(words), tags)
+    for words, tags in (
+        (r"textur", ("textury",)),
+        (r"\bgrain|\bnois[ey]|speckle", ("zrno", "grain", "sum", "noise")),
+        (r"paper|parchment|cardboard", ("papir", "paper")),
+        (r"halftone|dither|stipple", ("poloton", "halftone", "dither")),
+        (r"scanline|\bcrt\b", ("scanlines", "crt")),
+        (r"\bdust|scratch", ("prach", "dust", "scratches")),
+        (r"fabric|cloth|denim|leather|linen", ("fabric", "cloth", "denim", "leather")),
+        (r"concrete|plaster|asphalt|plywood|\bwood|\bsand\b|\brust|metal",
+         ("concrete", "plaster", "asphalt", "wood", "sand", "rusty", "metal")),
+        (r"glow|flare|\bhalo|bloom|light leak", ("zare", "glow", "flare", "halo")),
+        (r"photo|\bimagery", ("fotky",)),
+        (r"\bicons?\b|pictogram|glyph", ("ikony",)),
+        (r"silhouette|\bfigures?\b|\bpeople\b|\bpersons?\b|\bhumans?\b|mascot|avatar", ("postavy",)),
+        (r"\bfonts?\b|typeface|lettering|typograph", ("pisma",)),
+        (r"(?<!sans[- ])serif", ("serif", "patkové")),
+        (r"\bsans\b|grotesk|grotesque", ("sans", "grotesk")),
+        (r"\bmono(?:space|spaced)?\b|terminal", ("mono", "terminál")),
+        (r"condensed|compressed", ("úzký",)),
+        (r"extra[- ]?bold|ultra[- ]?bold", ("těžký",)),
+    )
+)  # fmt: skip
+MATERIAL_KINDS = (
+    "textury",
+    "zare",
+    "fotky",
+    "ikony",
+    "postavy",
+    "pisma",
+)  # library categories that are material
+WORD = re.compile(r"[a-zá-ž0-9]+")
 
-def library(folder: str | None, spec: Spec) -> str:
-    """What the forge is told about the asset library: its README (where things are) and the items
-    whose tags share most words with the task; fonts always. Never the whole manifest."""
+
+def reel_words(spec: Spec) -> str:
+    """What the spec says the reel shows: its task and visible criteria, the gaps (what a script cannot
+    draw) and each surface's own task and criteria. Never the effect's name, the user's text, the params
+    or the held-out criteria."""
+    parts = [spec.task, *spec.criteria]
+    for gap in spec.gaps:
+        parts += [str(gap.get("what", "")), str(gap.get("needs", ""))]
+    for surface in spec.parts:
+        parts += [surface.task, *surface.criteria]
+    return " ".join(parts).lower()
+
+
+def pick(items: list[dict[str, Any]], spec: Spec) -> list[dict[str, Any]]:
+    """The library items for the material the spec names, fonts last. An item is picked when its tags (its
+    category counts) share one with a tag the words stand for; items matching more of them come first, then
+    those whose tags share words with the spec; ties keep the manifest's order. Kinds take turns, so a
+    hundred icons cannot crowd out a photo. A clip with user text draws type, so it always gets fonts."""
+    said = reel_words(spec)
+    wanted = [tags for words, tags in MATERIAL_TAGS if words.search(said)]
+    if spec.text.strip():
+        wanted.append(("pisma",))
+    if not wanted:
+        return []
+    asked = {word for word in WORD.findall(said) if len(word) >= 4}
+
+    scored = []
+    for index, item in enumerate(items):
+        if not isinstance(item, dict) or item.get("kategorie") not in MATERIAL_KINDS:
+            continue
+        tags = {str(tag).lower() for tag in item.get("stitky", [])}
+        have = tags | {str(item.get("kategorie", "")).lower()}
+        named = set(WORD.findall(f"{item.get('jmeno', '')} {' '.join(sorted(tags))}".lower()))
+        if hits := sum(1 for want in wanted if have & set(want)):
+            scored.append((-hits, -len(asked & named), index, item))
+    ranked = [entry[3] for entry in sorted(scored, key=lambda entry: entry[:3])]
+    fonts = [item for item in ranked if item.get("kategorie") == "pisma"][:FONTS_SHOWN]
+    kinds: dict[str, list[dict[str, Any]]] = {}
+    for item in ranked:
+        if item.get("kategorie") != "pisma":
+            kinds.setdefault(str(item.get("kategorie")), []).append(item)
+    turns = [item for row in zip_longest(*kinds.values()) for item in row if item is not None]
+    return turns[:LIBRARY_SHOWN] + fonts
+
+
+def stock(folder: str | None, spec: Spec) -> tuple[str, list[dict[str, Any]]]:
+    """What the forge is told about the asset library (its README, where things are, and the items picked
+    for the material the spec names; never the whole manifest) and those items."""
     if not folder:
-        return ""
+        return "", []
     root = Path(folder)
     try:
         manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
         readme = (root / "README.md").read_text(encoding="utf-8")
     except (OSError, json.JSONDecodeError) as error:
-        return (
-            f"An asset library is mounted read-only at /assets, but its manifest could not be read ({error})."
-        )
+        note = "An asset library is mounted read-only at /assets, but its manifest could not be read"
+        return f"{note} ({error}).", []
     items = manifest.get("prvky", []) if isinstance(manifest, dict) else []
-    words = set(re.findall(r"[a-zá-ž0-9]+", " ".join([spec.effect, spec.task, *spec.criteria]).lower()))
-
-    def score(item: dict[str, Any]) -> int:
-        tags = " ".join(str(t) for t in item.get("stitky", []))
-        have = set(
-            re.findall(r"[a-zá-ž0-9]+", f"{item.get('jmeno', '')} {item.get('kategorie', '')} {tags}".lower())
-        )
-        return len(words & have)
-
-    fonts = [i for i in items if i.get("kategorie") == "pisma"][:8]
-    ranked = sorted((i for i in items if i.get("kategorie") != "pisma"), key=lambda i: -score(i))
-    chosen = [i for i in ranked if score(i) > 0][:LIBRARY_SHOWN] + fonts
+    chosen = pick(items, spec)
     lines = [
         "Asset library, read-only at /assets (use only what helps; say which files you used):",
         readme[:2500],
         "Items picked for this task (path, category, tags, size):",
     ]
+    if not chosen:
+        lines.append("(none: the criteria name no texture, photo, icon, figure or font)")
     for item in chosen:
         size = item.get("viewBox") or item.get("rozmer") or item.get("delka_s") or ""
         tags = ", ".join(str(t) for t in item.get("stitky", [])[:8])
         lines.append(f"- /assets/{item.get('soubor')} [{item.get('kategorie')}] {tags} {size}".rstrip())
-    return "\n".join(lines)
+    return "\n".join(lines), chosen
+
+
+def library(folder: str | None, spec: Spec) -> str:
+    """The text the forge reads about the library (see stock)."""
+    return stock(folder, spec)[0]
+
+
+SHEET_TILES = 24  # library items on the preview sheet
+SHEET_SUFFIXES = {".png", ".jpg", ".jpeg", ".svg"}
+SHEET_TIMEOUT_S = 60
+SHEET_LABEL = "library items you may use (file names under the tiles; full paths are in the task)"
+
+# Fixed code (ours), run in the workshop: the library is mounted there and Pillow is not on the host. Each
+# item becomes a tile (an SVG is rasterised by ffmpeg, which has no size option: the root tag gets a bigger
+# width and height first), the tiles a labelled grid, saved as PNG, or as JPEG when that is over the cap.
+SHEET_CODE = r"""
+import io, re, subprocess
+from PIL import Image, ImageDraw, ImageFont
+
+TILE, LABEL, GAP, COLUMNS = 200, 18, 8, 6
+GREY = (160, 160, 160, 255)  # black strokes and white glows both show on it
+FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+QUOTED = r'''\s*=\s*(?:"([^"]*)"|'([^']*)')'''
+
+def svg_raster(path, work, n):
+    text = open(path, encoding="utf-8", errors="replace").read()
+    root = re.search(r"<svg\b[^>]*>", text)
+    if root:
+        tag = root.group(0)
+        box = re.search("viewBox" + QUOTED, tag)
+        numbers = re.findall(r"[-+]?[0-9.]+(?:[eE][-+]?[0-9]+)?", box.group(1) or box.group(2) if box else "")
+        if len(numbers) == 4 and float(numbers[2]) > 0 and float(numbers[3]) > 0:
+            w, h = float(numbers[2]), float(numbers[3])
+            k = 2 * TILE / max(w, h)
+            tag = re.sub(r"\s(?:width|height)" + QUOTED, "", tag)
+            tag = tag.replace("<svg", f'<svg width="{w * k:.0f}" height="{h * k:.0f}"', 1)
+        if "xmlns=" not in tag:
+            tag = tag.replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg"', 1)
+        text = text.replace(root.group(0), tag, 1)
+    source, target = f"{work}/s{n}.svg", f"{work}/s{n}.png"
+    with open(source, "w", encoding="utf-8") as file:
+        file.write(text)
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", source, "-frames:v", "1", target],
+                   check=True, capture_output=True, timeout=30)
+    return Image.open(target)
+
+def tile_of(picture):
+    picture = picture.convert("RGBA")
+    picture.thumbnail((TILE, TILE))
+    base = Image.new("RGBA", (TILE, TILE), GREY)
+    base.alpha_composite(picture, ((TILE - picture.width) // 2, (TILE - picture.height) // 2))
+    return base.convert("RGB")
+
+def encoded(picture, cap):
+    for kind, options in (("PNG", {}), ("JPEG", {"quality": 85}), ("JPEG", {"quality": 60})):
+        buffer = io.BytesIO()
+        picture.save(buffer, kind, **options)
+        if buffer.tell() <= cap:
+            return kind, buffer.getvalue()
+    return None
+
+def run(input, work):
+    tiles, labels, skipped = [], [], []
+    for n, item in enumerate(input["items"]):
+        try:
+            path = item["path"]
+            picture = svg_raster(path, work, n) if path.lower().endswith(".svg") else Image.open(path)
+            tiles.append(tile_of(picture))
+            labels.append(item["label"])
+        except Exception as error:
+            skipped.append([item.get("path"), f"{type(error).__name__}: {error}"[:120]])
+    if not tiles:
+        return {"tiles": 0, "skipped": skipped}
+    columns = min(COLUMNS, len(tiles))
+    rows = -(-len(tiles) // columns)
+    size = (GAP + columns * (TILE + GAP), GAP + rows * (TILE + LABEL + GAP))
+    sheet = Image.new("RGB", size, (127, 127, 127))
+    draw = ImageDraw.Draw(sheet)
+    font = ImageFont.truetype(FONT, 12)
+    for j, (tile, label) in enumerate(zip(tiles, labels)):
+        x, y = GAP + (j % columns) * (TILE + GAP), GAP + (j // columns) * (TILE + LABEL + GAP)
+        sheet.paste(tile, (x, y))
+        draw.rectangle((x, y + TILE, x + TILE - 1, y + TILE + LABEL - 1), fill=(0, 0, 0))
+        draw.text((x + 4, y + TILE + 2), label[:28], fill=(255, 255, 255), font=font)
+    found = encoded(sheet, input["max_bytes"])
+    while not found and sheet.width > 200:  # smaller until it fits
+        sheet = sheet.resize((sheet.width * 7 // 10, sheet.height * 7 // 10))
+        found = encoded(sheet, input["max_bytes"])
+    if not found:
+        return {"tiles": len(tiles), "skipped": skipped, "error": "does not fit the image cap"}
+    kind, data = found
+    name = "library.png" if kind == "PNG" else "library.jpg"
+    with open(f"{work}/out/{name}", "wb") as file:
+        file.write(data)
+    return {"tiles": len(tiles), "skipped": skipped, "file": name, "bytes": len(data)}
+"""
+
+
+def library_sheet(
+    chosen: list[dict[str, Any]],
+    assets: str | None,
+    limits: workshop.Limits | None,
+    image: str,
+    folder: Path,
+    ledger: Ledger,
+) -> tuple[tuple[str, Path], ...]:
+    """Round 1's extra image: the picked items that can be shown (PNG, JPEG, SVG; fonts and sounds cannot)
+    as one labelled contact sheet, made in the workshop. Nothing to show or any failure: no sheet."""
+    shown = [
+        item
+        for item in chosen
+        if Path(str(item.get("soubor", ""))).suffix.lower() in SHEET_SUFFIXES
+        and not {"", ".", ".."} & set(str(item["soubor"]).split("/"))  # a plain relative path only
+    ][:SHEET_TILES]
+    if not shown or not assets or limits is None:
+        return ()
+    items = [{"path": f"/assets/{i['soubor']}", "label": Path(i["soubor"]).stem} for i in shown]
+    # the sheet reads the folder the items were picked from, and is not worth more than a minute
+    shop = replace(limits, assets=assets, timeout_s=min(limits.timeout_s, SHEET_TIMEOUT_S))
+    ran = workshop.run(SHEET_CODE, {"items": items, "max_bytes": MAX_IMAGE_BYTES}, limits=shop, image=image)
+    value = ran.value if ran.ok and isinstance(ran.value, dict) else {}
+    data = ran.outputs.get(str(value.get("file")))
+    if not data or len(data) > MAX_IMAGE_BYTES:
+        why = ran.error or str(value.get("error") or "no tile could be made")
+        ledger.record("library_sheet", ok=False, items=len(items), error=why[:300])
+        return ()
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / str(value["file"])
+    path.write_bytes(data)
+    ledger.record("library_sheet", ok=True, items=len(items), tiles=value.get("tiles"), bytes=len(data))
+    return ((SHEET_LABEL, path),)
 
 
 def used_assets(files: dict[str, str], said: Any) -> list[str]:
@@ -426,7 +634,7 @@ def build(
     """Up to `rounds` rounds. `finish(code, round)` renders the whole clip, checks and judges it."""
     space = Workspace()
     feedback, measured = "", ""
-    shelf = library(assets, spec)
+    shelf, chosen = stock(assets, spec)
     said: list[str] = []
     failed: set[str] = set()  # file sets the whole-clip check already failed
     last_verdict = ""
@@ -434,7 +642,11 @@ def build(
     base: tuple[int, dict[str, str], tuple[tuple[str, Path], ...]] = (0, {}, ())
     lowest = float("inf")
     looks: list[dict[str, Any]] = []
-    images: tuple[tuple[str, Path], ...] = (("reel frames", reel.strip),)
+    # the first round also sees what the library holds for this reel's material
+    images: tuple[tuple[str, Path], ...] = (
+        ("reel frames", reel.strip),
+        *library_sheet(chosen, assets, limits, image, folder, ledger),
+    )
     for number in range(1, rounds + 1):
         here = folder / f"round-{number:02d}"
         here.mkdir(parents=True, exist_ok=True)
