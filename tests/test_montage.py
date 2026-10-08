@@ -7,6 +7,7 @@ import pytest
 
 from creature import composer, criteria, montage, registry, verdict
 from creature.criteria import Spec
+from creature.perceive import Reel
 
 FPS = criteria.FPS
 STYLE = {
@@ -254,3 +255,48 @@ def test_follow_without_cuts_changes_screen_halfway_between_their_times():
     t = montage.follow("m", [((0.5, 1.0), "x", 1), ((3.0,), "y", 1)], 4.0, (), layers=[])
     assert [(s["source"], s["start"], s["dur"]) for s in t["scenes"]] == [("a", 0, 60), ("b", 60, 60)]
     assert montage.follow("m", [((), "x", 1)], 4.0, (), layers=[]) is None  # nothing to place
+
+
+def test_follow_covers_a_reel_longer_than_the_montage_and_survives_cuts_in_one_frame():
+    # a 45 s reel cut every 2 s: the montage is its first 30 s, every shot still 60 frames, cuts past the
+    # end dropped; two cuts inside one frame (and one before frame 1) are one cut, never an empty scene
+    long = montage.follow(
+        "m", [((0.5, 10.0), "x", 1), ((20.0, 40.0), "y", 1)], 45.0, tuple(range(2, 45, 2)), layers=[]
+    )
+    assert long["frames"] == 900 and montage.problems(long) == []
+    assert {s["dur"] for s in long["scenes"]} == {60} and len(long["scenes"]) == 15
+    dense = montage.follow("m", [((0.5,), "x", 1), ((1.5,), "y", 1)], 3.0, (0.01, 1.0, 1.004, 2.0), layers=[])
+    assert [(s["source"], s["start"], s["dur"]) for s in dense["scenes"]] == [
+        ("a", 0, 30),
+        ("b", 30, 30),
+        ("a", 60, 30),
+    ]
+    seven = [((float(i),), f"s{i}", 1) for i in range(montage.MAX_SOURCES + 1)]
+    assert montage.follow("m", seven, 8.0, tuple(float(i) for i in range(1, 8)), layers=[]) is None
+
+
+def test_follow_keeps_the_first_cut_a_cut_when_the_opening_shot_shows_nothing_learned():
+    # nothing learned for 0-1 s, y at 1.5 s, x at 2.5 s: the opening shot has no shot before it, so it must
+    # differ from the shot after it (else the first cut is b|b: no cut at all)
+    t = montage.follow("m", [((2.5,), "x", 1), ((1.5,), "y", 1)], 3.0, (1.0, 2.0), layers=[])
+    assert [s["source"] for s in t["scenes"]] == ["a", "b", "a"]
+
+
+def test_the_composers_rhythm_is_the_reels_even_when_the_montage_stops_at_30_s():
+    # a 90 s reel cut every 2 s: the montage covers its first 30 s and every shot still lasts the reel's
+    # 2 s, which is what the rhythm check asks for (30 s divided by all 45 shots gave 20 frames: a fail)
+    long = _reel(90.0, tuple(2.0 * i for i in range(1, 45)))
+    choice = {"sources": ["grid-cards", "type-wall"], "mark": {"use": False}}
+    catalog = [_skill("grid-cards"), _skill("type-wall")]
+    t = composer.timeline("m", choice, catalog, reel=long)
+    [rhythm] = [c for c in criteria.look_checks(long, montage.MONTAGE) if c["kind"] == "rhythm"]
+    assert t["frames"] == 900 and rhythm["frames_per_shot"] == 60.0
+    assert t["scenes"][0]["dur"] == 60
+    short = composer.timeline("m", choice, catalog, reel=_reel(12.0, tuple(1.5 * i for i in range(1, 8))))
+    assert short["frames"] == 360 and short["scenes"][0]["dur"] == 45  # 8 shots of 45 frames, as the reel
+    still = composer.timeline("m", choice, catalog, reel=_reel(12.0, ()))
+    assert [s["dur"] for s in still["scenes"]] == [180, 180]  # no cuts: one share per source, in order
+
+
+def _reel(duration_s, cuts):
+    return Reel("r.mp4", "", "", "a", None, None, (), duration_s, 1080, 1920, 30.0, cuts=cuts)

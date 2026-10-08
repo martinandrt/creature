@@ -490,7 +490,11 @@ class Creature:
             folder = self.folder / f"montage-{attempt}"
             # the reel's colours and rhythm, checked on the montage as on any clip of a look-matters reel
             wants_look = any(c["kind"] in ("palette", "rhythm") for c in spec.checks)
-            look = tuple(criteria.look_checks(self.reel, montage.MONTAGE)) if wants_look else ()
+            # one source never shows a cut (the sources play in step): rhythm needs two
+            rhythm = len(t["sources"]) > 1
+            look = (
+                tuple(criteria.look_checks(self.reel, montage.MONTAGE, rhythm=rhythm)) if wants_look else ()
+            )
             clip, problems, checked = self.render_timeline(t, text, folder, mark=mark, style=None, extra=look)
             report.clip = clip or report.clip
             if problems or checked is None or not checked.strip:

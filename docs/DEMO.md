@@ -5,15 +5,18 @@ rounds while looking at its own frames next to the reel's, installs a sealed ski
 design on new text at $0, names what it lacks, waits for a human on an ASK, and the board shows every
 run of the night with its cost. Authority stays the same: every run prints `authority unchanged: True`.
 
-Each step says whether it costs money and how it was verified (QA, 9 Oct, ~02:40). Nothing below was
-run in a live home: the $0 steps were verified on a temporary copy of `creature-ukazka`'s registry.
+Each step says whether it costs money and how it was verified (QA, 9 Oct, ~02:40; board and montage
+notes updated ~03:50 on 87702bf, 345 tests green). Nothing below was run in a live home: the $0 steps
+were verified on a temporary copy of `creature-ukazka`'s registry.
 
 ## 0. Before the camera
 
 - Docker running, workshop image built (`docker image inspect creature-workshop:v1`).
 - The board loop up (one terminal, keep it running):
   `uv run python -m creature.board --every=10 ~/Desktop/creature-homes/board.html ~/Desktop/creature-homes/*/`
-  then open `~/Desktop/creature-homes/board.html` in a browser (it refreshes itself every 10 s).
+  then open `~/Desktop/creature-homes/board.html` in a browser. The page never reloads: every 10 s it
+  pulls `board-data.js` (written next to it) and patches itself in place, so a playing clip keeps playing
+  and the tab you picked stays. Keep the two files next to each other.
 - The library closed (no more files added to `~/Desktop/creature-assets`): a change mid-run refuses the
   install (fingerprint part "asset library"), which is correct and not what you want on camera.
 - Keys: `CREATURE_SECRETS` points at the file with `APIFY_TOKEN=…` (Instagram reels only; a local `.mp4`
@@ -41,6 +44,12 @@ uv run python -m creature try <reel URL or .mp4> --text "Capabilities may grow. 
   creature sees pairs of frames, reel left, its own right, and edits its files) → the whole clip through
   the fixed checks and the judge → the same clip 2 s shorter → install, sealed → `BUILT` and
   `authority unchanged: True`.
+- If an installed skill already does it (`HAVE`), its clip must also match this reel's orientation and
+  rhythm (and colours, when it was learned for its look); otherwise the reel is taken apart and learned.
+  A reel with 6 or more cuts is matched part by part after the criteria, not as a whole. A montage is as
+  long as the reel (up to 30 s) and cut where the reel cuts; its first try follows the reel's own shots.
+- A usage-limit answer from the CLI ("You've hit your session limit") stops the run at once instead of
+  burning attempts: `FAILED` with the limit named in the gap. Check `/usage` before recording.
 - Money and time (from last night's ledgers): rounds ran $0.09–0.13 each; a surface took 2–10 rounds;
   one deep run stays under its $4.00 budget by construction (the budget ends the rounds).
 - While it runs, the board shows the run first, `RUNNING`, with its latest pairs sheet (reel | output)
@@ -79,11 +88,12 @@ uv run python -m creature design <timeline design> --text "…" --style examples
 ```
 
 - The style (colours, fonts) and the mark apply to a **timeline** design (a montage). A plain step
-  design ignores them; as of 02:40 no home has a saved timeline yet (the montage runs in
-  `lilium-s-knihovnou` and `mikro-s-knihovnou` were still composing). If one finishes, `creature list`
+  design prints a note that the style is for montages and replays without it (pinned by QA). As of
+  03:50 no home has a saved timeline yet (`mikro-s-knihovnou` was rerunning on f95e2a0: the surfaces
+  came from the registry at $0.11, the montage itself had not passed). If one finishes, `creature list`
   shows it as `design: <name>` and this step is $0. If none finishes, skip the style on camera or say
   it is for montages.
-- QA pin pending: `--style` on a step design should print a note instead of silently doing nothing.
+- A second montage of the same kind never overwrites the first: it is saved as `<slug>-2` (pinned).
 
 ## 6. What it lacks (PAID, one small call, ~$0.03)
 
@@ -110,11 +120,14 @@ montage and let it ask (PAID, outcome not guaranteed).
 
 ## 8. The board ($0, verified)
 
-`~/Desktop/creature-homes/board.html`: every home and run of the night, `RUNNING` runs first, then
-newest; per run the input text and reel frames, the output clip or the latest pairs sheet, time, dollars,
-what was learned, the last steps and the gap. Totals on top: runs, running, learned, spent. Numbers come
-from the ledgers only (QA-tested: spent = Σ cost_usd, learned = installed events, RUNNING = no run_end
-and something new within 15 min).
+`~/Desktop/creature-homes/board.html`: one section per reel, the reel run most recently on top. A reel
+run several times (in any home) is one section with tabs `V1..Vn`, oldest to newest, the newest shown.
+Per run: the source video, the input text and reel frames, the output clip or the latest pairs sheet,
+time, dollars, what was learned, the last steps and the gap; a run that died without an end says so
+(`STOPPED`, no output, the last step is in the list). Totals on top: runs, running, learned, spent.
+Numbers come from the ledgers only (QA-tested: spent = Σ cost_usd, learned = installed events,
+RUNNING = no run_end and something new within 15 min). A broken ledger shows as a red line on the page,
+the rest of the page stays.
 
 ## 9. Pages, rebuilt from the ledger ($0, verified)
 

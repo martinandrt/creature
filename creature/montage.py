@@ -98,23 +98,31 @@ def follow(
         ordered = sorted(times)
         changes = [(a + b) / 2 for (a, sa), (b, sb) in itertools.pairwise(ordered) if sa != sb]
         bounds = [0.0, *changes, end]
-    scenes: list[dict[str, Any]] = []
-    cues: list[dict[str, Any]] = []
-    previous, at = None, 0
+    shots = []  # (start frame, stop frame, middle second, the screen the reel shows there or None)
+    at = 0
     for a, b in itertools.pairwise(bounds):
         stop = frames if b >= end else round(b * criteria.FPS)
         if stop <= at:
             continue
         inside = collections.Counter(s for t, s in times if a <= t < b)
-        if inside:
-            source = inside.most_common(1)[0][0]
-        else:
-            ranked = sorted(times, key=lambda ts: abs(ts[0] - (a + b) / 2))
-            source = next((s for _, s in ranked if s != previous), ranked[0][1])
-        scene = {"id": f"s{len(scenes) + 1:02d}", "source": source, "start": at, "dur": stop - at}
+        shots.append((at, stop, (a + b) / 2, inside.most_common(1)[0][0] if inside else None))
+        at = stop
+    scenes: list[dict[str, Any]] = []
+    cues: list[dict[str, Any]] = []
+    previous = None
+    for number, (start, stop, middle, own) in enumerate(shots):
+        source = own
+        if source is None:  # a gap shot: the nearest screen that keeps both its cuts visible
+            after = shots[number + 1][3] if number + 1 < len(shots) else None
+            ranked = sorted(times, key=lambda ts: abs(ts[0] - middle))
+            source = next(
+                (s for _, s in ranked if s not in (previous, after)),
+                next((s for _, s in ranked if s != previous), ranked[0][1]),
+            )
+        scene = {"id": f"s{len(scenes) + 1:02d}", "source": source, "start": start, "dur": stop - start}
         scenes.append(scene)
-        cues.append({"frame": at, "kind": "cut", "scene": scene["id"]})
-        previous, at = source, stop
+        cues.append({"frame": start, "kind": "cut", "scene": scene["id"]})
+        previous = source
     return {
         "name": name,
         "fps": criteria.FPS,
@@ -273,6 +281,7 @@ def frames_for(seconds: float) -> int:
 # Fixed code (ours) that runs in the workshop: reads every source in step, frame by frame, takes the
 # frame of the scene's source, puts the layer on top with the ink that contrasts with what is behind it.
 MONTAGE_CODE = r"""
+import math
 import subprocess
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
@@ -315,8 +324,9 @@ def run(input, work):
     layers = []
     for layer in input["layers"]:
         safe = input.get("safe") or {"left": 0, "right": 0, "top": 0, "bottom": 0}
-        left, right = round(safe["left"] * W), W - round(safe["right"] * W)
-        top, bottom = round(safe["top"] * H), H - round(safe["bottom"] * H)
+        # inward: a clamped mark must lie inside the zone the check measures, also where 0.06 x W is not whole
+        left, right = math.ceil(safe["left"] * W), math.floor((1 - safe["right"]) * W)
+        top, bottom = math.ceil(safe["top"] * H), math.floor((1 - safe["bottom"]) * H)
         alpha = mark_alpha(input, work, max(8, round(layer["height"] * H)))
         if alpha.shape[1] > right - left:  # a long word: smaller, never wider than the safe zone
             ratio = (right - left) / alpha.shape[1]

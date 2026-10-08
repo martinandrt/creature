@@ -52,9 +52,9 @@ def _timeline(clips, *, every, landscape=False, layers=()):
     )
 
 
-def _render(env, t, clips, tmp_path):
+def _render(env, t, clips, tmp_path, text="Stay curious."):
     limits, image = env
-    ran = montage.render(t, clips, text="Stay curious.", mark=None, style=None, limits=limits, image=image)
+    ran = montage.render(t, clips, text=text, mark=None, style=None, limits=limits, image=image)
     assert ran.ok, f"{ran.error}\n{ran.log[-600:]}"
     checks = tuple(montage.checks(t, ran.value.get("layers", [])))
     return ran, verdict.check(ran.outputs, checks, limits=limits, image=image, folder=tmp_path)
@@ -78,3 +78,28 @@ def test_a_landscape_montage_keeps_its_sources_orientation(env, tmp_path):
     ran, checked = _render(env, t, clips, tmp_path)
     assert ran.value["frames"] == 60 and checked.problems == (), checked.problems
     assert (checked.probe["width"], checked.probe["height"]) == (1920, 1080)
+
+
+def test_a_long_mark_is_drawn_smaller_inside_the_safe_zone(env, tmp_path):
+    # DcEZ: a 12-letter mark at height 0.12 came out 1103 px wide in a 1080 frame and crashed the render;
+    # a word too wide for the safe zone is drawn smaller, never wider than the zone, and passes its check
+    clips = _sources(env, tmp_path, 2)
+    mark = [{"id": "mark", "x": 0.5, "y": 0.5, "height": 0.12}]
+    t = _timeline(clips, every=10, layers=mark)
+    ran, checked = _render(env, t, clips, tmp_path, text="Configurations.")
+    [(_x0, _y0, w, h)] = ran.value["layers"]
+    zone = 1080 - 2 * round(montage.SAFE["left"] * 1080)
+    assert w <= zone and h < round(0.12 * 1920), (w, h)  # smaller than asked, to fit
+    assert checked.problems == (), checked.problems
+
+
+def test_a_mark_pushed_to_the_edge_stays_inside_the_safe_zone_in_landscape_too(env, tmp_path):
+    # the composer may put a wide mark at x 0.1: it is clamped to the zone's left edge; in a 1920 frame
+    # that edge is 115.2 px, and 115 (rounded down) is 0.0599 of the width: outside the zone the check wants
+    clips = _sources(env, tmp_path, 2, size="1920x1080")
+    mark = [{"id": "mark", "x": 0.1, "y": 0.5, "height": 0.12}]
+    t = _timeline(clips, every=10, landscape=True, layers=mark)
+    ran, checked = _render(env, t, clips, tmp_path, text="Configurations.")
+    [(x0, _y0, w, _h)] = ran.value["layers"]
+    assert x0 / 1920 >= montage.SAFE["left"] and (x0 + w) / 1920 <= 1 - montage.SAFE["right"], (x0, w)
+    assert checked.problems == (), checked.problems

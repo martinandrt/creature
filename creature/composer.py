@@ -118,7 +118,9 @@ def timeline(
         # gets an equal share, in order
         frames = montage.frames_for(reel.duration_s)
         shots = len(reel.cuts) + 1
-        every = round(frames / shots) if len(reel.cuts) >= criteria.MIN_CUTS else frames // max(1, len(order))
+        # a shot as long as the reel's (not the montage's length over all its shots: a long reel is cut off)
+        reel_shot = round(reel.duration_s / shots * criteria.FPS)
+        every = reel_shot if len(reel.cuts) >= criteria.MIN_CUTS else frames // max(1, len(order))
         every = max(montage.MIN_EVERY, every)
     return montage.timeline(
         name, sources, order, every=every, frames=frames, layers=layers, landscape=landscape
