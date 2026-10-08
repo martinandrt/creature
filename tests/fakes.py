@@ -1,38 +1,12 @@
-"""Test doubles.
-
-The model interface here is a proposal for creature/llm.py (F3). Once llm.py lands,
-ModelCall, ModelReply and Transport move there and this module imports them.
-"""
+"""Test doubles. The model contract lives in creature/llm.py; this module only fakes the transport."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Any
 
+from creature.llm import ModelCall, ModelReply, Transport
 
-@dataclass(frozen=True)
-class ModelCall:
-    step: str  # spine step that asks: "planner", "examiner", "forge", "perceive", "skill:<name>"
-    model: str
-    system: str
-    prompt: str
-    schema: dict[str, Any]
-    max_usd: float
-
-
-@dataclass(frozen=True)
-class ModelReply:
-    data: dict[str, Any]  # structured_output from the CLI
-    cost_usd: float  # total_cost_usd from the CLI, list-price equivalent
-    model: str = "claude-haiku-5-5"
-    input_tokens: int = 0
-    output_tokens: int = 0
-
-
-class Transport(Protocol):
-    """One isolated model call. Caps, ledger events and retries live above it, in llm.py."""
-
-    def complete(self, call: ModelCall) -> ModelReply: ...
+__all__ = ["FakeModel", "ModelCall", "ModelReply", "Transport"]
 
 
 class FakeModel:
