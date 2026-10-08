@@ -56,6 +56,14 @@ def _authority(home, change=None):
     (home / "authority.json").write_text(json.dumps(raw, indent=1), encoding="utf-8")
 
 
+def _check_passes(outputs, checks, *, folder, **kwargs):
+    """The real check writes the clip into its folder before it probes it (a HAVE re-reads that file)."""
+    folder.mkdir(parents=True, exist_ok=True)
+    for name, data in outputs.items():
+        (folder / name).write_bytes(data)
+    return PASSED
+
+
 @pytest.fixture
 def world(home, tmp_path, monkeypatch):
     """A home with the shipped authority, and every outside dependency faked."""
@@ -71,7 +79,7 @@ def world(home, tmp_path, monkeypatch):
     monkeypatch.setattr(loop.workshop, "ensure_image", lambda *a, **k: IMAGE)
     monkeypatch.setattr(loop.workshop, "image_id", lambda *a, **k: IMAGE)
     monkeypatch.setattr(loop.workshop, "run", lambda *a, **k: RENDER)
-    monkeypatch.setattr(loop.verdict, "check", lambda *a, **k: PASSED)
+    monkeypatch.setattr(loop.verdict, "check", _check_passes)
     return home
 
 
@@ -146,6 +154,50 @@ def test_fresh_process_reuses_the_skill_without_criteria_or_forge(world, fake_mo
     ]
     assert judge_call.images[0][1].name == registry.REFERENCE  # judged against ITS stored reel frames
     assert sum(c in judge_call.prompt for c in CRITERIA) == 3  # by ITS stored criteria, hidden included
+
+
+def test_a_skill_with_the_wrong_orientation_for_the_reel_is_not_a_have(
+    world, fake_model, monkeypatch, tmp_path
+):
+    # the skill passes its OWN stored tests (portrait, 3 s), but this reel is landscape: a clip of the
+    # wrong orientation is not a copy of what the reel shows, so the run decomposes the reel instead
+    _build(world, fake_model)
+    strip = tmp_path / "wide-strip.png"
+    strip.write_bytes(PNG)
+    wide = Reel(
+        source="wide.mp4", caption="Typewriter tutorial", transcript="type it slowly", author="anet",
+        video=tmp_path / "wide.mp4", strip=strip, times=(0.5, 1.5), duration_s=12.0,
+        width=1920, height=1080, fps=30.0, palette=({"hex": "#1b2135", "share": 0.7},),
+    )  # fmt: skip
+    monkeypatch.setattr(loop.perceive, "perceive", lambda *a, **k: wide)
+    monkeypatch.setattr(loop.verdict, "check", REAL_CHECK)  # the real file checks, on a probe we control
+
+    def run(code, input, files=None, **kwargs):
+        if code == verdict.PROBE_CODE:
+            [clip] = files.values()
+            size = {"width": 1920, "height": 1080} if clip.parent.name.startswith("attempt") else {}
+            return workshop.WorkshopResult(
+                True, {**_probe(90), **size}, {"strip.png": PNG}, None, None, 0.1, ""
+            )
+        return RENDER  # every render of the skill is portrait 1080x1920, the house format of the first reel
+
+    monkeypatch.setattr(loop.workshop, "run", run)
+    fresh = FakeModel()
+    fresh.queue("planner", {"skill": "typewriter-reveal", "reason": "same technique"})
+    fresh.queue("judge", _judge(True, True, True))  # the skill passes its own tests on this text
+    fresh.queue("criteria", REPLY).queue("forge", {"code": CODE, "approach": "a"})
+    fresh.queue("judge", _judge(True, True, True))
+    creature = _creature(world, fresh)
+    report = creature.try_reel("wide.mp4", "A different line.")
+    events = ledger.read(creature.ledger.path)
+    [checked] = [e for e in events if e["type"] == "have_checked"]
+    assert [e["ok"] for e in events if e["type"] == "have_try"] == [True]  # its own tests passed
+    assert checked["ok"] is False and checked["skill"] == "typewriter-reveal"
+    assert any("resolution: 1080x1920, need 1920x1080" in p for p in checked["problems"]), checked
+    assert not any(p.startswith("palette") for p in checked["problems"])  # not learned for its look
+    assert report.status != "HAVE"
+    assert _steps(fresh)[:3] == ["planner", "judge", "criteria"]  # not a HAVE: the reel goes on to criteria
+    assert any("passes its own tests, not this reel" in note for note in report.notes)
 
 
 def test_forge_is_told_the_text_of_this_run(world, fake_model):

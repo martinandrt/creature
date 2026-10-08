@@ -147,6 +147,29 @@ class Creature:
             report.status, report.gap = "FAILED", f"{type(error).__name__}: {error}"
             return self.finish(report)
 
+    def _against_reel(self, spec: criteria.Spec, clip: Path, folder: Path) -> list[str]:
+        """The fixed checks a BUILT clip meets against the reel, for a clip made by an installed skill:
+        the reel's orientation, its main colours and its rhythm."""
+        name = spec.output["file"]
+        house = criteria.clip_format(spec.output["duration_s"], landscape=self.reel.width > self.reel.height)
+        # colours only where the skill was learned for its look (its stored checks carry them, as a BUILT
+        # clip's do); the rhythm check exists only for a reel with cuts
+        learned_for_look = any(c.get("kind") in ("palette", "rhythm") for c in spec.checks)
+        look = [c for c in criteria.look_checks(self.reel, name) if c["kind"] == "rhythm" or learned_for_look]
+        against = (
+            {"kind": "resolution", "file": name, "width": house["width"], "height": house["height"]},
+            *look,
+        )
+        folder.mkdir(parents=True, exist_ok=True)
+        checked = verdict.check(
+            {name: clip.read_bytes()},
+            against,
+            limits=self.authority.workshop,
+            image=self.image,
+            folder=folder,
+        )
+        return list(checked.problems)
+
     def _match_whole(self, report: Report, source: str, text: str) -> Report | None:
         """The whole reel against the installed skills: a match is run and judged by its own stored tests."""
         skill, why = planner.match(
@@ -165,7 +188,12 @@ class Creature:
             self.ledger.record(
                 "have_try", skill=skill.slug, version=skill.version, ok=outcome.ok, detail=outcome.detail
             )
-            if outcome.ok:
+            if outcome.ok and clip is not None:
+                problems = self._against_reel(spec, clip, self.folder / f"have-{skill.slug}" / "against-reel")
+                self.ledger.record("have_checked", skill=skill.slug, ok=not problems, problems=problems[:4])
+                if problems:  # it does what it learned, but not what this reel shows: decompose the reel
+                    report.notes.append(f"{skill.slug} passes its own tests, not this reel: {problems[0]}")
+                    return None
                 report.status, report.skill, report.clip = "HAVE", f"{skill.slug}@v{skill.version}", clip
                 return self.finish(report)
             # it fails its own tests on this input: learn the next version against the same tests
