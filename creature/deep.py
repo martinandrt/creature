@@ -205,8 +205,7 @@ def run(input, work):
     tiles, times = [], []
     for i, (t, n) in enumerate(input["pairs"]):
         reel_tile, out_tile = f"{work}/r_{i:02d}.png", f"{work}/o_{i:02d}.png"
-        subprocess.run(["ffmpeg", "-v", "error", "-ss", str(t), "-i", f"{work}/in/reel.mp4", "-frames:v", "1",
-                        "-vf", FIT, reel_tile], check=True)
+        grab(f"{work}/in/reel.mp4", t, reel_tile, FIT)
         subprocess.run(["ffmpeg", "-v", "error", "-i", f"{work}/in/f_{n:04d}.png", "-vf", FIT, out_tile],
                        check=True)
         tiles += [reel_tile, out_tile]
@@ -231,8 +230,7 @@ def run(input, work):
     for k, crop in enumerate(input["crops"]):
         x0, y0, x1, y1 = crop["box"]
         full = f"{work}/reel_full_{k}.png"
-        subprocess.run(["ffmpeg", "-v", "error", "-ss", str(crop["time"]), "-i", f"{work}/in/reel.mp4",
-                        "-frames:v", "1", full], check=True)
+        grab(f"{work}/in/reel.mp4", crop["time"], full)
         parts = []
         for path in (full, f"{work}/in/f_{crop['n']:04d}.png"):
             with Image.open(path) as im:

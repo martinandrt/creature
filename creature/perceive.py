@@ -79,8 +79,7 @@ def run(input, work):
     tiles = []
     for i, t in enumerate(times):
         path = f"{work}/frame_{i:03d}.png"
-        subprocess.run(["ffmpeg", "-v", "error", "-ss", str(t), "-i", video, "-frames:v", "1", "-vf", FIT,
-                        path], check=True)
+        grab(video, t, path, FIT)
         tiles.append(path)
     sheets(tiles, times, f"{work}/out/strip")
     audio = any(s.get("codec_type") == "audio" for s in streams)
@@ -188,8 +187,7 @@ def run(input, work):
     tiles = []
     for i, t in enumerate(input["times"]):
         path = f"{work}/frame_{i:03d}.png"
-        subprocess.run(["ffmpeg", "-v", "error", "-ss", str(t), "-i", f"{work}/in/reel.mp4", "-frames:v", "1",
-                        "-vf", FIT, path], check=True)
+        grab(f"{work}/in/reel.mp4", t, path, FIT)
         tiles.append(path)
     sheets(tiles, input["times"], f"{work}/out/strip")
     return len(tiles)

@@ -35,6 +35,7 @@ STDERR_TAIL = 4000
 # 270x480 tiles, 6 per row, 4 rows per sheet, grey gutters, each tile's time printed under it; cuts
 # and the palette are measured the same way on a reel and on a clip, so the two can be compared.
 SHEET_CODE = r"""
+import os
 import re
 import subprocess
 import numpy as np
@@ -44,6 +45,15 @@ TILE_W, TILE_H, LABEL_H, GAP, COLUMNS, PER_SHEET = 270, 480, 30, 8, 6, 24
 FIT = (f"scale={TILE_W}:{TILE_H}:force_original_aspect_ratio=decrease,"
        f"pad={TILE_W}:{TILE_H}:(ow-iw)/2:(oh-ih)/2")
 LABEL_FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf"
+
+def grab(video, t, path, vf=None):
+    # one frame near t; a seek at the very end can come back empty, so step back a little and retry
+    for back in (0.0, 0.1, 0.25, 0.5, 1.0):
+        args = ["ffmpeg", "-v", "error", "-y", "-ss", str(max(0.0, t - back)), "-i", video, "-frames:v", "1"]
+        subprocess.run(args + (["-vf", vf] if vf else []) + [path], check=True)
+        if os.path.exists(path):
+            return path
+    raise RuntimeError(f"no frame could be read near {t} s")
 
 def sheets(tiles, times, prefix):
     font = ImageFont.truetype(LABEL_FONT, 22)
