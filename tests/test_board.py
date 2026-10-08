@@ -1,10 +1,14 @@
 """The board (creature/board.py) reads ledgers and files only; its numbers must be the ledgers' numbers:
 spent is the sum of cost_usd, learned is the installed events, a run without run_end is RUNNING until
 it has been quiet for STALE_S, the picture is the newest pairs sheet (else strip), and every path on the
-page resolves from the board's folder, for homes inside it and outside it."""
+page resolves from the board's folder, for homes inside it and outside it. The page itself is a static shell
+that never reloads; what it shows is in the data file next to it: one section per reel (a reel run several
+times is one section, its runs the tabs V1..Vn), each with a sig."""
 
+import json
 import os
 import re
+import time
 
 import pytest
 
@@ -32,9 +36,21 @@ def _run(home, run_id, *events, source="reel.mp4"):
     return folder
 
 
+def _data(out):
+    text = board.data_path(out).read_text(encoding="utf-8")
+    assert text.startswith("window.BOARD_DATA = ") and text.endswith(";\n")
+    return json.loads(text[len("window.BOARD_DATA = ") : -2])
+
+
 def _page(homes, out):
+    """What the viewer ends up with: the summary and every section from the data file."""
     board.render(homes, out)
-    return out.read_text(encoding="utf-8")
+    data = _data(out)
+    return data["summary"] + "".join(r["html"] for r in data["runs"])
+
+
+def _later():
+    time.sleep(0.005)  # ledger timestamps are milliseconds; runs made in a test must differ
 
 
 def _refs(text):
@@ -137,3 +153,136 @@ def test_a_run_with_no_task_event_still_shows(tmp_path):
     assert run["status"] == "DONE" and run["spent"] == 0
     text = _page([home], base / "board.html")
     assert "used" in text and "DONE" in text
+
+
+def test_the_shell_is_static_and_never_reloads(tmp_path):
+    base = tmp_path / "creature-homes"
+    home = _home(base, "one")
+    _run(home, "r1", ("run_end", {"status": "BUILT"}))
+    out = base / "board.html"
+    board.render([home], out)
+    shell = out.read_text(encoding="utf-8")
+    assert "http-equiv" not in shell and "refresh" not in shell.lower() and "location.reload" not in shell
+    assert "class='run'" not in shell and "r1" not in shell  # no run in it
+    assert "<div id='runs'></div>" in shell and "board-data.js" in shell
+    before = out.stat()
+    time.sleep(0.01)
+    _run(home, "r2", ("run_end", {"status": "FAILED"}))
+    board.render([home], out)  # new runs, same shell: it is not even rewritten
+    after = out.stat()
+    assert (before.st_ino, before.st_mtime_ns) == (after.st_ino, after.st_mtime_ns)
+    assert out.read_text(encoding="utf-8") == shell
+    assert sorted(p.name for p in base.iterdir()) == ["board-data.js", "board.html", "one"]  # no temp files
+
+
+def test_the_data_file_holds_every_run_with_an_id_and_a_sig(tmp_path):
+    base = tmp_path / "creature-homes"
+    one, two = _home(base, "one"), _home(base, "two")
+    _run(one, "r1", ("run_end", {"status": "BUILT"}), source="a.mp4")
+    _run(one, "r2", ("run_end", {"status": "BUILT"}), source="b.mp4")
+    _run(two, "r3", ("run_end", {"status": "FAILED", "gap": "no"}), source="c.mp4")
+    board.render([one, two], base / "board.html", now=1_700_000_000)
+    data = _data(base / "board.html")
+    assert re.fullmatch(r"\d\d:\d\d:\d\d", data["updated"]) and data["homes"] == "one, two"
+    assert "<b>3</b>běhů" in data["summary"]
+    ids = [r["id"] for r in data["runs"]]
+    assert len(ids) == 3 and len(set(ids)) == 3
+    for r in data["runs"]:
+        assert set(r) == {"id", "sig", "html"} and r["sig"] == board._sig(r["html"])
+        assert r["html"].startswith("<section") and r["html"].endswith("</section>")
+    for needle in ("r1", "r2", "r3", "Chybí: no"):
+        assert any(needle in r["html"] for r in data["runs"]), needle
+    assert (
+        board.data_path(base / "board.html").read_text(encoding="utf-8").isascii()
+    )  # valid whatever the charset
+
+
+def test_a_section_that_did_not_change_keeps_its_sig_between_renders(tmp_path):
+    base = tmp_path / "creature-homes"
+    home = _home(base, "one")
+    _run(home, "r1", ("run_end", {"status": "BUILT"}), source="a.mp4")
+    _run(home, "r2", ("round", {"round": 1, "note": "n"}), source="b.mp4")
+    out = base / "board.html"
+    now = board.time.time()
+    board.render([home], out, now=now)
+    first = {r["id"]: r["sig"] for r in _data(out)["runs"]}
+    board.render([home], out, now=now)  # nothing happened: nothing differs
+    assert {r["id"]: r["sig"] for r in _data(out)["runs"]} == first
+    board.render([home], out, now=now + 3)  # a few seconds on: an ended run reads the same
+    assert {r["id"]: r["sig"] for r in _data(out)["runs"]}["src:a.mp4"] == first["src:a.mp4"]
+    # something happens in b only: b's sig moves, a's does not
+    Ledger(home / "runs" / "r2.jsonl").record("round", round=2, note="second")  # reopened: the chain goes on
+    board.render([home], out, now=now)
+    third = {r["id"]: r["sig"] for r in _data(out)["runs"]}
+    assert third["src:a.mp4"] == first["src:a.mp4"] and third["src:b.mp4"] != first["src:b.mp4"]
+
+
+def test_render_is_a_pure_function_of_the_ledgers(tmp_path):
+    base = tmp_path / "creature-homes"
+    home = _home(base, "one")
+    _run(home, "r1", ("model_call", {"step": "s", "cost_usd": 0.01, "model": "m"}), source="a.mp4")
+    _run(home, "r2", ("run_end", {"status": "BUILT"}), source="b.mp4")
+    out = base / "board.html"
+    board.render([home], out, now=1_700_000_000)
+    first = (out.read_bytes(), board.data_path(out).read_bytes())
+    board.render([home], out, now=1_700_000_000)
+    assert (out.read_bytes(), board.data_path(out).read_bytes()) == first
+    # only the clock differs when `now` does: the header time; the ended run keeps its text
+    board.render([home], out, now=1_700_000_000 + 4000)
+    later = _data(out)
+    now_data = json.loads(first[1].decode()[len("window.BOARD_DATA = ") : -2])
+    assert later["updated"] != now_data["updated"] or later["runs"] != now_data["runs"]
+    assert {r["id"]: r["html"] for r in later["runs"]}["src:b.mp4"] == {
+        r["id"]: r["html"] for r in now_data["runs"]
+    }["src:b.mp4"]
+
+
+def test_runs_of_the_same_reel_are_one_group_with_tabs_oldest_to_newest(tmp_path):
+    base = tmp_path / "creature-homes"
+    one, two = _home(base, "one"), _home(base, "two")
+    _run(one, "old", ("run_end", {"status": "FAILED"}), source="Dcs-MiOpO2V.mp4")
+    _later()
+    _run(two, "other", ("run_end", {"status": "BUILT"}), source="Other.mp4")
+    _later()
+    _run(two, "new", ("run_end", {"status": "BUILT"}), source="Dcs-MiOpO2V.mp4")
+    out = base / "board.html"
+    board.render([one, two], out)
+    groups = _data(out)["runs"]
+    assert [g["id"] for g in groups] == ["src:Dcs-MiOpO2V.mp4", "src:Other.mp4"]  # newest run first
+    html = groups[0]["html"]
+    assert html.count("<section class='run'>") == 2
+    tabs = re.findall(r"<button[^>]*data-run='([^']*)'[^>]*>(V\d+)</button>", html)
+    assert tabs == [("one/old", "V1"), ("two/new", "V2")]  # oldest to newest
+    assert "class='tab FAILED'" in html and "class='tab BUILT on'" in html  # the newest is the selected one
+    old_panel = re.search(r"<div class='panel' data-run='one/old'([^>]*)>", html)
+    new_panel = re.search(r"<div class='panel' data-run='two/new'([^>]*)>", html)
+    assert old_panel and "hidden" in old_panel.group(1) and new_panel and "hidden" not in new_panel.group(1)
+    assert "V1" not in groups[1]["html"] and "class='tabs'" not in groups[1]["html"]  # one run: no tabs
+    assert "<b>3</b>běhů" in _data(out)["summary"]  # the summary still counts runs, not groups
+
+
+def test_the_same_run_name_in_two_homes_is_two_tabs(tmp_path):
+    base = tmp_path / "creature-homes"
+    one, two = _home(base, "one"), _home(base, "two")
+    _run(one, "r", ("run_end", {"status": "BUILT"}))
+    _later()
+    _run(two, "r", ("run_end", {"status": "BUILT"}))
+    board.render([one, two], base / "board.html")
+    [group] = _data(base / "board.html")["runs"]
+    assert "data-run='one/r'" in group["html"] and "data-run='two/r'" in group["html"]
+
+
+def test_a_render_that_fails_leaves_the_shell_and_says_why_in_the_data(tmp_path, monkeypatch):
+    base = tmp_path / "creature-homes"
+    home = _home(base, "one")
+    _run(home, "r1", ("run_end", {"status": "BUILT"}))
+    out = base / "board.html"
+
+    def broken(*args, **kwargs):
+        raise ValueError("bad ledger")
+
+    monkeypatch.setattr(board, "runs", broken)
+    board.main([home], out, None)
+    data = _data(out)
+    assert "bad ledger" in data["error"] and "runs" not in data  # the page keeps what it shows
+    assert "http-equiv" not in out.read_text(encoding="utf-8")
