@@ -254,3 +254,26 @@ def test_design_replays_with_no_model_call_and_no_dollars(world, fake_model):
     kinds = _kinds(creature)
     assert "model_call" not in kinds and "design_step" in kinds and kinds[-1] == "run_end"
     assert creature.ledger.spent_usd == 0 and report.spent_usd == 0
+
+
+# --- seals -----------------------------------------------------------------------
+
+
+def test_a_tampered_skill_is_logged_and_never_offered_to_the_planner(world, fake_model):
+    # a broken seal must not stop the creature: the skill is reported, skipped, and the run goes on
+    _build(world, fake_model)
+    root = world / "registry"
+    path = root / "typewriter-reveal" / "1" / "tests.json"
+    tests = json.loads(path.read_text(encoding="utf-8"))
+    tests["held_out"] = []
+    path.write_text(json.dumps(tests), encoding="utf-8")
+    broken = registry.broken(root)
+    assert len(broken) == 1 and "typewriter-reveal" in str(broken[0])
+    fresh = FakeModel()
+    fresh.queue("criteria", {**REPLY, "verdict": "skip", "reason": "nothing to reproduce"})
+    creature = _creature(world, fresh)
+    report = creature.try_reel("another.mp4", "A different line.")
+    assert report.status == "SKIP"
+    assert _steps(fresh) == ["criteria"]  # nothing left to offer, so the planner was not asked
+    kinds = _kinds(creature)
+    assert "seal_broken" in kinds and kinds[-1] == "run_end"
