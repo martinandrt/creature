@@ -74,6 +74,68 @@ def test_failed_call_cost_is_counted(fake_model, run):
     assert math.isclose(run.spent_usd, 0.03)
 
 
+@pytest.mark.parametrize(
+    ("budget", "reserve"),
+    [(float("nan"), 0.03), (float("inf"), 0.03), (-1.0, 0.03), (1.0, 0.0), (1.0, -1.0), (1.0, float("nan"))],
+)
+def test_bad_budget_or_reserve_is_refused_at_construction(fake_model, run, budget, reserve):
+    # NaN compares False everywhere, so a NaN budget never refuses; inf is no budget at all;
+    # a reserve <= 0 lets the run overshoot by |reserve| (measured: $0.16 spent on a $0.10 budget)
+    with pytest.raises(ValueError):
+        Model(fake_model, run, budget_usd=budget, reserve_usd=reserve)
+
+
+@pytest.mark.parametrize("cap", [0.0, -0.01, float("nan"), float("inf")])
+def test_bad_cap_is_refused_before_the_model_is_reached(fake_model, run, cap):
+    # today a NaN cap reaches the transport (paid), then the ledger write raises: the call is lost
+    fake_model.queue("forge", {"words": 1})
+    with pytest.raises(ValueError):
+        _model(fake_model, run).ask("forge", "s", "p", SCHEMA, cap_usd=cap)
+    assert fake_model.calls == []
+    assert _events(run, "model_call") == []
+
+
+def test_calls_within_the_reserve_never_exceed_the_budget(fake_model, run):
+    # the reserve is sized to one large fallback-priced call. While every call costs at most
+    # the reserve, the budget is a hard ceiling. Powers of two keep the float arithmetic exact.
+    budget, reserve = 0.125, 0.03125
+    for _ in range(10):
+        fake_model.queue("forge", {"words": 1}, cost_usd=reserve)
+    model = Model(fake_model, run, budget_usd=budget, reserve_usd=reserve)
+    with pytest.raises(BudgetRefused):
+        for _ in range(10):
+            model.ask("forge", "s", "p", SCHEMA, cap_usd=0.05)
+    assert len(fake_model.calls) == 4
+    assert run.spent_usd <= budget
+
+
+def test_overshoot_is_bounded_by_one_call_above_the_reserve_then_refused(fake_model, run):
+    # --max-budget-usd is checked after the turn, so one call can cost more than its cap;
+    # the damage is bounded by (that call's cost - reserve) and the very next call is refused
+    budget, reserve, big = 0.05, 0.03, 0.08
+    fake_model.queue("forge", {"words": 1}, cost_usd=0.0018).queue("forge", {"words": 1}, cost_usd=big)
+    fake_model.queue("forge", {"words": 1})
+    model = Model(fake_model, run, budget_usd=budget, reserve_usd=reserve)
+    model.ask("forge", "s", "p", SCHEMA, cap_usd=0.05)
+    model.ask("forge", "s", "p", SCHEMA, cap_usd=0.05)  # 0.0482 left >= reserve, so it proceeds
+    with pytest.raises(BudgetRefused):
+        model.ask("forge", "s", "p", SCHEMA, cap_usd=0.05)
+    assert len(fake_model.calls) == 2
+    assert run.spent_usd - budget <= big - reserve
+
+
+def test_reply_missing_required_keys_is_an_error_but_still_costs(run):
+    # the fake checks required keys; production must be at least as strict as the fake
+    class Loose:
+        def complete(self, call):
+            return llm.ModelReply(data={"other": 1}, cost_usd=0.001)
+
+    with pytest.raises(ModelError):
+        Model(Loose(), run, budget_usd=1.0).ask("planner", "s", "p", SCHEMA, cap_usd=0.05)
+    [event] = _events(run, "model_call")
+    assert event["cost_usd"] == 0.001
+
+
 def _cli_result(**over):
     result = {
         "type": "result",

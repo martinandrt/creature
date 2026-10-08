@@ -12,6 +12,7 @@ returns no result. A run can therefore overshoot its budget by at most one call.
 from __future__ import annotations
 
 import json
+import math
 import os
 import subprocess
 import tempfile
@@ -24,7 +25,13 @@ CLI_PACKAGE = "@anthropic-ai/claude-code@2.1.294"
 MODEL = "claude-haiku-5-5"
 FALLBACK_MODEL = "claude-haiku-4-5-20251001"
 RESERVE_USD = 0.03  # ~4k output tokens on the fallback model, plus input
-SECRET_ENV = ("CREATURE_SECRETS", "APIFY_TOKEN", "ELEVENLABS_API_KEY")
+# the CLI child gets only what it needs to run and log in; everything else in the shell stays out
+ENV_KEEP = (
+    "PATH", "HOME", "USER", "LOGNAME", "SHELL", "TMPDIR", "LANG", "LC_ALL", "LC_CTYPE", "TERM",
+    "ANTHROPIC_API_KEY", "ANTHROPIC_BASE_URL", "CLAUDE_CODE_OAUTH_TOKEN", "CLAUDE_CONFIG_DIR",
+    "HTTP_PROXY", "HTTPS_PROXY", "NO_PROXY", "http_proxy", "https_proxy", "no_proxy",
+    "NODE_EXTRA_CA_CERTS", "SSL_CERT_FILE",
+)  # fmt: skip
 INPUT_TOKEN_KEYS = ("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens")
 
 
@@ -75,6 +82,11 @@ class Model:
         reserve_usd: float = RESERVE_USD,
         model: str = MODEL,
     ) -> None:
+        # NaN compares False everywhere and would switch the cap off; inf is no budget at all
+        if not (math.isfinite(budget_usd) and budget_usd >= 0):
+            raise ValueError(f"budget_usd must be a finite number >= 0, got {budget_usd!r}")
+        if not (math.isfinite(reserve_usd) and reserve_usd > 0):
+            raise ValueError(f"reserve_usd must be a finite number > 0, got {reserve_usd!r}")
         self.transport = transport
         self.ledger = ledger
         self.budget_usd = budget_usd
@@ -88,7 +100,9 @@ class Model:
     def ask(
         self, step: str, system: str, prompt: str, schema: dict[str, Any], *, cap_usd: float
     ) -> dict[str, Any]:
-        """Structured answer for one step, or ModelError. Never spends past the caps it was given."""
+        """Structured answer for one step, or ModelError. A call is logged with its cost or not made."""
+        if not (math.isfinite(cap_usd) and cap_usd > 0):
+            raise ValueError(f"{step}: cap_usd must be a finite number > 0, got {cap_usd!r}")
         remaining = self.remaining_usd
         if remaining < self.reserve_usd:
             self.ledger.record("model_refused", step=step, reason="budget", remaining_usd=round(remaining, 6))
@@ -109,6 +123,9 @@ class Model:
         )  # fmt: skip
         if not ok:
             raise ModelError(f"{step}: reply is not a JSON object")
+        missing = set(schema.get("required", [])) - reply.data.keys()
+        if missing:
+            raise ModelError(f"{step}: reply lacks required keys {sorted(missing)}")
         return reply.data
 
 
@@ -131,7 +148,7 @@ class ClaudeCLI:
         ]  # fmt: skip
 
     def complete(self, call: ModelCall) -> ModelReply:
-        env = {key: value for key, value in os.environ.items() if key not in SECRET_ENV}
+        env = {key: value for key, value in os.environ.items() if key in ENV_KEEP}
         with tempfile.TemporaryDirectory(prefix="creature-model-") as empty:
             try:
                 proc = subprocess.run(
@@ -152,7 +169,7 @@ def parse(stdout: str, call: ModelCall, *, stderr: str = "") -> ModelReply:
         raise ModelError(f"CLI gave no JSON: {(stdout or stderr).strip()[:300]}") from None
     if not isinstance(result, dict):
         raise ModelError("CLI result is not an object")
-    cost = float(result.get("total_cost_usd") or 0.0)
+    cost = _cost(result.get("total_cost_usd"), call)
     if result.get("is_error") or result.get("subtype") != "success":
         raise ModelError(f"CLI error: {result.get('subtype')}: {str(result.get('result'))[:300]}", cost)
     data = result.get("structured_output")
@@ -169,6 +186,15 @@ def parse(stdout: str, call: ModelCall, *, stderr: str = "") -> ModelReply:
         input_tokens=sum(int(tokens.get(key, 0)) for key in INPUT_TOKEN_KEYS),
         output_tokens=int(tokens.get("output_tokens", 0)),
     )
+
+
+def _cost(value: object, call: ModelCall) -> float:
+    # an unreadable cost is unknown, and unknown counts as the whole cap
+    try:
+        cost = float(value or 0.0)
+    except (TypeError, ValueError):
+        return call.max_usd
+    return cost if math.isfinite(cost) and cost >= 0 else call.max_usd
 
 
 def resolve_binary() -> str:
