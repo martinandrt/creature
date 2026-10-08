@@ -236,7 +236,7 @@ def test_a_landscape_timeline_has_its_sources_orientation_everywhere():
 
 
 def test_follow_gives_each_reel_shot_the_screen_learned_for_it():
-    # cuts at 1 s and 2 s; screen x shows at 0.5 s, y at 1.5 s, nothing learned for 2–3 s
+    # cuts at 1 s and 2 s; screen x shows at 0.5 s, y at 1.5 s, nothing learned for 2 to 3 s
     t = montage.follow("m", [((0.5,), "x", 1), ((1.5,), "y", 2)], 3.0, (1.0, 2.0), layers=[], landscape=False)
     assert t is not None and montage.problems(t) == []
     assert [(s["source"], s["start"], s["dur"]) for s in t["scenes"]] == [
