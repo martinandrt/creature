@@ -197,7 +197,7 @@ def write(
     if palette and "palette" not in params:  # measured, not named: a user's style may replace it
         params["palette"] = palette
         sources["palette"] = "measured from the reel's frames"
-    output = clip_format(data["duration_s"])
+    output = clip_format(data["duration_s"], landscape=reel.width > reel.height)
     look = look_checks(reel, output["file"]) if data.get("look_matters") is True else []
     kind = "montage" if data.get("kind") == "montage" else "effect"
     parts = (
@@ -322,8 +322,9 @@ def read_params(raw: Any) -> tuple[dict[str, Any], dict[str, str]]:
     return params, sources
 
 
-def clip_format(duration_s: Any) -> dict[str, Any]:
-    """The house format with a duration clamped to the allowed range and snapped to whole frames."""
+def clip_format(duration_s: Any, *, landscape: bool = False) -> dict[str, Any]:
+    """The house format with a duration clamped to the allowed range and snapped to whole frames; a
+    landscape reel gets the same format turned (1920x1080), so a copy can be compared frame by frame."""
     try:
         seconds = float(duration_s)
     except (TypeError, ValueError):
@@ -331,7 +332,8 @@ def clip_format(duration_s: Any) -> dict[str, Any]:
     if not math.isfinite(seconds):
         seconds = 3.0
     frames = round(min(MAX_S, max(MIN_S, seconds)) * FPS)
-    return {"file": CLIP, "width": WIDTH, "height": HEIGHT, "fps": FPS, "duration_s": frames / FPS}
+    width, height = (HEIGHT, WIDTH) if landscape else (WIDTH, HEIGHT)
+    return {"file": CLIP, "width": width, "height": height, "fps": FPS, "duration_s": frames / FPS}
 
 
 def hold_out(criteria: list[str], seed: str) -> tuple[list[str], list[str]]:

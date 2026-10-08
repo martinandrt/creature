@@ -295,7 +295,7 @@ class Creature:
     def _other_length(self, code: str, spec: criteria.Spec, folder: Path) -> Outcome:
         """The same skill 2 s shorter (at least 1 s) must still pass the file checks: "my input, shorter"."""
         seconds = max(criteria.MIN_S, spec.output["duration_s"] - 2.0)
-        output = criteria.clip_format(seconds)
+        output = criteria.clip_format(seconds, landscape=spec.output["width"] > spec.output["height"])
         other = dataclasses.replace(spec, output=output, checks=tuple(criteria.checks_for(output)))
         ran = workshop.run(code, forge.skill_input(other), limits=self.authority.workshop, image=self.image)
         problems = [f"the script failed: {ran.error}"] if not ran.ok else list(

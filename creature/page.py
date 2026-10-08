@@ -196,7 +196,12 @@ def _replay(report: Any, events: list[dict[str, Any]]) -> str:
     installed = next((e for e in events if e["type"] == "installed"), None)
     task = next((e for e in events if e["type"] in ("task", "design_task")), {})
     lines = []
-    name = installed["design"] if installed else (report.skill or "").split("@")[0].removeprefix("design:")
+    if installed and installed.get("kind") == "tool":
+        name = ""  # a tool replays with `creature use`, below
+    elif installed:
+        name = installed.get("design") or installed.get("skill", "")
+    else:
+        name = (report.skill or "").split("@")[0].removeprefix("design:")
     if name:
         texts = task.get("texts") or [task.get("text", "")]
         given = " ".join(f"--text {shlex.quote(t)}" for t in texts)
