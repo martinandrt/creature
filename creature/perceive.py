@@ -24,6 +24,7 @@ APIFY_COST_USD = 0.001 + 0.0026 + 0.048
 APIFY_MAX_CHARGE_USD = 0.10
 APIFY_TIMEOUT_S = 180
 MAX_VIDEO_BYTES = 100_000_000
+MAX_APIFY_BYTES = 5_000_000
 FRAMES = 12  # one strip: 6 columns x 2 rows, in time order
 
 # Fixed code (ours, not generated) that runs in the workshop on the downloaded video.
@@ -137,8 +138,11 @@ def fetch_reel(url: str) -> dict[str, Any]:
     )
     try:
         with urllib.request.urlopen(request, timeout=APIFY_TIMEOUT_S + 30) as response:
-            items = json.loads(response.read())
-    except OSError as error:
+            body = response.read(MAX_APIFY_BYTES + 1)
+        if len(body) > MAX_APIFY_BYTES:
+            raise PerceiveError("Apify answer is too large")
+        items = json.loads(body)
+    except (OSError, json.JSONDecodeError) as error:
         raise PerceiveError(f"Apify: {error}") from None
     if not isinstance(items, list) or not items or not isinstance(items[0], dict):
         raise PerceiveError("Apify returned no reel")
