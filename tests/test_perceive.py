@@ -223,3 +223,22 @@ def test_whisper_missing_or_hearing_music_gives_no_transcript(monkeypatch, tmp_p
     assert perceive.transcribe(wav) == ""  # a word heard in music is not speech
     monkeypatch.setattr(perceive.subprocess, "run", heard(" Apply the typewriter\n transition here.\n"))
     assert perceive.transcribe(wav) == "Apply the typewriter transition here."
+
+
+@pytest.mark.docker
+def test_palette_measures_the_picture_not_the_letterbox(home, tmp_path):
+    # a square reel is padded into the 9:16 tile with black bars (210 of 480 rows, 44 % of the tile).
+    # The palette describes the reel's colours: a pure red reel must come out red, with no black entry
+    limits = dataclasses.replace(authority.load(REPO).workshop, timeout_s=60)
+    image = workshop.ensure_image(REPO / "workshop")
+    code = CLIP_CODE.replace("testsrc2=s=360x640:r=30:d=2", "color=c=red:s=1080x1080:r=30:d=2")
+    clip = workshop.run(code, {}, limits=limits, image=image)
+    source = tmp_path / "square.mp4"
+    source.write_bytes(clip.outputs["clip.mp4"])
+    log = Ledger.start(home, run_id="palette")
+    reel = perceive.perceive(str(source), tmp_path / "attempt", log, limits=limits, image=image)
+    assert (reel.width, reel.height) == (1080, 1080) and reel.palette
+    red = reel.palette[0]["hex"]
+    assert int(red[1:3], 16) > 240 and int(red[3:5], 16) < 16 and int(red[5:7], 16) < 16, reel.palette
+    assert reel.palette[0]["share"] > 0.9, reel.palette  # one colour, not 56 % red and 44 % padding
+    assert not any(c["hex"] == "#000000" for c in reel.palette), reel.palette

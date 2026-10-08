@@ -158,3 +158,30 @@ class TestChecks:
         source = "color=c=black:s=1080x1920:r=30:d=2,drawbox=x=440:y=860:w=200:h=200:color=white:t=fill"
         checked = self._check(env, spec, tmp_path, source)
         assert checked.problems == ()
+
+
+@pytest.mark.docker
+def test_a_stream_that_stops_decoding_is_a_finding_not_a_traceback(tmp_path):
+    # two parts of different formats joined with -c copy: the second half does not decode. The probe
+    # must say what it found (frames decoded vs. counted), not fall over a frame file ffmpeg never wrote
+    from creature import loop
+
+    limits = dataclasses.replace(authority.load(REPO).workshop, timeout_s=90)
+    image = workshop.ensure_image(REPO / "workshop")
+    parts = {}
+    for name, source in (
+        ("part00.mp4", "testsrc2=s=1080x1920:r=30:d=3"),
+        ("part01.mp4", "testsrc2=s=720x1280:r=25:d=3"),
+    ):
+        made = workshop.run(_clip_code(source), {}, limits=limits, image=image)
+        (tmp_path / name).write_bytes(made.outputs["clip.mp4"])
+        parts[name] = tmp_path / name
+    joined = workshop.run(loop.JOIN_CODE, {"parts": sorted(parts)}, parts, limits=limits, image=image)
+    assert joined.ok and loop.JOINED in joined.outputs  # concat itself does not notice
+    output = {**criteria.clip_format(5.5), "file": loop.JOINED}  # 90 + 75 frames declared
+    checked = verdict.check(
+        joined.outputs, tuple(criteria.checks_for(output)), limits=limits, image=image, folder=tmp_path
+    )
+    assert checked.problems
+    assert not any("Error" in problem for problem in checked.problems), checked.problems
+    assert checked.probe.get("readable") and checked.probe.get("frames")  # ffprobe did read the file

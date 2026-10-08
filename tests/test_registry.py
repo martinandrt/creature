@@ -132,3 +132,17 @@ def test_compose_flattens_designs_and_adds_skills_in_order(root, ref):
         registry.compose(root, "solo", ["intro"], origin={})
     with pytest.raises(KeyError):
         registry.compose(root, "ghost", ["intro", "nothing"], origin={})
+
+
+def test_compose_never_overwrites_a_design_or_takes_a_skills_name(root, ref):
+    # `creature compose intro ...` must not silently replace the learned design "intro", and a design
+    # named like a skill would shadow that skill in every later lookup (compose prefers designs)
+    registry.install(root, _spec("typewriter-reveal"), "# a", origin=ORIGIN, cost=COST, reference=ref)
+    registry.install(root, _spec("counter-roll"), "# b", origin=ORIGIN, cost=COST, reference=ref)
+    registry.save_design(root, "intro", [{"skill": "counter-roll", "version": 1}], origin=ORIGIN)
+    with pytest.raises(FileExistsError):
+        registry.compose(root, "intro", ["typewriter-reveal", "counter-roll"], origin={})
+    with pytest.raises(FileExistsError):
+        registry.compose(root, "counter-roll", ["typewriter-reveal", "intro"], origin={})
+    assert registry.design(root, "intro")["steps"] == [{"skill": "counter-roll", "version": 1}]
+    assert registry.designs(root) == ["intro"]
