@@ -13,5 +13,8 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 
+# editor and agent harness state
+.claude/
+
 # os
 .DS_Store
