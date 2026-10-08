@@ -834,7 +834,8 @@ def test_the_forge_is_told_about_the_library_and_the_skill_records_what_it_uses(
     creature, report = _learn_with_library(home, fake_model)
     assert report.status == "BUILT" and report.fingerprint_same, report.gap
     forge_prompt = fake_model.calls[1].prompt
-    assert "Asset library, read-only at /assets" in forge_prompt and "/assets/tvary/kruh.svg" in forge_prompt
+    # shapes are geometry the code draws: a circle task gets fonts, not the library's circle
+    assert "Asset library, read-only at /assets" in forge_prompt and "kruh" not in forge_prompt
     assert "/assets/pisma/font.ttf" in forge_prompt and "sipka" not in forge_prompt
     skill = registry.get(home / "registry", "typewriter-reveal")
     assert skill.capability["assets"] == ["/assets/pisma/font.ttf", "/assets/tvary/kruh.svg"]
