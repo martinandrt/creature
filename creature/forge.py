@@ -25,6 +25,9 @@ SCHEMA = {
 FONTS = (
     "/usr/share/fonts/opentype/inter/Inter-<weight>.otf with <weight> one of Thin, ExtraLight, Light, "
     "Regular, Medium, SemiBold, Bold, ExtraBold, Black (also <weight>Italic and InterDisplay-<weight>); "
+    "/usr/share/fonts/truetype/barlow/Barlow-<weight>.ttf with <weight> one of Regular, Medium, SemiBold, "
+    "Bold, ExtraBold, Black; /usr/share/fonts/truetype/jetbrains-mono/JetBrainsMono-<weight>.ttf with "
+    "<weight> one of Thin, Light, Regular, Medium, SemiBold, Bold, ExtraBold; "
     "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf, DejaVuSans-Bold.ttf, DejaVuSerif.ttf, "
     "DejaVuSerif-Bold.ttf, DejaVuSansMono.ttf, DejaVuSansMono-Bold.ttf"
 )
@@ -38,12 +41,13 @@ Contract:
   width x height, exactly fps, exactly round(duration_s * fps) frames.
 - Return a small JSON-serialisable dict about what you rendered.
 - Every param is optional: use the given value if present, else a sensible default, so the skill works
-  on any text.
+  on any text. When params has "palette" (hex colours, most used first) or "fonts" ({{"title": path,
+  "label": path}}), draw with those instead of your own choice: a design may pass the user's own.
 - The skill runs later on texts you have not seen: take every word from input["text"] and derive
   anything that depends on the words from them; never hardcode words of one text.
 
 Available, and nothing else: no network, no installs, no files outside work and /tmp.
-- Python 3.12 standard library, Pillow 11.3 (PIL), numpy 2.5.
+- Python 3.12 standard library, Pillow 11.3 (PIL), numpy 2.5, scipy 1.18.
 - ffmpeg and ffprobe 7.1 on PATH. A reliable pattern: draw each frame with Pillow and write raw RGB bytes
   to ffmpeg started with ["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24",
   "-s", f"{{w}}x{{h}}", "-r", str(fps), "-i", "-", "-frames:v", str(n), "-c:v", "libx264",
