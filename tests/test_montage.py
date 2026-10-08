@@ -217,3 +217,18 @@ def test_a_skill_named_twice_is_one_source_that_the_order_repeats():
     assert [s["skill"] for s in t["sources"].values()] == ["grid-cards", "type-wall", "stripe-bg"]
     assert [s["source"] for s in t["scenes"][:6]] == ["a", "b", "a", "c", "b", "a"]
     assert montage.problems(t) == []
+
+
+def test_a_landscape_timeline_has_its_sources_orientation_everywhere():
+    sources = {"a": {"skill": "grid-cards", "version": 1, "params": {}}}
+    t = montage.timeline("wide", sources, ["a"], every=4, frames=60, layers=[], landscape=True)
+    assert (t["width"], t["height"]) == (criteria.HEIGHT, criteria.WIDTH)
+    by_kind = {c["kind"]: c for c in montage.checks(t, [[100, 100, 200, 50]])}
+    assert (by_kind["resolution"]["width"], by_kind["resolution"]["height"]) == (1920, 1080)
+    [box] = by_kind["safe_zone"]["boxes"]
+    assert box == pytest.approx([100 / 1920, 100 / 1080, 300 / 1920, 150 / 1080])
+    choice = {"sources": ["grid-cards"], "mark": {"use": False}}
+    wide = composer.timeline("wide", choice, [_skill("grid-cards")], landscape=True)
+    assert (wide["width"], wide["height"]) == (1920, 1080) and montage.problems(wide) == []
+    tall = composer.timeline("tall", choice, [_skill("grid-cards")])
+    assert (tall["width"], tall["height"]) == (1080, 1920)
