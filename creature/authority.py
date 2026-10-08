@@ -27,7 +27,6 @@ ENFORCERS = (
     "authority.py",
     "ledger.py",
     "gate.py",
-    "sandbox.py",
     "workshop.py",
     "verdict.py",
     "llm.py",
