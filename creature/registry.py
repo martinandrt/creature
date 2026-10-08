@@ -191,7 +191,25 @@ def spec_of(skill: Skill, text: str) -> Spec:
 
 
 def skills(root: Path) -> list[Skill]:
-    return [get(root, slug) for slug in sorted(_index(root)["skills"])]
+    """Every skill whose seal holds. A skill with a broken seal is never offered for use."""
+    found = []
+    for slug in sorted(_index(root)["skills"]):
+        try:
+            found.append(get(root, slug))
+        except ValueError:
+            continue
+    return found
+
+
+def broken(root: Path) -> list[str]:
+    """Skills whose files changed after install; listed so a human can see them, never used."""
+    bad = []
+    for slug in sorted(_index(root)["skills"]):
+        try:
+            get(root, slug)
+        except ValueError as error:
+            bad.append(str(error))
+    return bad
 
 
 def activate(root: Path, slug: str, version: int) -> None:

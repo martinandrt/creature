@@ -105,7 +105,7 @@ def build(
     cap_usd: float,
     try_code: Callable[[str, int], Outcome],
 ) -> Build:
-    """Up to `attempts` rounds of write, run and judge; `try_code(code, n)` runs gate, workshop, verdict."""
+    """Up to `attempts` rounds of write, run and judge; `try_code(code, n)` runs workshop and verdict."""
     if isinstance(attempts, bool) or not isinstance(attempts, int) or attempts < 1:
         raise ValueError(f"attempts must be an integer >= 1, got {attempts!r}")
     code: str | None = None

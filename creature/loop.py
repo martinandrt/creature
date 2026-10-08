@@ -54,6 +54,8 @@ class Creature:
         self.reel: perceive.Reel | None = None
         self.installed = 0
         self.ledger.record("run_start", fingerprint=self.start.digest, image=self.image)
+        for problem in registry.broken(self.registry):
+            self.ledger.record("seal_broken", problem=problem)
 
     def cap(self, step: str) -> float:
         return self.authority.caps.step_cap_usd[step]

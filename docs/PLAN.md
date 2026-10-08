@@ -70,7 +70,6 @@ creature/
     criteria.py         reel → effect, success criteria (visible + held out), task, clip format, file checks
     planner.py          task + registry → existing skills to run or chain, or a gap
     forge.py            gap + criteria + last failure → skill code, max 3 attempts
-    gate.py             static filter on skill code
     workshop.py         runs skill code in the workshop container: files in, clip out
     verdict.py          file checks (fixed code, ffprobe) + judge (frames and criteria, never code)
     registry.py         install, version, index, search
@@ -90,8 +89,8 @@ creature/
 3. Criteria, **before any attempt**: the effect, success criteria (some held out from the forge), the task on my
    input, and the clip format (duration, resolution, fps) with file checks as data.
 4. Planner: does the registry already do it? Run it. Otherwise it is a gap.
-5. Gap: does it fit the authority? No → **ASK** (queue) or **REFUSE**. Yes → the forge writes a script, the gate
-   filters it, the workshop runs it, the verdict judges it: file checks first, then the judge. A failure goes back
+5. Gap: does it fit the authority? No → **ASK** (queue) or **REFUSE**. Yes → the forge writes a script, the workshop
+   runs it (the container is the boundary; there is no static gate), the verdict judges it: file checks first, then the judge. A failure goes back
    to the forge with the gap described; after 3 attempts → **FAILED**, with the gap described for me.
 6. Success → install as a skill (automatic after passing checks) and write the side-by-side page.
 7. End: fingerprint again (must equal step 1), summary with dollars.
@@ -188,7 +187,7 @@ Work is assigned by Martin and the main session. QA owns `tests/` and quality to
 | 6 | verdict: file checks + judge | 00:50 |
 | 7 | registry: install + index | 01:10 |
 | — | **first reel end to end** (`creature try`); then Martin runs more reels himself | **01:50** |
-| 8 | gate for workshop code | 02:10 |
+| — | ~~gate for workshop code~~: dropped (Martin); the container is the boundary | — |
 | 9 | side-by-side page + morning overview | 02:50 |
 | 10 | approval with preview | 03:10 |
 | — | 2–3 effects in the registry for composition | 03:15 |

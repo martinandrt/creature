@@ -67,6 +67,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{skill.slug} v{skill.version}  learned for ${learned:.4f}  {effect}")
         for name in registry.designs(root / "registry"):
             print(f"design: {name}")
+        for problem in registry.broken(root / "registry"):
+            print(f"SEAL BROKEN, not used: {problem}")
         return 0
     if args.command == "show":
         skill = registry.get(root / "registry", args.slug)

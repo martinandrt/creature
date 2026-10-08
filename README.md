@@ -40,10 +40,10 @@ Filled in honestly as features land.
 - A run can overshoot its model budget by at most one call. The spine refuses a call when the budget
   left is below a reserve, but the CLI checks `--max-budget-usd` only after a turn, so one call cannot be
   cut short; a call over its cap still costs and returns nothing.
-- The static gate is a filter, not a wall. Code can reach further through a public attribute of an
-  allowed module; the container (no network, read-only filesystem, no secrets) is what makes that harmless.
-- The gate rejects `__` anywhere, including inside strings, so a skill that writes Markdown bold as
-  `__x__` is refused and has to use `**x**`. Safety over the rare skill.
+- There is no static filter on generated code. The boundary is the workshop container: no network,
+  a read-only image, no keys or host environment, one work folder of fixed size, an unprivileged user,
+  no capabilities, and limits on time, memory, processes and output. Generated code never runs on the
+  host. A filter in front of it would only reject code the container already makes harmless.
 
 ## Tooling used to build it
 

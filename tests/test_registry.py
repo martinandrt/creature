@@ -110,3 +110,11 @@ def test_installed_skill_keeps_its_reference_and_spec(root, ref):
         again.text == "New text" and again.criteria == _spec().criteria and again.held_out == _spec().held_out
     )
     assert again.checks == _spec().checks and again.output == _spec().output
+
+
+def test_a_broken_seal_hides_the_skill_but_not_the_registry(root, ref):
+    registry.install(root, _spec("typewriter-reveal"), "# a", origin=ORIGIN, cost=COST, reference=ref)
+    registry.install(root, _spec("counter-roll"), "# b", origin=ORIGIN, cost=COST, reference=ref)
+    (root / "counter-roll" / "1" / "skill.py").write_text("# edited by hand")
+    assert [s.slug for s in registry.skills(root)] == ["typewriter-reveal"]
+    assert len(registry.broken(root)) == 1 and "counter-roll" in registry.broken(root)[0]

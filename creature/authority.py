@@ -2,7 +2,7 @@
 
 authority.json holds every cap and limit; the spine reads them from here, never from constants.
 The fingerprint covers authority.json, the workshop image ID and every module that enforces or proves
-the rules: this checker, the ledger, the gate, the workshop, the verdict, the model call (spend caps),
+the rules: this checker, the ledger, the workshop, the verdict, the model call (spend caps),
 the forge loop (attempt caps) and the registry (install only after passing checks). A run takes it at
 the start and at the end; any difference means authority changed while the creature ran. A module
 that starts enforcing a rule must be added to ENFORCERS.
@@ -26,7 +26,6 @@ IMAGE_PART = "workshop image"
 ENFORCERS = (
     "authority.py",
     "ledger.py",
-    "gate.py",
     "workshop.py",
     "verdict.py",
     "llm.py",
