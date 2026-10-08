@@ -87,14 +87,16 @@ def timeline(name: str, choice: dict[str, Any], catalog: list[Skill]) -> dict[st
     """The choice as a timeline. Unknown names are dropped; the mark is kept inside its size range."""
     by_slug = {s.slug: s for s in catalog}
     sources: dict[str, dict[str, Any]] = {}
+    ids: dict[str, str] = {}  # one source per skill: it renders once, the order may name it again
     order = []
     for name_ in choice.get("sources", []):
         skill = by_slug.get(str(name_).strip())
         if skill is None:
             continue
-        sid = chr(97 + len(sources))
-        sources[sid] = {"skill": skill.slug, "version": skill.version, "params": {}}
-        order.append(sid)
+        if skill.slug not in ids:
+            ids[skill.slug] = chr(97 + len(sources))
+            sources[ids[skill.slug]] = {"skill": skill.slug, "version": skill.version, "params": {}}
+        order.append(ids[skill.slug])
     mark = choice.get("mark") if isinstance(choice.get("mark"), dict) else {}
     layers = []
     if mark.get("use") is True:
