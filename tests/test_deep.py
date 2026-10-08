@@ -415,3 +415,26 @@ def test_without_picked_items_or_a_library_the_first_round_is_only_the_reel(home
     r.build(assets=_library(tmp_path), limits=LIMITS)  # the criteria name no material: nothing picked
     assert [label for label, _ in r.fake.calls[0].images] == ["reel frames"]
     assert "(none: the criteria name no texture" in r.prompts()[0]
+
+
+def test_a_plateau_checks_the_best_version_once_and_stops(home, tmp_path, monkeypatch):
+    # 9. 10. 2026: a run paid 24 Opus rounds ($3.6) long after its score had stopped improving
+    r = Rounds(home, tmp_path, monkeypatch, scores=[10.0] + [9.9] * 8, finish_ok=(False,))
+    r.fake.queue("forge", _reply("v1", files=[V1, LAYOUT]))
+    for n in range(2, 8):
+        r.fake.queue("forge", _reply(f"v{n}", edits=[_edit("V = 1", f"V = {n}")]))
+    result = r.build(rounds=30)
+    assert not result.ok and result.gap.startswith("plateau:") and "seen one" in result.gap
+    assert result.rounds == 7 and len(r.fake.calls) == 7  # rounds 2..7 bought less than 3 %: stop
+    [(number, _)] = r.finished
+    assert number == 7 and r.events("plateau")[0]["best_round"] in range(1, 8)
+
+
+def test_a_score_that_keeps_improving_is_not_a_plateau(home, tmp_path, monkeypatch):
+    r = Rounds(home, tmp_path, monkeypatch, scores=[40.0 * 0.9**n for n in range(9)])
+    r.fake.queue("forge", _reply("v1", files=[V1, LAYOUT]))
+    for n in range(2, 9):
+        r.fake.queue("forge", _reply(f"v{n}", edits=[_edit(f"V = {n - 1}" if n > 2 else "V = 1", f"V = {n}")],
+                                     done=n == 8))  # fmt: skip
+    result = r.build(rounds=30)
+    assert result.ok and result.rounds == 8 and r.events("plateau") == []

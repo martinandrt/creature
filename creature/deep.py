@@ -33,6 +33,8 @@ from creature.llm import MAX_IMAGE_BYTES, BudgetRefused, Model, ModelError
 
 PAIRS = 12  # frame pairs per preview sheet
 WORSE = 1.10  # a round scoring more than 10 % worse than the best goes back to the best
+PLATEAU = 6  # rounds without a 3 % better score or a whole-clip check: the best version is checked, then stop
+BETTER = 0.97
 MAX_FILES, MAX_FILE_BYTES, MAX_TOTAL_BYTES = 8, 16_000, 48_000  # a round resends every file
 FILE = re.compile(r"[a-z][a-z0-9_]{0,30}\.(py|json)")
 MEASURE_CHARS = 3000
@@ -641,6 +643,7 @@ def build(
     # the version the next round starts from (round, files, images), and the lowest score seen
     base: tuple[int, dict[str, str], tuple[tuple[str, Path], ...]] = (0, {}, ())
     lowest = float("inf")
+    moved = 0  # the last round that scored 3 % better than before, or ended in a whole-clip check
     looks: list[dict[str, Any]] = []
     # the first round also sees what the library holds for this reel's material
     images: tuple[tuple[str, Path], ...] = (
@@ -700,6 +703,8 @@ def build(
                 if preview.score < lowest
                 else f"kept, within 10 % of your best {lowest:.2f}"
             )
+            if preview.score < lowest * BETTER:
+                moved = number
             base, lowest = (number, dict(space.files), preview.images), min(lowest, preview.score)
             feedback += f"\n{score}: {mine}."
         else:  # the next round starts again from the kept version, and sees its frames
@@ -708,7 +713,12 @@ def build(
             )
             space.files, images = dict(base[1]), base[2]
         ledger.record("round_score", round=number, score=preview.score, best=lowest, best_round=base[0])
-        if reply.get("done") is True or number == rounds:
+        stalled = number - moved >= PLATEAU  # more rounds buy nothing: check the best version, then stop
+        if stalled:
+            space.files = dict(base[1])
+            ledger.record("plateau", round=number, best=lowest, best_round=base[0])
+        if reply.get("done") is True or number == rounds or stalled:
+            moved = number
             judged = json.dumps(space.files, sort_keys=True)
             if judged in failed:  # the same files again: forge and judge disagree, more rounds buy nothing
                 ledger.record("stalemate", round=number, why=feedback.strip()[-400:])
@@ -719,6 +729,9 @@ def build(
                 return Result(True, space.files, number, "", tuple(used_assets(space.files, said)))
             failed.add(judged)
             last_verdict = "\n" + outcome.feedback
+            if stalled:
+                return Result(False, space.files, number, f"plateau: no better score for {PLATEAU} rounds, "
+                              "the best version did not pass:" + last_verdict)  # fmt: skip
             feedback += "\nYour whole clip was checked and did not pass:\n" + outcome.feedback
     return Result(False, space.files, rounds, feedback.strip() or "no round passed")
 
