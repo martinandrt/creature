@@ -744,3 +744,75 @@ def test_a_home_with_a_forge_model_builds_in_rounds_and_installs_the_wrapper(dee
     assert other["ok"] is True and other["seconds"] == 1.0
     assert (creature.folder / "attempt-1" / "shorter" / "clip.mp4").exists()
     assert (creature.folder / "rounds" / "round-01" / "files.json").exists()
+
+
+# --- the asset library in the round forge ----------------------------------------------
+
+
+@pytest.fixture
+def library_world(deep_world, tmp_path):
+    from tests.test_assets import library
+
+    home, calls = deep_world
+    lib = library(tmp_path / "lib")
+    _authority(
+        home, lambda a: (a["models"].update(forge="claude-opus-5-5"), a["workshop"].update(assets=str(lib)))
+    )
+    return home, calls, lib
+
+
+def _learn_with_library(home, fake):
+    files = [
+        {"path": "frame.py", "content": FRAME_PY + "FONT = '/assets/pisma/font.ttf'\n"},
+        {"path": "layout.json", "content": json.dumps({"frames": 90})},
+    ]
+    fake.queue("criteria", {**REPLY, "effect": "A circle grows", "task": "Draw a circle."})
+    said = ["/assets/tvary/kruh.svg", "/assets/tvary/kruh.svg", "/etc/passwd"]
+    fake.queue("forge", {"note": "done", "files": files, "edits": [], "done": True, "assets": said})
+    fake.queue("judge", _judge(True, True, True))
+    creature = _creature(home, fake)
+    return creature, creature.try_reel("reel.mp4", "Stay curious.")
+
+
+def test_the_forge_is_told_about_the_library_and_the_skill_records_what_it_uses(library_world, fake_model):
+    home, _, _ = library_world
+    creature, report = _learn_with_library(home, fake_model)
+    assert report.status == "BUILT" and report.fingerprint_same, report.gap
+    forge_prompt = fake_model.calls[1].prompt
+    assert "Asset library, read-only at /assets" in forge_prompt and "/assets/tvary/kruh.svg" in forge_prompt
+    assert "/assets/pisma/font.ttf" in forge_prompt and "sipka" not in forge_prompt
+    skill = registry.get(home / "registry", "typewriter-reveal")
+    assert skill.capability["assets"] == ["/assets/pisma/font.ttf", "/assets/tvary/kruh.svg"]
+    [start] = [e for e in ledger.read(creature.ledger.path) if e["type"] == "run_start"]
+    assert start["fingerprint"] == authority.fingerprint(home, image_id=IMAGE).digest
+
+
+def test_a_library_edited_during_the_run_refuses_the_install(library_world, fake_model, monkeypatch):
+    home, _, lib = library_world
+    real_build = loop.deep.build
+
+    def build_then_edit(*args, **kwargs):
+        result = real_build(*args, **kwargs)
+        (lib / "tvary" / "kruh.svg").write_text("<svg/>")  # one byte of what the workshop may read
+        return result
+
+    monkeypatch.setattr(loop.deep, "build", build_then_edit)
+    creature, report = _learn_with_library(home, fake_model)
+    assert report.status == "FAILED" and report.gap.startswith("not installed")
+    assert authority.ASSETS_PART in report.gap and registry.skills(home / "registry") == []
+    [refused] = [e for e in ledger.read(creature.ledger.path) if e["type"] == "install_refused"]
+    assert refused["changed"] == [authority.ASSETS_PART]
+
+
+def test_a_skill_that_needs_the_library_is_refused_cleanly_where_there_is_none(library_world, fake_model):
+    # capability.assets says "it needs that library to run": a home without one must say so before
+    # the workshop fails on a missing file, and spend nothing on it
+    home, calls, _ = library_world
+    _learn_with_library(home, fake_model)
+    _authority(home)  # the shipped authority: no asset library
+    before = len(calls["renders"])
+    creature = _creature(home, FakeModel())
+    report = creature.run_design("typewriter-reveal", "Other words.")
+    assert report.status == "FAILED" and "asset library" in report.gap and "/assets/" in report.gap
+    assert len(calls["renders"]) == before  # nothing rendered
+    assert _kinds(creature)[-1] == "run_end"
