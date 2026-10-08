@@ -342,7 +342,7 @@ def test_live_call_sees_an_image(run, tmp_path):
 
 
 def test_a_usage_limit_stops_every_later_call_without_reaching_the_model(run):
-    # 9. 10. 2026: the CLI said "You've hit your session limit" 110 times and each answer was retried as malformed
+    # 9. 10. 2026: "You've hit your session limit" came back 110 times, each retried as a malformed answer
     stdout = _cli_result(
         subtype="success", is_error=True, structured_output=None,
         result="You've hit your session limit · resets 2:10am (Europe/Prague)",
