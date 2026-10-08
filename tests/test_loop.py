@@ -4,10 +4,11 @@ a gap comes from a task, nothing installs without passing, a fresh process reuse
 rebuilding, caps hold in code, and the authority fingerprint catches a change."""
 
 import json
+import re
 
 import pytest
 
-from creature import authority, ledger, loop, registry, verdict, workshop
+from creature import authority, ledger, loop, page, registry, verdict, workshop
 from creature.perceive import Reel
 from tests.conftest import REPO
 from tests.fakes import FakeModel
@@ -277,3 +278,66 @@ def test_a_tampered_skill_is_logged_and_never_offered_to_the_planner(world, fake
     assert _steps(fresh) == ["criteria"]  # nothing left to offer, so the planner was not asked
     kinds = _kinds(creature)
     assert "seal_broken" in kinds and kinds[-1] == "run_end"
+
+
+# --- the page --------------------------------------------------------------------
+
+
+def _page(report):
+    return (report.folder / page.PAGE).read_text(encoding="utf-8")
+
+
+def _refs(text):
+    return [r for r in re.findall(r"(?:src|href)='([^']*)'", text) if not r.startswith("http")]
+
+
+def test_page_and_overview_use_relative_references_only(world, fake_model):
+    report = _build(world, fake_model)
+    text = _page(report)
+    assert "BUILT" in text and "typewriter-reveal" in text
+    assert str(world) not in text and "/Users/" not in text and "/private/" not in text
+    refs = _refs(text)
+    assert refs and all(not r.startswith("/") and (report.folder / r).exists() for r in refs)
+    overview = (world / page.OVERVIEW).read_text(encoding="utf-8")
+    assert "BUILT" in overview and str(world) not in overview
+
+
+def test_failed_page_lists_every_attempt(world, fake_model):
+    attempts = authority.load(world).caps.forge_attempts
+    fake_model.queue("criteria", REPLY)
+    for n in range(attempts):
+        fake_model.queue("forge", {"code": f"{CODE}  # try {n + 1}", "approach": "a"})
+        fake_model.queue("judge", _judge(False, True, True))
+    report = _creature(world, fake_model).try_reel("reel.mp4", "Stay curious.")
+    text = _page(report)
+    assert report.status == "FAILED" and f"Failed after {attempts} attempts" in text
+    for n in range(1, attempts + 1):
+        assert f"attempt {n}:" in text  # every attempt in the timeline, none cut
+    assert text.count("forge_attempt") == attempts and f"# try {attempts}" in text
+
+
+def test_failed_page_keeps_the_code_when_the_script_crashed(world, fake_model, monkeypatch):
+    # "never cut failures": a crash in the workshop leaves no clip; the page must still show the attempt
+    crashed = workshop.WorkshopResult(
+        ok=False, value=None, outputs={}, error="NameError: name 'x' (skill.py line 2)",
+        killed=None, duration_s=0.1, log="",
+    )  # fmt: skip
+    monkeypatch.setattr(loop.workshop, "run", lambda *a, **k: crashed)
+    attempts = authority.load(world).caps.forge_attempts
+    fake_model.queue("criteria", REPLY)
+    for n in range(attempts):
+        fake_model.queue("forge", {"code": f"{CODE}  # crash {n + 1}", "approach": "a"})
+    report = _creature(world, fake_model).try_reel("reel.mp4", "Stay curious.")
+    text = _page(report)
+    assert report.status == "FAILED" and report.clip is None
+    assert "NameError" in text and f"# crash {attempts}" in text
+
+
+def test_design_run_renders_its_page_and_rebuild_needs_no_model(world, fake_model):
+    _build(world, fake_model)
+    silent = FakeModel()
+    creature = _creature(world, silent)
+    report = creature.run_design("typewriter-reveal", "Replay this.")
+    assert "DONE" in _page(report) and "no model call" in _page(report) and silent.calls == []
+    again = page.rebuild(world, report.run_id)
+    assert again == report.folder / page.PAGE and "DONE" in again.read_text(encoding="utf-8")
