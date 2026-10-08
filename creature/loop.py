@@ -24,6 +24,7 @@ from creature import (
     perceive,
     planner,
     registry,
+    tools,
     verdict,
     workshop,
 )
@@ -292,7 +293,8 @@ class Creature:
             report.notes.append(f"gap: {gap['what']} (needs {gap['needs']})")
         if spec.gaps:
             self.ledger.record("gaps", gaps=list(spec.gaps))
-        catalog = [s for s in registry.skills(self.registry) if s.slug in learned]
+        effects = [s for s in registry.skills(self.registry) if s.capability.get("kind") != "tool"]
+        catalog = [s for s in effects if s.slug in learned]
         if not catalog:
             report.status, report.gap = "FAILED", "no surface could be learned"
             return self.finish(report)
@@ -353,6 +355,119 @@ class Creature:
             )
         report.status = "DONE"
         return self.finish(report)
+
+    def build_tool(self, wish: str | None = None) -> Report:
+        """Build a tool the creature wished for: spec with test cases (a model call), clips for the cases
+        (fixed code), forge, exact comparison of the answers, install as a skill of kind "tool"."""
+        report = Report(self.ledger.run_id, "FAILED", self.folder, skill="tool")
+        if wish is None:
+            found = json.loads((self.home / wishes_mod.WISHES).read_text(encoding="utf-8"))
+            first = next((w for w in found.get("wishes", []) if w.get("kind") == "tool"), None)
+            if first is None:
+                report.gap = "no tool among the wishes"
+                return self.finish(report)
+            wish = f"{first['capability']}. Why: {first.get('why', '')}"
+        self.ledger.record("tool_task", wish=wish[:600])
+        try:
+            spec, cases = tools.write_spec(
+                self.model, wish, cap_usd=self.cap("criteria"), seed=self.ledger.run_id,
+                model_name=self.model_for("criteria"),
+            )  # fmt: skip
+        except (ModelError, ValueError) as error:
+            report.gap = f"no usable tool spec: {error}"
+            return self.finish(report)
+        report.spec = spec
+        self.ledger.record(
+            "tool_spec", slug=spec.slug, purpose=spec.effect[:300], returns=spec.output["returns"][:300],
+            cases=len(cases), visible=len(spec.criteria), held_out=len(spec.held_out),
+        )  # fmt: skip
+        (self.folder / "spec.json").write_text(json.dumps(_spec_dict(spec), indent=1, ensure_ascii=False))
+        place = self.folder / "cases"
+        place.mkdir(exist_ok=True)
+        clips = {}
+        for number, case in enumerate(cases):
+            clips[case["name"]] = place / f"case-{number}.mp4"
+            clips[case["name"]].write_bytes(
+                tools.fixture(case, limits=self.authority.workshop, image=self.image)
+            )
+
+        def try_code(code: str, number: int) -> Outcome:
+            folder = self.folder / f"attempt-{number}"
+            folder.mkdir(parents=True, exist_ok=True)
+            (folder / "skill.py").write_text(code, encoding="utf-8")
+            results, seen, hidden = {}, [], 0
+            for case in cases:
+                ran = workshop.run(
+                    code, {"clip": "/work/in/clip.mp4", "params": {}}, {"clip.mp4": clips[case["name"]]},
+                    limits=self.authority.workshop, image=self.image,
+                )  # fmt: skip
+                wrong = (
+                    [f"the script failed: {ran.error}"] if not ran.ok
+                    else tools.compare(case["expect"], ran.value, float(case["tolerance"]))
+                )  # fmt: skip
+                results[case["name"]] = {
+                    "ok": not wrong,
+                    "got": ran.value if ran.ok else None,
+                    "wrong": wrong,
+                }
+                if wrong and case["name"] in spec.held_out:
+                    hidden += 1
+                elif wrong:
+                    seen += [f"Case {case['name']}: {w}" for w in wrong[:4]]
+            (folder / "results.json").write_text(
+                json.dumps(results, indent=1, ensure_ascii=False, default=str)
+            )
+            passed = sum(r["ok"] for r in results.values())
+            feedback = "\n".join(
+                seen + ([f"{hidden} more cases you were not shown also failed."] if hidden else [])
+            )
+            detail = {"stage": "cases", "passed": passed, "of": len(cases)}
+            return Outcome(passed == len(cases), feedback, detail)
+
+        before = self.ledger.spent_usd
+        built = forge.build(
+            self.model, spec, self.ledger, attempts=self.authority.caps.forge_attempts,
+            cap_usd=self.cap("forge"), try_code=try_code, system=tools.TOOL_SYSTEM, write=tools.prompt,
+        )  # fmt: skip
+        report.attempts = built.attempts
+        if not built.ok:
+            report.gap = built.gap
+            return self.finish(report)
+        now = authority.fingerprint(self.home, image_id=workshop.image_id(self.authority.image) or "missing")
+        if now.digest != self.start.digest:
+            report.gap = "not installed: the authority fingerprint changed mid-run"
+            self.ledger.record("install_refused", changed=authority.changed(self.start, now))
+            return self.finish(report)
+        first = clips[cases[0]["name"]]
+        sheet = workshop.run(
+            perceive.FRAMES_AT_CODE, {"times": [0.0]}, {"reel.mp4": first}, limits=self.authority.workshop,
+            image=self.image,
+        )  # fmt: skip
+        reference = self.folder / "case-frame.png"
+        reference.write_bytes(sheet.outputs.get("strip.png", b""))
+        origin = {"wish": wish[:300], "run": self.ledger.run_id}
+        cost = {"learn_usd": round(self.ledger.spent_usd - before, 6), "forge_attempts": built.attempts}
+        skill = registry.install(
+            self.registry, spec, built.code, origin=origin, cost=cost, reference=reference,
+            staging=self.folder, kind="tool",
+        )  # fmt: skip
+        self.ledger.record("installed", skill=skill.slug, version=skill.version, kind="tool", **cost)
+        report.status, report.skill = "BUILT", f"{skill.slug}@v{skill.version}"
+        return self.finish(report)
+
+    def use_tool(self, slug: str, clip: Path) -> dict[str, Any]:
+        """Run an installed tool on a clip: no model, the workshop only."""
+        skill = registry.get(self.registry, slug)
+        if skill.capability.get("kind") != "tool":
+            raise ValueError(f"{slug} is not a tool")
+        ran = workshop.run(
+            skill.code, {"clip": "/work/in/clip.mp4", "params": {}}, {"clip.mp4": clip},
+            limits=self.authority.workshop, image=self.image,
+        )  # fmt: skip
+        self.ledger.record(
+            "tool_used", skill=slug, version=skill.version, ok=ran.ok, error=(ran.error or "")[:300]
+        )
+        return {"ok": ran.ok, "result": ran.value, "error": ran.error}
 
     def render_timeline(
         self, t: dict[str, Any], text: str, folder: Path, *, mark: Path | None, style: dict[str, Any] | None

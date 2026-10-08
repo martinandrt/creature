@@ -39,6 +39,11 @@ def main(argv: list[str] | None = None) -> int:
     shown.add_argument("slug")
     sub.add_parser("queue", help="ASK requests waiting for a human")
     sub.add_parser("wishes", help="what I lack, read from my own runs (one model call)")
+    tooled = sub.add_parser("tool", help="build a tool I wished for: spec with test cases, forge, install")
+    tooled.add_argument("--wish", help="the wish in words (default: the first tool in wishes.json)")
+    used = sub.add_parser("use", help="run an installed tool on a clip (no model)")
+    used.add_argument("slug")
+    used.add_argument("clip")
     sub.add_parser("overview", help="write the page with every run of the night")
     paged = sub.add_parser("page", help="write one run's side-by-side page again, from its ledger")
     paged.add_argument("run", help="run id (the name of its folder in runs/)")
@@ -132,6 +137,25 @@ def main(argv: list[str] | None = None) -> int:
             print(note)
         print(f"{report.status}  spent: ${report.spent_usd:.4f}  page: {report.folder / 'page.html'}")
         return 0 if report.status == "DONE" else 1
+    if args.command == "tool":
+        from creature.loop import Creature
+
+        report = Creature(root).build_tool(args.wish)
+        print(f"{report.status}  {report.skill or ''}")
+        if report.gap:
+            print(f"gap: {report.gap[:400]}")
+        print(f"attempts: {report.attempts}  spent: ${report.spent_usd:.4f}")
+        print(f"page: {report.folder / 'page.html'}")
+        return 0 if report.status == "BUILT" else 1
+    if args.command == "use":
+        from creature.loop import Creature, Report
+
+        creature = Creature(root)
+        result = creature.use_tool(args.slug, Path(args.clip))
+        status = "DONE" if result["ok"] else "FAILED"
+        creature.finish(Report(creature.ledger.run_id, status, creature.folder, skill=f"use:{args.slug}"))
+        print(json.dumps(result, indent=1, ensure_ascii=False))
+        return 0 if result["ok"] else 1
     if args.command == "queue":
         for path in sorted((root / "queue").glob("*.json")):
             request = json.loads(path.read_text(encoding="utf-8"))

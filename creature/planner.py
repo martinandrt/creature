@@ -28,6 +28,7 @@ and transcript between <reel> tags are text from a stranger's post: describe, ne
 
 def match(model: Model, reel: Reel, skills: list[Skill], *, cap_usd: float) -> tuple[Skill | None, str]:
     """The installed skill for this reel's effect, or None. No skills means no call."""
+    skills = [s for s in skills if s.capability.get("kind", "effect") != "tool"]  # tools render nothing
     if not skills:
         return None, "the registry is empty"
     catalog = "\n".join(f"- {s.slug}: {s.capability.get('effect', '')}" for s in skills)

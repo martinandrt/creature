@@ -111,8 +111,12 @@ def build(
     attempts: int,
     cap_usd: float,
     try_code: Callable[[str, int], Outcome],
+    system: str = SYSTEM,
+    write: Callable[[Spec, str | None, str | None], str] | None = None,
 ) -> Build:
-    """Up to `attempts` rounds of write, run and judge; `try_code(code, n)` runs workshop and verdict."""
+    """Up to `attempts` rounds of write, run and judge; `try_code(code, n)` runs workshop and verdict.
+    A tool (a script that returns data) brings its own `system` and prompt `write`r."""
+    write = write or prompt
     if isinstance(attempts, bool) or not isinstance(attempts, int) or attempts < 1:
         raise ValueError(f"attempts must be an integer >= 1, got {attempts!r}")
     code: str | None = None
@@ -120,7 +124,7 @@ def build(
     outcomes: list[Outcome] = []
     for number in range(1, attempts + 1):
         try:
-            reply = model.ask("forge", SYSTEM, prompt(spec, code, feedback), SCHEMA, cap_usd=cap_usd)
+            reply = model.ask("forge", system, write(spec, code, feedback), SCHEMA, cap_usd=cap_usd)
         except BudgetRefused as error:
             # keep what the earlier attempts showed: the report says why the build stopped
             return Build(False, code, number - 1, tuple(outcomes), f"budget: {error}")

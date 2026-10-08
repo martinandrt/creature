@@ -82,8 +82,10 @@ def install(
     cost: dict[str, Any],
     reference: Path,
     staging: Path | None = None,
+    kind: str = "effect",
 ) -> Skill:
-    """Install a skill that passed. A slug that exists gets the next version, which becomes active."""
+    """Install a skill that passed. A slug that exists gets the next version, which becomes active.
+    `kind` is "effect" (renders a clip) or "tool" (returns data about a clip)."""
     if not SLUG.fullmatch(spec.slug):
         raise ValueError(f"bad slug {spec.slug!r}")
     index = _index(root)
@@ -96,6 +98,7 @@ def install(
         raise FileExistsError(f"{folder} already exists")
     capability = {
         "name": spec.slug,
+        "kind": kind,
         "version": version,
         "effect": spec.effect,
         "summary": spec.task,
