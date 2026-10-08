@@ -36,6 +36,7 @@ RENDER = workshop.WorkshopResult(
     ok=True, value={}, outputs={"clip.mp4": b"clip"}, error=None, killed=None, duration_s=0.1, log=""
 )
 PASSED = verdict.Checked((), {"frames": 90}, PNG)
+REAL_CHECK = verdict.check  # the fixture below fakes it; the design tests put it back
 
 
 def _judge(*passes):
@@ -137,9 +138,23 @@ def test_fresh_process_reuses_the_skill_without_criteria_or_forge(world, fake_mo
     report = _creature(world, fresh).try_reel("another.mp4", "A different line.")
     assert report.status == "HAVE" and report.skill == "typewriter-reveal@v1"
     assert _steps(fresh) == ["planner", "judge"]  # no fresh criteria, no forge: nothing is rebuilt
-    judge_call = fresh.calls[1]
+    planner_call, judge_call = fresh.calls
+    # the planner compares frames with frames: the reel's, then each skill's stored reference
+    shown = [(label, path.name) for label, path in planner_call.images]
+    assert shown[0][1] == "reel-strip.png" and ("skill typewriter-reveal", registry.REFERENCE) in [
+        (label[: len("skill typewriter-reveal")], name) for label, name in shown[1:]
+    ]
     assert judge_call.images[0][1].name == registry.REFERENCE  # judged against ITS stored reel frames
     assert sum(c in judge_call.prompt for c in CRITERIA) == 3  # by ITS stored criteria, hidden included
+
+
+def test_forge_is_told_the_text_of_this_run(world, fake_model):
+    # a stored skill once kept the first text's key words, so v2 on new text emphasised nothing:
+    # the forge prompt must carry this run's text and the rule that words come from input["text"]
+    _build(world, fake_model)
+    [forge_call] = [c for c in fake_model.calls if c.step == "forge"]
+    assert "Stay curious." in forge_call.prompt
+    assert "never hardcode words" in forge_call.system
 
 
 def test_skill_that_fails_its_own_tests_evolves_against_the_same_tests(world, fake_model):
@@ -220,6 +235,31 @@ def test_authority_edited_during_the_run_is_caught_by_the_fingerprint(world, fak
     assert end["fingerprint_same"] is False and end["changed"] == [authority.AUTHORITY_FILE]
 
 
+def test_install_is_refused_when_authority_changes_after_the_judge_passed(world, fake_model, monkeypatch):
+    # the fingerprint is checked again right before install: an authority edited while the forge
+    # ran must leave the registry empty, not install under rules nobody approved
+    real_build = loop.forge.build
+    path = world / "authority.json"
+
+    def build_then_edit(*args, **kwargs):
+        built = real_build(*args, **kwargs)
+        path.write_text(path.read_text(encoding="utf-8") + "\n", encoding="utf-8")
+        return built
+
+    monkeypatch.setattr(loop.forge, "build", build_then_edit)
+    fake_model.queue("criteria", REPLY).queue("forge", {"code": CODE, "approach": "a"})
+    fake_model.queue("judge", _judge(True, True, True))
+    creature = _creature(world, fake_model)
+    report = creature.try_reel("reel.mp4", "Stay curious.")
+    assert report.status == "FAILED" and report.gap.startswith("not installed")
+    assert authority.AUTHORITY_FILE in report.gap and report.fingerprint_same is False
+    kinds = _kinds(creature)
+    assert "install_refused" in kinds and "installed" not in kinds and kinds[-1] == "run_end"
+    root = world / "registry"
+    assert registry.skills(root) == [] and registry.designs(root) == []
+    assert not (root / "typewriter-reveal").exists()
+
+
 def test_refuse_and_ask_classes_come_from_authority_not_from_a_prompt_constant(world, fake_model):
     # authority.json lists what is refused and what needs a human; the criteria model must be told
     # THOSE lists, or editing the file changes nothing and the authority is decorative
@@ -255,6 +295,89 @@ def test_design_replays_with_no_model_call_and_no_dollars(world, fake_model):
     kinds = _kinds(creature)
     assert "model_call" not in kinds and "design_step" in kinds and kinds[-1] == "run_end"
     assert creature.ledger.spent_usd == 0 and report.spent_usd == 0
+
+
+def _probe(frames):
+    """What the fixed probe code reports for a clip in the house format with this many frames."""
+    return {
+        "readable": True, "video": True, "codec": "h264", "pix_fmt": "yuv420p", "width": 1080,
+        "height": 1920, "fps": 30.0, "frames": frames, "duration_s": frames / 30, "luma": [255],
+        "times": [0.0],
+    }  # fmt: skip
+
+
+def _two_skills(world, fake_model, monkeypatch, *, joined_frames):
+    """Two learned skills (3 s and 2 s), composed into one design; the real file checks run against
+    a workshop faked per code: a render, the probe (frames by which clip it is asked about), the join."""
+    _build(world, fake_model)  # typewriter-reveal, 3.0 s = 90 frames
+    second = FakeModel()
+    second.queue("planner", {"skill": "none", "reason": "another effect"})
+    second.queue("criteria", {**REPLY, "slug": "slide-in", "effect": "Slide in", "duration_s": 2.0})
+    second.queue("forge", {"code": CODE + "  # slide", "approach": "a"}).queue(
+        "judge", _judge(True, True, True)
+    )
+    assert _creature(world, second).try_reel("other.mp4", "Two.").status == "BUILT"  # 2.0 s = 60 frames
+    root = world / "registry"
+    registry.compose(root, "promo", ["typewriter-reveal", "slide-in"], origin={"by": "test"})
+    monkeypatch.setattr(loop.verdict, "check", REAL_CHECK)
+    calls = {"renders": [], "probes": [], "joins": []}
+    frames_of = {"step-1-typewriter-reveal": 90, "step-2-slide-in": 60}
+
+    def run(code, input, files=None, **kwargs):
+        if code == loop.JOIN_CODE:
+            calls["joins"].append((input, files))
+            return workshop.WorkshopResult(True, {"parts": 2}, {loop.JOINED: b"joined"}, None, None, 0.2, "")
+        if code == verdict.PROBE_CODE:
+            [clip] = files.values()
+            calls["probes"].append(clip)
+            frames = frames_of.get(clip.parent.name, joined_frames)
+            return workshop.WorkshopResult(True, _probe(frames), {"strip.png": PNG}, None, None, 0.1, "")
+        calls["renders"].append(input)
+        return RENDER
+
+    monkeypatch.setattr(loop.workshop, "run", run)
+    return calls
+
+
+def test_two_skills_in_one_design_concatenate_to_the_declared_total_frames(world, fake_model, monkeypatch):
+    calls = _two_skills(world, fake_model, monkeypatch, joined_frames=150)
+    silent = FakeModel()
+    creature = _creature(world, silent)
+    report = creature.run_design("promo", ["One line.", "Second line."])
+    assert report.status == "DONE" and silent.calls == [] and report.spent_usd == 0
+    assert report.clip == creature.folder / loop.JOINED
+    assert [r["text"] for r in calls["renders"]] == ["One line.", "Second line."]  # each step its own text
+    [(join_input, join_files)] = calls["joins"]
+    assert join_input["parts"] == ["part00.mp4", "part01.mp4"]  # in the design's order
+    assert [join_files[p].parent.name for p in join_input["parts"]] == [
+        "step-1-typewriter-reveal", "step-2-slide-in",
+    ]  # fmt: skip
+    assert [p.name for p in calls["probes"]] == ["clip.mp4", "clip.mp4", loop.JOINED]
+    [join_event] = [e for e in ledger.read(creature.ledger.path) if e["type"] == "design_join"]
+    assert join_event["parts"] == 2 and join_event["frames"] == 150 and join_event["checks"] == "all passed"
+    [task] = [e for e in ledger.read(creature.ledger.path) if e["type"] == "design_task"]
+    assert task["texts"] == ["One line.", "Second line."] and task["steps"] == 2
+
+
+def test_a_joined_clip_one_frame_short_fails_the_design(world, fake_model, monkeypatch):
+    # the frames check is exact on purpose: a design that drifts by a frame is not the design
+    _two_skills(world, fake_model, monkeypatch, joined_frames=149)
+    creature = _creature(world, FakeModel())
+    report = creature.run_design("promo", "Same line everywhere.")
+    assert report.status == "FAILED" and report.clip is None
+    assert report.gap.startswith("joining the steps:") and "frames: got 149, need exactly 150" in report.gap
+    [join_event] = [e for e in ledger.read(creature.ledger.path) if e["type"] == "design_join"]
+    assert any("149" in problem for problem in join_event["checks"])
+
+
+def test_a_design_given_the_wrong_number_of_texts_runs_nothing(world, fake_model, monkeypatch):
+    calls = _two_skills(world, fake_model, monkeypatch, joined_frames=150)
+    creature = _creature(world, FakeModel())
+    report = creature.run_design("promo", ["one", "two", "three"])
+    assert report.status == "FAILED" and "2 steps" in report.gap
+    assert calls["renders"] == [] and calls["joins"] == []
+    kinds = _kinds(creature)
+    assert "design_step" not in kinds and kinds[-1] == "run_end"
 
 
 # --- seals -----------------------------------------------------------------------

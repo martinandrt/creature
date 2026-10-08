@@ -84,6 +84,9 @@ def _isolated(request, monkeypatch, home):
     """Every test gets a temp home and no secrets; offline tests also get no network and no model."""
     monkeypatch.setenv("CREATURE_HOME", str(home))
     monkeypatch.delenv("CREATURE_SECRETS", raising=False)
+    # local Whisper is off unless a test points at a model: the suite must not depend on a 1.5 GB
+    # file on the host, and a transcript that differs by machine makes the perceive tests flaky
+    monkeypatch.setenv("CREATURE_WHISPER_MODEL", str(home / "no-whisper-model.bin"))
     if request.node.get_closest_marker("slow"):
         return
 

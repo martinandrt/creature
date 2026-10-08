@@ -12,7 +12,7 @@ from importlib import resources
 import pytest
 from jsonschema import Draft202012Validator
 
-from creature import criteria, ledger, perceive, verdict
+from creature import criteria, ledger, perceive, verdict, workshop
 from creature.ledger import Ledger
 
 SCHEMAS = resources.files("creature") / "schemas"
@@ -97,14 +97,15 @@ def test_criteria_schema_is_valid_and_strict():
         assert list(v.iter_errors(bad)), bad
 
 
-def test_both_strips_tile_with_the_same_gutters():
+def test_both_strips_are_laid_out_by_the_one_shared_sheet_code():
     # the judge once read a cell's position in the grid as text motion. Gutters separate the cells,
     # and the reel strip and the clip strip must tile identically or their frames are not comparable.
-    # Each template defines GRID for the code that runs in the workshop; the two must not drift apart.
-    grids = []
+    # One sheet code (ours) is prepended to both templates, so the layout cannot drift apart.
+    sheet = workshop.SHEET_CODE
+    assert "GAP" in sheet and "def sheets(" in sheet and "TILE_W, TILE_H" in sheet
     for code in (perceive.STRIP_CODE, verdict.PROBE_CODE):
-        [grid] = re.findall(r'^GRID = "(.+)"', code, re.MULTILINE)
-        assert "margin=" in grid and "padding=" in grid
-        assert ":{GRID}" in code  # the tile filter really uses it
-        grids.append(grid)
-    assert grids[0] == grids[1]
+        assert code.startswith(sheet)
+        own = code[len(sheet) :]
+        assert re.search(r"^\s*sheets\(tiles, times, ", own, re.MULTILINE)  # the frames really go through it
+        # no private copy of the layout: the only FIT, GAP, tile size or sheets() is the shared one
+        assert not re.search(r"^(FIT|GAP|GRID|TILE_W|TILE_H|def sheets)\b", own, re.MULTILINE)
