@@ -38,6 +38,7 @@ def main(argv: list[str] | None = None) -> int:
     shown = sub.add_parser("show", help="one skill: manifest and tests")
     shown.add_argument("slug")
     sub.add_parser("queue", help="ASK requests waiting for a human")
+    sub.add_parser("wishes", help="what I lack, read from my own runs (one model call)")
     sub.add_parser("overview", help="write the page with every run of the night")
     paged = sub.add_parser("page", help="write one run's side-by-side page again, from its ledger")
     paged.add_argument("run", help="run id (the name of its folder in runs/)")
@@ -123,6 +124,14 @@ def main(argv: list[str] | None = None) -> int:
 
         print(page.overview(root))
         return 0
+    if args.command == "wishes":
+        from creature.loop import Creature
+
+        report = Creature(root).wishes()
+        for note in report.notes:
+            print(note)
+        print(f"{report.status}  spent: ${report.spent_usd:.4f}  page: {report.folder / 'page.html'}")
+        return 0 if report.status == "DONE" else 1
     if args.command == "queue":
         for path in sorted((root / "queue").glob("*.json")):
             request = json.loads(path.read_text(encoding="utf-8"))

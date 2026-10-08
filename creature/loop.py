@@ -27,6 +27,7 @@ from creature import (
     verdict,
     workshop,
 )
+from creature import wishes as wishes_mod
 from creature.forge import Outcome
 from creature.ledger import Ledger
 from creature.llm import ClaudeCLI, Model, ModelError, Transport
@@ -334,6 +335,23 @@ class Creature:
                 return self.finish(report)
             feedback = verdict.feedback(checked, judged)
         report.status, report.gap = "FAILED", feedback or "the montage did not pass"
+        return self.finish(report)
+
+    def wishes(self) -> Report:
+        """Read every run's ledger, name what is missing and how many reels each would unlock."""
+        report = Report(self.ledger.run_id, "FAILED", self.folder, skill="wishes")
+        self.ledger.record("wishes_task")
+        try:
+            found = wishes_mod.wish(self.model, self.home, cap_usd=self.cap("planner"))
+        except ModelError as error:
+            report.gap = f"a model call failed: {error}"
+            return self.finish(report)
+        self.ledger.record("wishes", runs=found["runs"], wishes=found["wishes"])
+        for w in found["wishes"]:
+            report.notes.append(
+                f"[{w['kind']}] {w['capability']}: unlocks {w['unlocks']} ({', '.join(w['reels'])})"
+            )
+        report.status = "DONE"
         return self.finish(report)
 
     def render_timeline(
