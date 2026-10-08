@@ -118,3 +118,89 @@ def test_local_reel_becomes_a_strip(home, tmp_path):
     assert (reel.width, reel.height, reel.fps) == (360, 640, 30.0) and 1.9 < reel.duration_s < 2.1
     assert reel.strip.read_bytes().startswith(b"\x89PNG") and len(reel.times) == perceive.FRAMES
     assert [e["type"] for e in ledger.read(log.path)] == ["perceive_local", "perceived"]
+
+
+def test_failed_apify_call_still_records_its_cost(monkeypatch, secrets_file, home):
+    # Apify charges the actor start even when nothing usable comes back: paid means recorded
+    _apify(monkeypatch, [])
+    log = Ledger.start(home, run_id="apify-fail")
+    limits = authority.load(REPO).workshop
+    with pytest.raises(perceive.PerceiveError):
+        perceive.perceive("https://www.instagram.com/p/X/", home / "attempt", log, limits=limits, image="img")
+    [event] = [e for e in ledger.read(log.path) if e["type"] == "perceive_apify"]
+    assert event["cost_usd"] == perceive.APIFY_COST_USD
+    assert log.spent_usd > 0
+
+
+def test_redirect_off_the_cdn_is_refused():
+    # the host allowlist must survive a 302: re-validate the Location, scheme included
+    import urllib.request
+
+    handler = perceive.RedirectWithinCdn()
+    request = urllib.request.Request("https://a.cdninstagram.com/v.mp4")
+    for target in ("https://evil.example/v.mp4", "http://a.cdninstagram.com/v.mp4"):
+        with pytest.raises(perceive.PerceiveError, match="not allowed"):
+            handler.redirect_request(request, None, 302, "Found", {}, target)
+    assert handler.redirect_request(request, None, 302, "Found", {}, "https://b.fbcdn.net/v.mp4") is not None
+
+
+def test_download_stops_at_the_size_cap(monkeypatch, tmp_path):
+    monkeypatch.setattr(perceive, "MAX_VIDEO_BYTES", 1000)
+    monkeypatch.setattr(perceive, "_open", lambda url: _Response(b"\0" * 2000))
+    with pytest.raises(perceive.PerceiveError, match="too large"):
+        perceive.download("https://a.cdninstagram.com/v.mp4", tmp_path / "v.mp4")
+
+
+def test_download_writes_the_file(monkeypatch, tmp_path):
+    monkeypatch.setattr(perceive, "_open", lambda url: _Response(b"video"))
+    perceive.download("https://a.cdninstagram.com/v.mp4", tmp_path / "v.mp4")
+    assert (tmp_path / "v.mp4").read_bytes() == b"video"
+
+
+def test_perceive_via_apify_offline(monkeypatch, secrets_file, home, tmp_path):
+    # the whole Apify path with the network and the workshop faked: events, cost, and no token anywhere
+    item = {
+        "type": "Video",
+        "videoUrl": "https://x.cdninstagram.com/v.mp4",
+        "caption": " Typewriter ",
+        "transcript": [{"text": "hi"}],
+        "ownerUsername": "anet",
+    }
+    _apify(monkeypatch, [item])
+    monkeypatch.setattr(perceive, "download", lambda url, target: target.write_bytes(b"video"))
+    strip = workshop.WorkshopResult(
+        ok=True,
+        value={"duration_s": 2.0, "width": 360, "height": 640, "fps": 30.0, "times": [0.5, 1.5]},
+        outputs={"strip.png": b"\x89PNG\r\n"},
+        error=None,
+        killed=None,
+        duration_s=0.3,
+        log="",
+    )
+    monkeypatch.setattr(perceive.workshop, "run", lambda *args, **kwargs: strip)
+    log = Ledger.start(home, run_id="apify-ok")
+    limits = authority.load(REPO).workshop
+    reel = perceive.perceive(
+        "https://www.instagram.com/p/X/", tmp_path / "attempt", log, limits=limits, image="img"
+    )
+    assert (reel.caption, reel.transcript, reel.author) == ("Typewriter", "hi", "anet")
+    assert reel.strip.read_bytes().startswith(b"\x89PNG") and reel.times == (0.5, 1.5)
+    assert [e["type"] for e in ledger.read(log.path)] == ["perceive_apify", "perceived"]
+    assert log.spent_usd == perceive.APIFY_COST_USD
+    assert "tok-123" not in log.path.read_text()
+
+
+def test_video_cap_fits_the_work_dir():
+    # a reel at the download cap plus 12 frames and a strip must fit the workshop's /work tmpfs
+    work_bytes = authority.load(REPO).workshop.work_mb * 1_000_000
+    needed = perceive.MAX_VIDEO_BYTES * 1.5
+    assert needed < work_bytes
+
+
+def test_recorded_apify_reel_replays_offline(monkeypatch, secrets_file):
+    # recorded from the real actor (reel 1, transcript add-on); the CDN URL is replaced
+    items = json.loads((REPO / "tests" / "fixtures" / "apify_reel01.json").read_text())
+    _apify(monkeypatch, items)
+    item = perceive.fetch_reel(items[0]["url"])
+    assert "typewriter" in perceive._transcript(item).lower() and item["type"] == "Video"
+    assert "TYPEWRITER" in perceive._text(item["caption"])

@@ -11,7 +11,7 @@ from importlib import resources
 import pytest
 from jsonschema import Draft202012Validator
 
-from creature import ledger
+from creature import criteria, ledger
 from creature.ledger import Ledger
 
 SCHEMAS = resources.files("creature") / "schemas"
@@ -65,3 +65,30 @@ def test_schema_rejects_what_record_rejects():
         {**base, "seq": -1},
     ):
         assert list(validator("ledger_event.json").iter_errors(bad)), bad
+
+
+def test_criteria_schema_is_valid_and_strict():
+    # the schema the model is given must be a valid draft and at least as strict as the code
+    Draft202012Validator.check_schema(criteria.SCHEMA)
+    v = Draft202012Validator(criteria.SCHEMA)
+    good = {
+        "effect": "Typewriter",
+        "slug": "typewriter-reveal",
+        "verdict": "try",
+        "reason": "2D text",
+        "transcript_is_speech": True,
+        "task": "Type it.",
+        "duration_s": 3.0,
+        "params": {},
+        "criteria": ["a", "b", "c"],
+    }
+    assert not list(v.iter_errors(good))
+    for bad in (
+        {**good, "slug": "../evil"},
+        {**good, "slug": "Typewriter Reveal"},
+        {**good, "verdict": "maybe"},
+        {**good, "criteria": ["a"]},
+        {**good, "criteria": "a b c"},
+        {**good, "transcript_is_speech": "yes"},
+    ):
+        assert list(v.iter_errors(bad)), bad
