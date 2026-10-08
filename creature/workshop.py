@@ -164,6 +164,40 @@ class Limits:
     work_mb: int
     tmp_mb: int
     output_mb: int
+    assets: str | None = None  # a host folder mounted read-only at /assets (hidden entries left out)
+
+
+ASSETS = "/assets"
+
+
+def asset_mounts(folder: str | None) -> list[str]:
+    """Each visible top-level entry of the asset library, read-only; hidden ones (.claude) are never
+    mounted, so nothing outside the library's own content reaches the workshop."""
+    if not folder:
+        return []
+    root = Path(folder)
+    mounts = []
+    for entry in sorted(root.iterdir()):
+        if entry.name.startswith(".") or not (entry.is_dir() or entry.is_file()) or entry.is_symlink():
+            continue
+        mounts += ["--mount", f"type=bind,src={entry},dst={ASSETS}/{entry.name},readonly"]
+    return mounts
+
+
+def assets_digest(folder: str | None) -> str:
+    """sha256 over every visible file of the library (path and content), for the fingerprint."""
+    if not folder:
+        return "none"
+    import hashlib
+
+    root = Path(folder)
+    combined = hashlib.sha256()
+    for path in sorted(root.rglob("*")):
+        parts = path.relative_to(root).parts
+        if any(p.startswith(".") for p in parts) or not path.is_file() or path.is_symlink():
+            continue
+        combined.update(f"{'/'.join(parts)}\0{hashlib.sha256(path.read_bytes()).hexdigest()}\n".encode())
+    return combined.hexdigest()
 
 
 @dataclass(frozen=True)
@@ -187,6 +221,7 @@ def docker_command(name: str, image: str, limits: Limits) -> list[str]:
         "--cpus", str(limits.cpus), "--pids-limit", str(limits.pids), "--ulimit", "nofile=256:256",
         "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
         "--user", "65534:65534", "--env", "GPG_KEY=", "--env", "HOME=/tmp", "--workdir", "/work",
+        *asset_mounts(limits.assets),
         image, "python", "-I", "-c", RUNNER,
     ]  # fmt: skip
 

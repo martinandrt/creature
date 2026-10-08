@@ -75,6 +75,7 @@ class Build:
     attempts: int
     outcomes: tuple[Outcome, ...]
     gap: str  # when it failed: the last feedback, i.e. what is still missing
+    assets: tuple[str, ...] = ()  # library files the skill uses (the round forge only)
 
 
 def skill_input(spec: Spec) -> dict[str, Any]:

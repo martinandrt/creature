@@ -30,7 +30,7 @@ from creature.ledger import Ledger
 from creature.llm import BudgetRefused, Model, ModelError
 
 PAIRS = 12  # frame pairs per preview sheet
-MAX_FILES, MAX_FILE_BYTES = 8, 40_000
+MAX_FILES, MAX_FILE_BYTES, MAX_TOTAL_BYTES = 8, 16_000, 48_000  # a round resends every file
 FILE = re.compile(r"[a-z][a-z0-9_]{0,30}\.(py|json)")
 MEASURE_CHARS = 3000
 
@@ -73,6 +73,7 @@ SCHEMA = {
             },
         },
         "done": {"type": "boolean"},
+        "assets": {"type": "array", "items": {"type": "string"}},
     },
 }
 
@@ -253,6 +254,54 @@ def run(input, work):
 )
 
 
+LIBRARY_SHOWN = 30  # items from the asset manifest shown to the forge, picked by tags
+USED = re.compile(r"/assets/[A-Za-z0-9_./-]+")
+
+
+def library(folder: str | None, spec: Spec) -> str:
+    """What the forge is told about the asset library: its README (where things are) and the items
+    whose tags share most words with the task; fonts always. Never the whole manifest."""
+    if not folder:
+        return ""
+    root = Path(folder)
+    try:
+        manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
+        readme = (root / "README.md").read_text(encoding="utf-8")
+    except (OSError, json.JSONDecodeError):
+        return ""
+    items = manifest.get("prvky", []) if isinstance(manifest, dict) else []
+    words = set(re.findall(r"[a-zá-ž0-9]+", " ".join([spec.effect, spec.task, *spec.criteria]).lower()))
+
+    def score(item: dict[str, Any]) -> int:
+        tags = " ".join(str(t) for t in item.get("stitky", []))
+        have = set(
+            re.findall(r"[a-zá-ž0-9]+", f"{item.get('jmeno', '')} {item.get('kategorie', '')} {tags}".lower())
+        )
+        return len(words & have)
+
+    fonts = [i for i in items if i.get("kategorie") == "pisma"][:8]
+    ranked = sorted((i for i in items if i.get("kategorie") != "pisma"), key=lambda i: -score(i))
+    chosen = [i for i in ranked if score(i) > 0][:LIBRARY_SHOWN] + fonts
+    lines = [
+        "Asset library, read-only at /assets (use only what helps; say which files you used):",
+        readme[:2500],
+        "Items picked for this task (path, category, tags, size):",
+    ]
+    for item in chosen:
+        size = item.get("viewBox") or item.get("rozmer") or item.get("delka_s") or ""
+        tags = ", ".join(str(t) for t in item.get("stitky", [])[:8])
+        lines.append(f"- /assets/{item.get('soubor')} [{item.get('kategorie')}] {tags} {size}".rstrip())
+    return "\n".join(lines)
+
+
+def used_assets(files: dict[str, str], said: Any) -> list[str]:
+    """The library files a skill uses: those its code names, plus those the forge said it used."""
+    found = {m.rstrip(".,") for text in files.values() for m in USED.findall(text)}
+    if isinstance(said, list):
+        found |= {str(x) for x in said if isinstance(x, str) and x.startswith("/assets/")}
+    return sorted(found)
+
+
 @dataclass
 class Workspace:
     """The skill's files as they last rendered, and what each round did."""
@@ -291,20 +340,33 @@ def apply(space: Workspace, reply: dict[str, Any]) -> list[str]:
         problems.append(f"at most {MAX_FILES} files; the change was not applied")
         return problems
     big = [p for p, c in files.items() if len(c.encode()) > MAX_FILE_BYTES]
-    if big:
-        problems.append(f"files over {MAX_FILE_BYTES} bytes: {', '.join(big)}; the change was not applied")
+    if big or sum(len(c.encode()) for c in files.values()) > MAX_TOTAL_BYTES:
+        problems.append(
+            f"files too long (each at most {MAX_FILE_BYTES} bytes, all together {MAX_TOTAL_BYTES}): "
+            f"{', '.join(big) or 'all together'}; the change was not applied"
+        )
         return problems
     if "layout.json" in files:
         try:
-            json.loads(files["layout.json"])
+            layout = json.loads(files["layout.json"])
         except json.JSONDecodeError as error:
             problems.append(f"layout.json is not valid JSON: {error}; the change was not applied")
+            return problems
+        design = layout.get("frames") if isinstance(layout, dict) else None
+        if design is not None and (
+            isinstance(design, bool) or not isinstance(design, int) or not 1 <= design <= 240
+        ):
+            problems.append(
+                'layout.json "frames" must be a whole number from 1 to 240; the change was not applied'
+            )
             return problems
     space.files = files
     return problems
 
 
-def prompt(spec: Spec, space: Workspace, feedback: str, measured: str, round_no: int, rounds: int) -> str:
+def prompt(
+    spec: Spec, space: Workspace, feedback: str, measured: str, round_no: int, rounds: int, shelf: str = ""
+) -> str:
     lines = [
         f"Round {round_no} of at most {rounds}.",
         f"Effect: {spec.effect}",
@@ -316,6 +378,8 @@ def prompt(spec: Spec, space: Workspace, feedback: str, measured: str, round_no:
         "Success criteria (judged from frames of your whole clip):",
         *[f"- {c}" for c in spec.criteria],
     ]
+    if shelf:
+        lines += ["", shelf]
     if space.notes:
         lines += ["", "Your earlier rounds:", *[f"{i + 1}. {n}" for i, n in enumerate(space.notes[-12:])]]
     if space.files:
@@ -337,6 +401,7 @@ class Result:
     files: dict[str, str]
     rounds: int
     gap: str
+    assets: tuple[str, ...] = ()
 
 
 def build(
@@ -352,10 +417,13 @@ def build(
     image: str,
     folder: Path,
     finish: Callable[[str, int], Outcome],
+    assets: str | None = None,
 ) -> Result:
     """Up to `rounds` rounds. `finish(code, round)` renders the whole clip, checks and judges it."""
     space = Workspace()
     feedback, measured = "", ""
+    shelf = library(assets, spec)
+    said: list[str] = []
     best: tuple[float, int, dict[str, str], tuple[tuple[str, Path], ...]] = (float("inf"), 0, {}, ())
     looks: list[dict[str, Any]] = []
     images: tuple[tuple[str, Path], ...] = (("reel frames", reel.strip),)
@@ -364,16 +432,23 @@ def build(
         here.mkdir(parents=True, exist_ok=True)
         try:
             reply = model.ask(
-                "forge", SYSTEM, prompt(spec, space, feedback, measured, number, rounds), SCHEMA,
+                "forge", SYSTEM, prompt(spec, space, feedback, measured, number, rounds, shelf), SCHEMA,
                 cap_usd=cap_usd, images=images, model=model_name,
             )  # fmt: skip
         except BudgetRefused as error:
             return Result(False, space.files, number - 1, f"budget: {error}")
         except ModelError as error:
             ledger.record("round", round=number, ok=False, error=str(error)[:300])
-            feedback = "Your last answer could not be used (it was cut off or malformed): answer smaller."
+            too_big = "budget" in str(error)
+            feedback = (
+                "Your last answer went over this round's cap: keep files short, change only what is needed."
+                if too_big
+                else "Your last answer could not be used (cut off or malformed): answer with less."
+            )
             continue
         problems = apply(space, reply)
+        if isinstance(reply.get("assets"), list):
+            said = reply["assets"]
         note = str(reply.get("note", ""))[:200]
         space.notes.append(note + (" (some changes refused)" if problems else ""))
         (here / "files.json").write_text(json.dumps(space.files, indent=1, ensure_ascii=False))
@@ -411,7 +486,7 @@ def build(
         if reply.get("done") is True or number == rounds:
             outcome = finish(skill_code(space.files), number)
             if outcome.ok:
-                return Result(True, space.files, number, "")
+                return Result(True, space.files, number, "", tuple(used_assets(space.files, said)))
             feedback += "\nYour whole clip was checked and did not pass:\n" + outcome.feedback
     return Result(False, space.files, rounds, feedback.strip() or "no round passed")
 

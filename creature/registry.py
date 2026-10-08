@@ -83,6 +83,7 @@ def install(
     reference: Path,
     staging: Path | None = None,
     kind: str = "effect",
+    assets: list[str] | None = None,
 ) -> Skill:
     """Install a skill that passed. A slug that exists gets the next version, which becomes active.
     `kind` is "effect" (renders a clip) or "tool" (returns data about a clip)."""
@@ -110,6 +111,7 @@ def install(
         "output": spec.output,
         "origin": origin,
         "cost": cost,
+        "assets": list(assets or []),  # library files it reads at /assets: it needs that library to run
     }
     tests = {"checks": list(spec.checks), "criteria": list(spec.criteria), "held_out": list(spec.held_out)}
     # built outside the registry (in the run's folder), then moved in whole: a failed install leaves

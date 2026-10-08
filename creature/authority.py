@@ -23,6 +23,7 @@ from creature.workshop import Limits
 
 AUTHORITY_FILE = "authority.json"
 IMAGE_PART = "workshop image"
+ASSETS_PART = "asset library"
 ENFORCERS = (
     "authority.py",
     "ledger.py",
@@ -100,6 +101,7 @@ def load(home: str | Path) -> Authority:
             work_mb=_number(shop, "work_mb", integer=True, minimum=1),
             tmp_mb=_number(shop, "tmp_mb", integer=True, minimum=1),
             output_mb=_number(shop, "output_mb", integer=True, minimum=1),
+            assets=_assets(shop),
         ),
         image=image,
         models=dict(models),
@@ -166,10 +168,30 @@ def fingerprint(
     parts = {AUTHORITY_FILE: _file_digest(authority_path), IMAGE_PART: image_id}
     for name in ENFORCERS:
         parts[name] = _file_digest(code / name)
+    try:
+        raw = json.loads(authority_path.read_text(encoding="utf-8"))
+        library = raw.get("workshop", {}).get("assets") if isinstance(raw, dict) else None
+    except (OSError, json.JSONDecodeError):
+        library = None
+    if library:  # what the workshop can read is part of what it may do
+        from creature import workshop
+
+        parts[ASSETS_PART] = workshop.assets_digest(str(Path(str(library)).expanduser()))
     combined = hashlib.sha256()
     for name, digest in parts.items():
         combined.update(f"{name}\0{digest}\n".encode())
     return Fingerprint(combined.hexdigest(), parts)
+
+
+def _assets(shop: dict[str, Any]) -> str | None:
+    """An asset library mounted read-only into the workshop: a folder that exists, or nothing."""
+    value = shop.get("assets")
+    if value is None:
+        return None
+    folder = Path(str(value)).expanduser()
+    if not isinstance(value, str) or not folder.is_dir():
+        raise AuthorityError(f"workshop.assets must be an existing folder, got {value!r}")
+    return str(folder)
 
 
 def changed(before: Fingerprint, after: Fingerprint) -> list[str]:

@@ -261,6 +261,7 @@ class Creature:
             cost=cost,
             reference=reference,
             staging=self.folder,
+            assets=list(built.assets),
         )
         self.installed += 1
         self.ledger.record("installed", skill=skill.slug, version=skill.version, design=spec.slug, **cost)
@@ -288,9 +289,10 @@ class Creature:
             self.model, spec, self.ledger, reel=reel, rounds=self.authority.caps.forge_attempts,
             cap_usd=self.cap("forge"), model_name=self.model_for("forge"), limits=self.authority.workshop,
             image=self.image, folder=self.folder / f"{prefix}rounds", finish=finish,
+            assets=self.authority.workshop.assets,
         )  # fmt: skip
         last = max(clips) if clips else result.rounds
-        return forge.Build(result.ok, deep.skill_code(result.files), last, (), result.gap)
+        return forge.Build(result.ok, deep.skill_code(result.files), last, (), result.gap, result.assets)
 
     def _other_length(self, code: str, spec: criteria.Spec, folder: Path) -> Outcome:
         """The same skill 2 s shorter (at least 1 s) must still pass the file checks: "my input, shorter"."""
