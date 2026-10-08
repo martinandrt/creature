@@ -305,6 +305,16 @@ def taken(root: Path, name: str) -> None:
         raise FileExistsError(f"{name!r} is already a design or a skill; pick another name")
 
 
+def free_name(root: Path, base: str) -> str:
+    """The first of base, base-2, base-3 … that is neither a design nor a skill: a later reel never rewrites
+    an earlier design."""
+    index = _index(root)
+    name, n = base, 2
+    while name in index["designs"] or name in index["skills"]:
+        name, n = f"{base}-{n}", n + 1
+    return name
+
+
 def compose(root: Path, name: str, parts: list[str], *, origin: dict[str, Any]) -> dict[str, Any]:
     """A new design from known parts, in order: a design adds its steps, a skill adds its active
     version with the values it was learned with. Data only, no model."""

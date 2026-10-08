@@ -436,8 +436,9 @@ class Creature:
             if judged.ok:
                 origin = {"reel": source, "run": self.ledger.run_id, "author": self.reel.author}
                 tests = {"criteria": list(spec.criteria), "held_out": list(spec.held_out)}
-                registry.save_timeline(self.registry, spec.slug, t, origin=origin, tests=tests)
-                report.status, report.skill = "BUILT", f"design:{spec.slug}"
+                name = registry.free_name(self.registry, spec.slug)
+                registry.save_timeline(self.registry, name, t, origin=origin, tests=tests)
+                report.status, report.skill = "BUILT", f"design:{name}"
                 return self.finish(report)
             feedback = verdict.feedback(checked, judged)
         report.status, report.gap = "FAILED", feedback or "the montage did not pass"

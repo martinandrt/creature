@@ -30,13 +30,15 @@ h1{font-size:20px;margin:0 0 4px}.sub{color:var(--mute);margin:0 0 16px}
 .sum div{background:var(--card);border:1px solid var(--line);
 border-radius:8px;padding:8px 12px}.sum b{font-size:18px;display:block}
 .run{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin:0 0 12px;
-display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.2fr);gap:12px}
+display:grid;grid-template-columns:minmax(0,.7fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1.2fr);gap:12px}
 @media (max-width:900px){.run{grid-template-columns:1fr}}
 .head{grid-column:1/-1;display:flex;gap:12px;flex-wrap:wrap;align-items:baseline}
 .st{font-weight:700}.BUILT,.HAVE,.DONE{color:var(--ok)}.FAILED,.REFUSE,.STOPPED{color:var(--bad)}.RUNNING,.ASK{color:var(--run)}
 .mute{color:var(--mute)}img,video{max-width:100%;max-height:360px;border-radius:6px;background:#000;display:block}
 ol{margin:4px 0 0 18px;padding:0}li{margin:0 0 2px}a{color:inherit}
 """
+
+PLAYER = "controls muted loop playsinline preload='metadata'"  # many runs on one page: first frame only
 
 
 def _when(ts: str) -> float:
@@ -158,24 +160,37 @@ def render(homes: list[Path], out: Path) -> Path:
             + (f"<a href='{html.escape(page)}'>stránka běhu</a>" if page else "")
             + "</div>"
         )
+        original = _rel(r["folder"] / "reel.mp4", base)
+        source = (
+            "<div><div class='mute'>Zdrojové video</div>"
+            + (
+                f"<video src='{html.escape(original)}' {PLAYER}></video>"
+                if original
+                else "<div class='mute'>není v běhu</div>"
+            )
+            + "</div>"
+        )
         left = (
-            "<div><div class='mute'>Vstup</div>"
+            "<div><div class='mute'>Vstup (snímky)</div>"
             + (f"<img src='{html.escape(reel)}' alt='snímky reelu'>" if reel else "")
             + (f"<div>„{html.escape(r['text'][:160])}“</div>" if r["text"] else "")
             + "</div>"
         )
         if clip:
-            player = f"<video src='{html.escape(clip)}' controls muted loop playsinline></video>"
+            player = f"<video src='{html.escape(clip)}' {PLAYER}></video>"
             middle = f"<div><div class='mute'>Výstup</div>{player}</div>"
         elif picture:
             shown = f"<img src='{html.escape(picture)}' alt=''>"
             middle = f"<div><div class='mute'>Poslední obrázek (reel | výstup)</div>{shown}</div>"
+        elif r["status"] == "STOPPED":
+            why = "žádný: proces skončil bez závěru (přerušený běh), poslední krok je v postupu"
+            middle = f"<div><div class='mute'>Výstup</div><div class='mute'>{why}</div></div>"
         else:
             middle = "<div><div class='mute'>Výstup</div><div class='mute'>zatím nic</div></div>"
         steps = "".join(f"<li>{html.escape(s)}</li>" for s in r["steps"][-STEPS_SHOWN:])
         gap = f"<div class='mute'>Chybí: {html.escape(r['gap'][:240])}</div>" if r["gap"] else ""
         right = f"<div><div class='mute'>Postup</div><ol>{steps}</ol>{gap}</div>"
-        parts.append(f"<section class='run'>{head}{left}{middle}{right}</section>")
+        parts.append(f"<section class='run'>{head}{source}{left}{middle}{right}</section>")
     parts.append("</body></html>")
     out.write_text("".join(parts), encoding="utf-8")
     return out

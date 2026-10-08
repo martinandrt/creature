@@ -826,3 +826,79 @@ def test_a_style_on_a_step_design_is_named_as_not_applied(world, fake_model):
     report = _creature(world, FakeModel()).run_design("typewriter-reveal", "Replay this.", style=style)
     assert report.status == "DONE"
     assert any("style" in note and "montage" in note for note in report.notes), report.notes
+
+
+# --- a montage reuses installed surfaces -----------------------------------------------
+
+SURFACE2 = ["A wall of cards.", "Each card carries a number.", "The wall scrolls up."]
+MONTAGE_REPLY_2 = {
+    **MONTAGE_REPLY,
+    "slug": "card-promo",
+    "surfaces": [
+        {"slug": "card-wall", "effect": "A grid of cards", "task": "Draw cards.", "frames": [0.5],
+         "criteria": SURFACE2},
+    ],
+}  # fmt: skip
+
+
+def _second_montage(home, fake, *, have_ok, reply=MONTAGE_REPLY_2, source_slug="grid-cards"):
+    """A second montage reel in a home that already learned grid-cards: the part planner is asked."""
+    fake.queue("planner", {"skill": "none", "reason": "a montage, not one effect"})  # the reel as a whole
+    fake.queue("criteria", reply)
+    fake.queue("planner", {"skill": "grid-cards", "reason": "the same kind of screen"})  # the surface
+    fake.queue("judge", _judge_of(SURFACE, have_ok, True, True))  # grid-cards by ITS OWN stored tests
+    if not have_ok:
+        fake.queue("forge", {"code": CODE + "  # wall", "approach": "a"})
+        fake.queue("judge", _judge_of(SURFACE2, True, True, True))
+    fake.queue("compose", {**CHOICE, "sources": [source_slug]}).queue("judge", _judge(True, True, True))
+    creature = _creature(home, fake)
+    return creature, creature.try_reel("other.mp4", "New words.")
+
+
+def test_an_installed_surface_is_reused_by_the_part_planner_without_a_forge_call(montage_world, fake_model):
+    home, _ = montage_world
+    _learn_montage(home, fake_model)  # grid-cards v1 and the timeline grid-promo
+    second = FakeModel()
+    creature, report = _second_montage(home, second, have_ok=True)
+    assert report.status == "BUILT" and report.skill == "design:card-promo", report.gap
+    assert _steps(second) == ["planner", "criteria", "planner", "judge", "compose", "judge"]  # no forge
+    labels = [label for label, _ in second.calls[2].images]
+    assert labels[0] == "this screen in the reel" and labels[1].startswith("skill grid-cards")
+    [part] = [e for e in ledger.read(creature.ledger.path) if e["type"] == "part"]
+    assert (part["status"], part["skill"], part["version"]) == ("have", "grid-cards", 1)
+    root = home / "registry"
+    assert registry.get(root, "grid-cards").version == 1
+    with pytest.raises(KeyError):
+        registry.get(root, "card-wall")  # nothing new was installed
+    assert registry.design(root, "card-promo")["timeline"]["sources"]["a"]["skill"] == "grid-cards"
+
+
+def test_a_reused_surface_that_fails_its_own_tests_is_learned_anew(montage_world, fake_model):
+    home, _ = montage_world
+    _learn_montage(home, fake_model)
+    second = FakeModel()
+    creature, report = _second_montage(home, second, have_ok=False, source_slug="card-wall")
+    assert report.status == "BUILT", report.gap
+    assert _steps(second) == ["planner", "criteria", "planner", "judge", "forge", "judge", "compose", "judge"]
+    parts = [e for e in ledger.read(creature.ledger.path) if e["type"] == "part"]
+    assert [p["status"] for p in parts] == ["have-failed", "built"]
+    root = home / "registry"
+    assert registry.get(root, "card-wall").version == 1 and registry.get(root, "grid-cards").version == 1
+    [compose_call] = [c for c in second.calls if c.step == "compose"]
+    catalog = compose_call.prompt.split("Catalog")[1]
+    assert catalog.index("- card-wall") < catalog.index(
+        "- grid-cards"
+    )  # this run's surface first, all offered
+
+
+def test_a_second_montage_with_the_same_name_does_not_replace_the_first(montage_world, fake_model):
+    # "what can you do" must not shrink: a later reel with the same slug is another design, not a rewrite
+    home, _ = montage_world
+    _learn_montage(home, fake_model)
+    root = home / "registry"
+    first = registry.design(root, "grid-promo")
+    second = FakeModel()
+    _, report = _second_montage(home, second, have_ok=True, reply={**MONTAGE_REPLY_2, "slug": "grid-promo"})
+    assert report.status == "BUILT", report.gap
+    assert registry.design(root, "grid-promo") == first
+    assert len(registry.designs(root)) == 2, registry.designs(root)
