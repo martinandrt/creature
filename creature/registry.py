@@ -247,6 +247,7 @@ def save_design(
         entry = index["skills"].get(step.get("skill"))
         if entry is None or step.get("version") not in entry["versions"]:
             raise KeyError(f"design step uses an unknown skill: {step}")
+        _not_a_tool(root, step["skill"], step["version"])
     design = {"name": name, "steps": steps, "origin": origin}
     _write_json(root / DESIGNS / f"{name}.json", design)
     index["designs"][name] = {"steps": len(steps), "origin": origin}
@@ -267,6 +268,7 @@ def save_timeline(
         entry = index["skills"].get(source.get("skill"))
         if entry is None or source.get("version") not in entry["versions"]:
             raise KeyError(f"timeline source uses an unknown skill: {source}")
+        _not_a_tool(root, source["skill"], source["version"])
     found = montage.problems(t)
     if found:
         raise ValueError("bad timeline: " + "; ".join(found))
@@ -275,6 +277,13 @@ def save_timeline(
     index["designs"][name] = {"steps": len(t["sources"]), "kind": "timeline", "origin": origin}
     _write_json(root / INDEX, index)
     return design
+
+
+def _not_a_tool(root: Path, slug: str, version: int) -> None:
+    folder = root / slug / str(version)
+    capability = json.loads((folder / "capability.json").read_text(encoding="utf-8"))
+    if capability.get("kind") == "tool":
+        raise ValueError(f"{slug} is a tool, not an effect: it cannot be a step of a design")
 
 
 def design(root: Path, name: str) -> dict[str, Any]:

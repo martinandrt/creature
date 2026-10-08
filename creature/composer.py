@@ -63,7 +63,8 @@ def choose(
 ) -> tuple[dict[str, Any], list[str]]:
     """The creature's choice as data, and the slugs it named that are not in the catalog."""
     shots = len(reel.cuts) + 1
-    rhythm = f"{shots} shots in {reel.duration_s:.1f} s, about {reel.duration_s * 30 / shots:.0f} frames each"
+    each = reel.duration_s / shots
+    rhythm = f"{shots} shots in {reel.duration_s:.1f} s, a shot about {each:.2f} s ({each * 30:.0f} frames)"
     lines = [
         f"<reel>\nCaption: {reel.caption or '(none)'}\n</reel>",
         f"Measured in the reel: {rhythm}.",

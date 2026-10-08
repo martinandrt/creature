@@ -137,7 +137,11 @@ def write_spec(
     data = model.ask(
         "criteria", SPEC_SYSTEM, f"<wish>\n{wish}\n</wish>", SPEC_SCHEMA, cap_usd=cap_usd, model=model_name
     )
-    cases = [c for c in data.get("cases", []) if _valid_case(c)]
+    cases, names_seen = [], set()
+    for case in data.get("cases", []):
+        if _valid_case(case) and str(case["name"]) not in names_seen:  # one clip per name
+            names_seen.add(str(case["name"]))
+            cases.append({**case, "name": str(case["name"])})
     if len(cases) < CASES_MIN:
         raise ValueError(f"the tool spec gave {len(cases)} usable test cases, need {CASES_MIN}")
     names = [str(c["name"]) for c in cases]
@@ -161,6 +165,9 @@ def write_spec(
 def _valid_case(case: Any) -> bool:
     if not isinstance(case, dict) or not isinstance(case.get("expect"), dict) or not case["expect"]:
         return False
+    tolerance = case.get("tolerance")
+    if isinstance(tolerance, bool) or not isinstance(tolerance, int | float) or not 0 <= tolerance < math.inf:
+        return False
     segments = case.get("segments")
     if not isinstance(segments, list) or not 1 <= len(segments) <= 8:
         return False
@@ -174,7 +181,22 @@ def _valid_case(case: Any) -> bool:
         if not _hex(seg.get("background")):
             return False
         box = seg.get("box")
-        if box is not None and not (isinstance(box, dict) and _hex(box.get("color"))):
+        if box is not None and not _valid_box(box):
+            return False
+    return True
+
+
+def _valid_box(box: Any) -> bool:
+    if not isinstance(box, dict) or not _hex(box.get("color")):
+        return False
+    size = box.get("size")
+    if isinstance(size, bool) or not isinstance(size, int | float) or not 0 < size <= 1:
+        return False
+    for key in ("from", "to"):
+        point = box.get(key)
+        if not isinstance(point, list) or len(point) != 2:
+            return False
+        if not all(isinstance(v, int | float) and not isinstance(v, bool) and 0 <= v <= 1 for v in point):
             return False
     return True
 

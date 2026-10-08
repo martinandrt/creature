@@ -234,8 +234,9 @@ def _rhythm(reel: Reel) -> str:
     shots = len(reel.cuts) + 1
     if shots < 2:
         return "one shot, no cuts"
-    frames = reel.duration_s * reel.fps / shots if reel.fps else 0
-    return f"{len(reel.cuts)} cuts, {shots} shots, a shot lasts about {frames:.0f} frames"
+    seconds = reel.duration_s / shots
+    each = f"{seconds:.2f} s ({seconds * FPS:.0f} frames at {FPS} fps)"
+    return f"{len(reel.cuts)} cuts, {shots} shots, a shot lasts about {each}"
 
 
 LOOK_SHARE = 0.03  # reel colours below this share are noise, not palette
@@ -252,7 +253,7 @@ def look_checks(reel: Reel, file: str, *, rhythm: bool = True) -> list[dict[str,
     if colors:
         found.append({"kind": "palette", "file": file, "colors": colors, "distance": PALETTE_DISTANCE})
     if rhythm and len(reel.cuts) >= MIN_CUTS and reel.fps:
-        per_shot = round(reel.duration_s * reel.fps / (len(reel.cuts) + 1), 1)
+        per_shot = round(reel.duration_s / (len(reel.cuts) + 1) * FPS, 1)  # house frames, like the clip's
         found.append(
             {"kind": "rhythm", "file": file, "frames_per_shot": per_shot, "tolerance": RHYTHM_TOLERANCE}
         )

@@ -133,10 +133,10 @@ class Creature:
         report = Report(self.ledger.run_id, "FAILED", self.folder)
         try:
             return self._try_reel(report, source, text, mark)
-        except ModelError as error:
+        except (ModelError, ValueError, perceive.PerceiveError) as error:
             # a paid call that gave no usable answer (over its cap, refused, malformed): the run ends
             # cleanly with what it has, its page and its ledger, instead of a traceback
-            report.status, report.gap = "FAILED", f"a model call failed: {error}"
+            report.status, report.gap = "FAILED", f"{type(error).__name__}: {error}"
             return self.finish(report)
 
     def _try_reel(self, report: Report, source: str, text: str, mark: Path | None) -> Report:
@@ -315,7 +315,10 @@ class Creature:
                 layers=len(t["layers"]), unknown=unknown, reason=str(choice.get("reason", ""))[:300],
             )  # fmt: skip
             folder = self.folder / f"montage-{attempt}"
-            clip, problems, checked = self.render_timeline(t, text, folder, mark=mark, style=None)
+            # the reel's colours and rhythm, checked on the montage as on any clip of a look-matters reel
+            wants_look = any(c["kind"] in ("palette", "rhythm") for c in spec.checks)
+            look = tuple(criteria.look_checks(self.reel, montage.MONTAGE)) if wants_look else ()
+            clip, problems, checked = self.render_timeline(t, text, folder, mark=mark, style=None, extra=look)
             report.clip = clip or report.clip
             if problems or checked is None or not checked.strip:
                 feedback = "\n".join(f"Check failed: {p}" for p in problems)
@@ -387,9 +390,12 @@ class Creature:
         clips = {}
         for number, case in enumerate(cases):
             clips[case["name"]] = place / f"case-{number}.mp4"
-            clips[case["name"]].write_bytes(
-                tools.fixture(case, limits=self.authority.workshop, image=self.image)
-            )
+            try:
+                made = tools.fixture(case, limits=self.authority.workshop, image=self.image)
+            except RuntimeError as error:
+                report.gap = f"case {case['name']} cannot be rendered: {error}"
+                return self.finish(report)
+            clips[case["name"]].write_bytes(made)
 
         def try_code(code: str, number: int) -> Outcome:
             folder = self.folder / f"attempt-{number}"
@@ -443,8 +449,11 @@ class Creature:
             perceive.FRAMES_AT_CODE, {"times": [0.0]}, {"reel.mp4": first}, limits=self.authority.workshop,
             image=self.image,
         )  # fmt: skip
+        if not sheet.ok or not sheet.outputs.get("strip.png"):  # never seal an empty reference
+            report.gap = f"the reference frame could not be taken: {sheet.error}"
+            return self.finish(report)
         reference = self.folder / "case-frame.png"
-        reference.write_bytes(sheet.outputs.get("strip.png", b""))
+        reference.write_bytes(sheet.outputs["strip.png"])
         origin = {"wish": wish[:300], "run": self.ledger.run_id}
         cost = {"learn_usd": round(self.ledger.spent_usd - before, 6), "forge_attempts": built.attempts}
         skill = registry.install(
@@ -470,11 +479,18 @@ class Creature:
         return {"ok": ran.ok, "result": ran.value, "error": ran.error}
 
     def render_timeline(
-        self, t: dict[str, Any], text: str, folder: Path, *, mark: Path | None, style: dict[str, Any] | None
+        self,
+        t: dict[str, Any],
+        text: str,
+        folder: Path,
+        *,
+        mark: Path | None,
+        style: dict[str, Any] | None,
+        extra: tuple[dict[str, Any], ...] = (),
     ) -> tuple[Path | None, list[str], verdict.Checked | None]:
         """Each source once at the timeline's length (with the user's style over its own values), then
         the montage, then the montage's fixed checks. No model. Returns the clip and what failed."""
-        extra, notes = montage.style_params(style)
+        styled, notes = montage.style_params(style)
         for note in notes:
             self.ledger.record("style_note", note=note)
         clips = {}
@@ -483,7 +499,7 @@ class Creature:
             base = registry.spec_of(skill, text)
             output = {**base.output, "duration_s": t["frames"] / t["fps"]}
             spec = dataclasses.replace(
-                base, params={**base.params, **source.get("params", {}), **extra}, output=output,
+                base, params={**base.params, **source.get("params", {}), **styled}, output=output,
                 checks=tuple(criteria.checks_for(output)),
             )  # fmt: skip
             ran = workshop.run(
@@ -511,7 +527,7 @@ class Creature:
             self.ledger.record("montage", ok=False, error=(ran.error or "")[:300])
             return None, [f"the montage failed: {ran.error}"], None
         checked = verdict.check(
-            ran.outputs, tuple(montage.checks(t, ran.value.get("layers", []))),
+            ran.outputs, tuple(montage.checks(t, ran.value.get("layers", []))) + extra,
             limits=self.authority.workshop, image=self.image, folder=folder,
         )  # fmt: skip
         if checked.strip:

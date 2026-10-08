@@ -94,6 +94,8 @@ def wish(model: Model, home: Path, *, cap_usd: float) -> dict[str, Any]:
         for item in data.get("wishes", []):
             if not isinstance(item, dict) or item.get("kind") not in KINDS:
                 continue
+            if not str(item.get("capability", "")).strip():
+                continue
             reels = sorted({str(r) for r in item.get("reels", []) if str(r) in known})
             if reels:
                 wishes.append({**item, "reels": reels, "unlocks": len(reels)})
