@@ -3,10 +3,10 @@
 Every call runs the pinned Claude Code CLI with its own system prompt, no tools, no MCP servers and no
 user settings, from an empty directory, so the model sees nothing but what the spine sends.
 
-Caps: before each call the run's remaining budget must cover a reserve (the cost of a large call at
-fallback-model prices); otherwise the call is refused and the model is never reached. The CLI checks
---max-budget-usd only after a turn, so it is a second net: a call over its cap still costs, then
-returns no result. A run can therefore overshoot its budget by at most one call.
+Caps (all from authority.json): before each call the run's remaining budget must cover a reserve (the
+cost of a large call at fallback-model prices); otherwise the call is refused and the model is never
+reached. The CLI checks --max-budget-usd only after a turn, so it is a second net: a call over its cap
+still costs, then returns no result. A run can therefore overshoot its budget by at most one call.
 """
 
 from __future__ import annotations
@@ -26,7 +26,6 @@ from creature.ledger import Ledger
 CLI_PACKAGE = "@anthropic-ai/claude-code@2.1.294"
 MODEL = "claude-haiku-5-5"
 FALLBACK_MODEL = "claude-haiku-4-5-20251001"
-RESERVE_USD = 0.03  # ~4k output tokens on the fallback model, plus input
 # the CLI child gets only what it needs to run and log in; everything else in the shell stays out
 ENV_KEEP = (
     "PATH", "HOME", "USER", "LOGNAME", "SHELL", "TMPDIR", "LANG", "LC_ALL", "LC_CTYPE", "TERM",
@@ -84,7 +83,7 @@ class Model:
         ledger: Ledger,
         *,
         budget_usd: float,
-        reserve_usd: float = RESERVE_USD,
+        reserve_usd: float,
         model: str = MODEL,
     ) -> None:
         # NaN compares False everywhere and would switch the cap off; inf is no budget at all

@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "domain": "motion design: text and graphic animation",
+  "spine_network": ["Apify API", "Instagram CDN (perception only)", "ElevenLabs API", "the model via claude -p"],
+  "caps": {
+    "run_budget_usd": 1.0,
+    "call_reserve_usd": 0.03,
+    "forge_attempts": 3,
+    "new_skills_per_run": 5,
+    "step_cap_usd": {"perceive": 0.05, "criteria": 0.05, "planner": 0.03, "forge": 0.05, "judge": 0.03}
+  },
+  "workshop": {
+    "image": "creature-workshop:v1",
+    "network": false,
+    "timeout_s": 120,
+    "memory_mb": 2048,
+    "cpus": 2,
+    "pids": 256,
+    "work_mb": 512,
+    "tmp_mb": 64,
+    "output_mb": 200
+  },
+  "install": "automatic after all file checks and the judge pass",
+  "refuse": [
+    "send messages",
+    "make payments",
+    "delete anything outside the work folder",
+    "read or use credentials",
+    "publish in someone's name",
+    "change authority, gate, workshop or registry code"
+  ],
+  "ask": [
+    "network for skills",
+    "a package or model downloaded at run time",
+    "files outside the work folder",
+    "more budget or higher limits"
+  ]
+}

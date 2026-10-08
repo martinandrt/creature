@@ -10,9 +10,9 @@ An agent that grows its own capabilities from short videos, while its authority 
 | Part | State |
 |---|---|
 | Repository skeleton | done |
-| Docker sandbox for skill code | done |
+| Workshop: container with Python, ffmpeg, Pillow, numpy and fonts, one work folder, limits from `authority.json` | done |
 | Run ledger (hash chain) and authority fingerprint | done |
-| Model call: isolated, budget-capped, logged (Haiku 5.5, fallback 4.5) | done |
+| Model call: isolated, budget-capped, logged, reads images (Haiku 5.5, fallback 4.5) | done |
 | Everything else | not started |
 
 ## Run

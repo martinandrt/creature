@@ -10,6 +10,7 @@ from creature.ledger import Ledger
 from creature.llm import BudgetRefused, ClaudeCLI, Model, ModelCall, ModelError
 
 SCHEMA = {"type": "object", "properties": {"words": {"type": "integer"}}, "required": ["words"]}
+RESERVE = 0.03  # authority.json caps.call_reserve_usd
 
 
 @pytest.fixture
@@ -18,7 +19,7 @@ def run(home) -> Ledger:
 
 
 def _model(fake_model, run, budget=1.0) -> Model:
-    return Model(fake_model, run, budget_usd=budget)
+    return Model(fake_model, run, budget_usd=budget, reserve_usd=RESERVE)
 
 
 def _events(run, kind):
@@ -131,7 +132,9 @@ def test_reply_missing_required_keys_is_an_error_but_still_costs(run):
             return llm.ModelReply(data={"other": 1}, cost_usd=0.001)
 
     with pytest.raises(ModelError):
-        Model(Loose(), run, budget_usd=1.0).ask("planner", "s", "p", SCHEMA, cap_usd=0.05)
+        Model(Loose(), run, budget_usd=1.0, reserve_usd=RESERVE).ask(
+            "planner", "s", "p", SCHEMA, cap_usd=0.05
+        )
     [event] = _events(run, "model_call")
     assert event["cost_usd"] == 0.001
 
@@ -215,7 +218,7 @@ def test_timeout_counts_the_whole_cap(monkeypatch):
 
 @pytest.mark.slow
 def test_live_call_on_haiku_5_5(run):
-    model = Model(ClaudeCLI(), run, budget_usd=0.2)
+    model = Model(ClaudeCLI(), run, budget_usd=0.2, reserve_usd=RESERVE)
     prompt = "Count the words: the quick brown fox jumps"
     answer = model.ask("planner", "You are terse.", prompt, SCHEMA, cap_usd=0.05)
     assert answer == {"words": 5}
@@ -229,7 +232,9 @@ def test_reply_with_missing_keys_is_logged_as_failed(run):
             return llm.ModelReply(data={"other": 1}, cost_usd=0.001)
 
     with pytest.raises(ModelError):
-        Model(Loose(), run, budget_usd=1.0).ask("planner", "s", "p", SCHEMA, cap_usd=0.05)
+        Model(Loose(), run, budget_usd=1.0, reserve_usd=RESERVE).ask(
+            "planner", "s", "p", SCHEMA, cap_usd=0.05
+        )
     [event] = _events(run, "model_call")
     assert event["ok"] is False and "words" in event["error"]
 
@@ -329,7 +334,7 @@ def test_images_reach_the_transport(fake_model, run, tmp_path):
 def test_live_call_sees_an_image(run, tmp_path):
     schema = {"type": "object", "properties": {"color": {"type": "string"}}, "required": ["color"]}
     image = _png(tmp_path / "red.png", rgb=(230, 20, 20), size=64)
-    answer = Model(ClaudeCLI(), run, budget_usd=0.2).ask(
+    answer = Model(ClaudeCLI(), run, budget_usd=0.2, reserve_usd=RESERVE).ask(
         "judge", "You name colours in one word.", "What colour fills this image?", schema,
         cap_usd=0.05, images=(("image", image),),
     )  # fmt: skip
