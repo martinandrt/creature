@@ -79,7 +79,7 @@ def test_criteria_schema_is_valid_and_strict():
         "transcript_is_speech": True,
         "task": "Type it.",
         "duration_s": 3.0,
-        "params": {},
+        "params": [{"name": "blinks", "value": 8, "quote": "blink it eight times"}],
         "criteria": ["a", "b", "c"],
     }
     assert not list(v.iter_errors(good))
@@ -90,5 +90,7 @@ def test_criteria_schema_is_valid_and_strict():
         {**good, "criteria": ["a"]},
         {**good, "criteria": "a b c"},
         {**good, "transcript_is_speech": "yes"},
+        {**good, "params": {"blinks": 8}},  # params carry their transcript quote: a list, not a map
+        {**good, "params": [{"name": "blinks", "value": 8}]},
     ):
         assert list(v.iter_errors(bad)), bad
