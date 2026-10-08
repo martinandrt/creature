@@ -98,6 +98,28 @@ def test_unknown_check_kind_fails_closed():
     )
 
 
+def test_feedback_scrubs_hidden_text_quoted_in_visible_evidence(fake_model, model, spec, tmp_path):
+    # the judge sees every criterion and may quote a hidden one inside another's evidence;
+    # that quote must not ride into the forge prompt
+    answers = _answers(False, True, True)
+    answers["criteria"][0]["evidence"] = f"the caret is missing, unlike '{HIDDEN[0]}' which holds"
+    fake_model.queue("judge", answers)
+    judged = verdict.judge(model, spec, *_strips(tmp_path), cap_usd=0.03)
+    text = verdict.feedback(verdict.Checked((), {}, None), judged)
+    assert VISIBLE[0] in text and "SECRET" not in text
+
+
+def test_frames_are_checked_exactly_for_composition():
+    # Martin's rule: an effect returns exactly round(duration_s * fps) frames, so clips concatenate
+    # without drift. duration ± 0.1 s lets a 3-frame drift through; the frame count must be exact.
+    output = criteria.clip_format(2)
+    [frames] = [c for c in criteria.checks_for(output) if c["kind"] == "frames"]
+    assert frames["expect"] == 60
+    probe = {"readable": True, "video": True, "frames": 60}
+    assert verdict._evaluate(frames, b"x", probe) is None
+    assert verdict._evaluate(frames, b"x", {**probe, "frames": 59})
+
+
 @pytest.mark.docker
 class TestChecks:
     @pytest.fixture(scope="class")
@@ -119,7 +141,7 @@ class TestChecks:
     def test_wrong_format_is_named(self, env, spec, tmp_path):
         checked = self._check(env, spec, tmp_path, "testsrc2=s=720x1280:r=25:d=3")
         kinds = {problem.split(":")[0] for problem in checked.problems}
-        assert kinds == {"resolution", "fps", "duration"}
+        assert kinds == {"resolution", "fps", "duration", "frames"}
 
     def test_black_clip_fails(self, env, spec, tmp_path):
         checked = self._check(env, spec, tmp_path, "color=c=black:s=1080x1920:r=30:d=2")
@@ -129,3 +151,10 @@ class TestChecks:
         limits, image = env
         checked = verdict.check({}, spec.checks, limits=limits, image=image, folder=tmp_path)
         assert checked.problems == ("exists: clip.mp4 was not written",)
+
+    def test_dark_clip_with_small_bright_content_is_not_black(self, env, spec, tmp_path):
+        # motion design's default look: a little white on black. A 200x200 white box on 1080x1920
+        # is 1.9 % of the frame, mean luma ~5 — "black" by mean, plainly visible to a judge
+        source = "color=c=black:s=1080x1920:r=30:d=2,drawbox=x=440:y=860:w=200:h=200:color=white:t=fill"
+        checked = self._check(env, spec, tmp_path, source)
+        assert checked.problems == ()

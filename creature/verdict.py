@@ -17,7 +17,8 @@ from creature import workshop
 from creature.criteria import Spec
 from creature.llm import Model
 
-BLACK_LUMA = 8.0  # mean luma (0-255) at or below this on every sampled frame means a black clip
+CLIP_FRAMES = 18  # dense enough that a blink or flicker shows up between samples
+BLACK_LUMA = 8  # brightest pixel (0-255) at or below this on every sampled frame means a black clip
 
 # Fixed code (ours) that runs in the workshop on the attempt's clip.
 PROBE_CODE = r"""
@@ -52,9 +53,9 @@ def run(input, work):
     for i in range(1, len(picks) + 1):
         gray = subprocess.run(["ffmpeg", "-v", "error", "-i", f"{work}/frame_{i:02d}.png", "-f", "rawvideo",
                                "-pix_fmt", "gray", "-"], capture_output=True, check=True).stdout
-        luma.append(sum(gray) / max(1, len(gray)))
+        luma.append(max(gray) if gray else 0)  # brightest pixel: a small glyph on black is not black
     subprocess.run(["ffmpeg", "-v", "error", "-start_number", "1", "-i", f"{work}/frame_%02d.png",
-                    "-vf", "tile=6x2", "-frames:v", "1", f"{work}/out/strip.png"], check=True)
+                    "-vf", f"tile=6x{-(-count // 6)}", "-frames:v", "1", f"{work}/out/strip.png"], check=True)
     return {"readable": True, "video": True, "codec": v.get("codec_name"), "pix_fmt": v.get("pix_fmt"),
             "width": v.get("width"), "height": v.get("height"), "fps": fps, "frames": frames,
             "duration_s": frames / fps if fps else 0.0, "luma": luma, "times": times}
@@ -84,10 +85,11 @@ JUDGE_SCHEMA = {
 JUDGE_SYSTEM = """You judge whether a rendered clip reproduces the TECHNIQUE of a motion design effect
 shown in a reference reel. Compare technique only: ignore the words, fonts, colours and layout. The
 reference reel is a tutorial, so many of its frames show an editing app; use the frames that show the
-effect. Each image is a strip of 12 frames in time order, 6 per row; the clip's strip runs from its
-first frame to its last.
+effect. Each image is a strip of frames in time order, 6 per row: 12 from the reel, and 18 from the
+clip running from its first frame to its last.
 Judge each criterion from the clip's frames alone. Answer every criterion, in the order given, copying
-its text exactly. pass is true only if the frames clearly show it; when unsure, false."""
+its text exactly. pass is true only if the frames clearly show it; when unsure, false. Evidence
+describes the frames only: never mention or quote another criterion."""
 
 
 @dataclass(frozen=True)
@@ -122,15 +124,17 @@ def check(
         return Checked((f"exists: {name} was not written",), {}, None)
     clip = folder / name
     clip.write_bytes(outputs[name])
-    result = workshop.run(PROBE_CODE, {"file": name, "count": 12}, {name: clip}, limits=limits, image=image)
+    result = workshop.run(
+        PROBE_CODE, {"file": name, "count": CLIP_FRAMES}, {name: clip}, limits=limits, image=image
+    )
     probe = result.value if result.ok and isinstance(result.value, dict) else {}
-    problems = [p for c in checks if (p := _evaluate(c, outputs[name], probe))]
+    problems = list(dict.fromkeys(p for c in checks if (p := _evaluate(c, outputs[name], probe))))
     if not result.ok:
-        problems.append(f"probe failed: {result.error}")
+        problems = [f"the clip cannot be read: {result.error}"]
     return Checked(tuple(problems), probe, result.outputs.get("strip.png"))
 
 
-KINDS = ("exists", "max_bytes", "video_stream", "resolution", "fps", "duration", "not_black")
+KINDS = ("exists", "max_bytes", "video_stream", "resolution", "fps", "duration", "frames", "not_black")
 
 
 def _evaluate(check: dict[str, Any], data: bytes, probe: dict[str, Any]) -> str | None:
@@ -142,7 +146,7 @@ def _evaluate(check: dict[str, Any], data: bytes, probe: dict[str, Any]) -> str 
     if kind == "max_bytes":
         return None if len(data) <= check["expect"] else f"max_bytes: {len(data)} bytes > {check['expect']}"
     if not probe.get("readable"):
-        return f"{kind}: the clip cannot be read"
+        return "the clip cannot be read"
     if kind == "video_stream":
         ok = probe.get("video") and probe.get("codec") == "h264" and probe.get("pix_fmt") == "yuv420p"
         return (
@@ -163,6 +167,9 @@ def _evaluate(check: dict[str, Any], data: bytes, probe: dict[str, Any]) -> str 
         return _near("fps", probe.get("fps"), check)
     if kind == "duration":
         return _near("duration", probe.get("duration_s"), check)
+    if kind == "frames":
+        got = probe.get("frames")
+        return None if got == check["expect"] else f"frames: got {got}, need exactly {check['expect']}"
     luma = probe.get("luma") or []  # the one kind left: not_black
     return None if luma and max(luma) > BLACK_LUMA else "not_black: every sampled frame is black"
 
@@ -212,9 +219,13 @@ def feedback(checked: Checked, judged: Judged | None) -> str:
     """What the forge may read about a failed attempt: never the text of a held-out criterion."""
     lines = [f"Check failed: {p}" for p in checked.problems]
     if judged:
+        secret = [r["criterion"].lower() for r in judged.results if r["hidden"]]
         for r in judged.results:
             if not r["pass"] and not r["hidden"]:
-                lines.append(f"Judge, not met: {r['criterion']} (seen: {r['evidence']})")
+                # the judge saw every criterion and may quote a hidden one: then its evidence stays out
+                quoted = any(text in r["evidence"].lower() for text in secret)
+                seen = "(evidence withheld)" if quoted else r["evidence"]
+                lines.append(f"Judge, not met: {r['criterion']} (seen: {seen})")
         hidden = sum(1 for r in judged.results if not r["pass"] and r["hidden"])
         if hidden:
             lines.append(f"{hidden} more criteria you were not shown also failed.")

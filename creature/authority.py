@@ -55,6 +55,7 @@ class Authority:
     caps: Caps
     workshop: Limits
     image: str
+    models: dict[str, str]  # step name -> model; "default" for the rest
     refuse: tuple[str, ...]
     ask: tuple[str, ...]
 
@@ -78,6 +79,11 @@ def load(home: str | Path) -> Authority:
     image = shop.get("image")
     if not isinstance(image, str) or not image:
         raise AuthorityError("workshop.image must name the workshop image")
+    models = _section(raw, "models")
+    if not isinstance(models.get("default"), str) or not all(
+        isinstance(v, str) and v for v in models.values()
+    ):
+        raise AuthorityError("models must map step names to model names, with a default")
     return Authority(
         version=_number(raw, "version", integer=True, minimum=1),
         caps=Caps(
@@ -97,6 +103,7 @@ def load(home: str | Path) -> Authority:
             output_mb=_number(shop, "output_mb", integer=True, minimum=1),
         ),
         image=image,
+        models=dict(models),
         refuse=_strings(raw, "refuse"),
         ask=_strings(raw, "ask"),
     )

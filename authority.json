@@ -1,13 +1,28 @@
 {
   "version": 2,
   "domain": "motion design: text and graphic animation",
-  "spine_network": ["Apify API", "Instagram CDN (perception only)", "ElevenLabs API", "the model via claude -p"],
+  "spine_network": [
+    "Apify API",
+    "Instagram CDN (perception only)",
+    "ElevenLabs API",
+    "the model via claude -p"
+  ],
+  "models": {
+    "default": "claude-haiku-5-5",
+    "criteria": "claude-opus-5-5"
+  },
   "caps": {
     "run_budget_usd": 1.0,
-    "call_reserve_usd": 0.03,
+    "call_reserve_usd": 0.1,
     "forge_attempts": 3,
     "new_skills_per_run": 5,
-    "step_cap_usd": {"perceive": 0.05, "criteria": 0.05, "planner": 0.03, "forge": 0.05, "judge": 0.03}
+    "step_cap_usd": {
+      "perceive": 0.05,
+      "criteria": 0.1,
+      "planner": 0.03,
+      "forge": 0.05,
+      "judge": 0.03
+    }
   },
   "workshop": {
     "image": "creature-workshop:v1",

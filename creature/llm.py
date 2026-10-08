@@ -110,6 +110,7 @@ class Model:
         *,
         cap_usd: float,
         images: tuple[tuple[str, Path], ...] = (),
+        model: str | None = None,
     ) -> dict[str, Any]:
         """Structured answer for one step, or ModelError. A call is logged with its cost or not made."""
         if not (math.isfinite(cap_usd) and cap_usd > 0):
@@ -122,7 +123,7 @@ class Model:
             self.ledger.record("model_refused", step=step, reason="budget", remaining_usd=round(remaining, 6))
             raise BudgetRefused(f"{step}: ${remaining:.4f} left, a call needs a ${self.reserve_usd} reserve")
         max_usd = round(min(cap_usd, remaining), 6)
-        call = ModelCall(step, self.model, system, prompt, schema, max_usd=max_usd, images=images)
+        call = ModelCall(step, model or self.model, system, prompt, schema, max_usd=max_usd, images=images)
         try:
             reply = self.transport.complete(call)
         except ModelError as error:

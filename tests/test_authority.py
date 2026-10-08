@@ -132,6 +132,9 @@ def _write(home, change):
         lambda a: a["workshop"].update(image=""),
         lambda a: a.update(refuse="everything"),
         lambda a: a.pop("caps"),
+        lambda a: a.pop("models"),
+        lambda a: a["models"].pop("default"),
+        lambda a: a["models"].update(criteria=""),
     ],
 )
 def test_bad_authority_is_refused(home, change):

@@ -99,7 +99,17 @@ def test_clip_format_clamps_and_snaps_to_frames(asked, seconds):
 def test_checks_follow_the_format():
     out = criteria.clip_format(2)
     kinds = {check["kind"]: check for check in criteria.checks_for(out)}
-    assert set(kinds) == {"exists", "video_stream", "resolution", "fps", "duration", "not_black", "max_bytes"}
+    assert set(kinds) == {
+        "exists",
+        "video_stream",
+        "resolution",
+        "fps",
+        "duration",
+        "frames",
+        "not_black",
+        "max_bytes",
+    }
+    assert kinds["frames"]["expect"] == 60
     assert kinds["duration"]["expect"] == 2.0 and kinds["resolution"]["width"] == 1080
     assert all(check["file"] == "clip.mp4" for check in kinds.values())
 
