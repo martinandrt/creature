@@ -666,3 +666,81 @@ def test_a_montage_is_checked_for_the_reels_rhythm_and_palette(montage_world, fa
     assert report.status == "BUILT", report.gap
     assert "palette" in seen["grid-cards-attempt-1"] and "rhythm" not in seen["grid-cards-attempt-1"]
     assert {"palette", "rhythm", "smooth", "frames"} <= set(seen["montage-1"]), seen["montage-1"]
+
+
+# --- the round forge (a home whose authority names a forge model) -------------------
+
+FRAME_PY = (
+    "from PIL import Image\ndef frame(n, ctx):\n    return Image.new('RGB', (ctx['width'], ctx['height']))\n"
+)
+DEEP_FILES = [
+    {"path": "frame.py", "content": FRAME_PY},
+    {"path": "layout.json", "content": json.dumps({"frames": 90})},
+]
+DEEP_HEAD = loop.deep.WRAPPER.split("__FILES__")[0]
+
+
+@pytest.fixture
+def deep_world(world, monkeypatch):
+    """The authority names a forge model; the workshop is faked per code: preview frames, pair sheets,
+    the probe (frames by which clip it is asked about), the full render. verdict.check is real."""
+    _authority(world, lambda a: a["models"].update(forge="claude-opus-5-5"))
+    monkeypatch.setattr(loop.verdict, "check", REAL_CHECK)
+    calls = {"previews": [], "pairs": [], "renders": [], "probes": []}
+
+    def run(code, input, files=None, **kwargs):
+        if code == verdict.PROBE_CODE:
+            [clip] = files.values()
+            calls["probes"].append(clip)
+            frames = 30 if clip.parent.name == "shorter" else 90
+            return workshop.WorkshopResult(True, _probe(frames), {"strip.png": PNG}, None, None, 0.1, "")
+        if code == loop.deep.PAIRS_CODE:
+            calls["pairs"].append(input)
+            value = {
+                "pairs": len(input["pairs"]),
+                "crops": 0,
+                "score": 12.5,
+                "frame_diff": 12.5,
+                "palette_misses": 0,
+            }
+            return workshop.WorkshopResult(True, value, {"pairs.png": PNG}, None, None, 0.2, "")
+        if code.startswith(DEEP_HEAD) and input.get("frames_only") is not None:
+            calls["previews"].append(input["frames_only"])
+            outputs = {f"f_{n:04d}.png": PNG for n in input["frames_only"]}
+            return workshop.WorkshopResult(True, {"frames": len(outputs)}, outputs, None, None, 0.3, "")
+        calls["renders"].append(input)
+        return RENDER
+
+    monkeypatch.setattr(loop.workshop, "run", run)
+    return world, calls
+
+
+def test_a_home_with_a_forge_model_builds_in_rounds_and_installs_the_wrapper(deep_world, fake_model):
+    home, calls = deep_world
+    fake_model.queue("criteria", REPLY)
+    fake_model.queue("forge", {"note": "first, done", "files": DEEP_FILES, "edits": [], "done": True})
+    fake_model.queue("judge", _judge(True, True, True))
+    creature = _creature(home, fake_model)
+    report = creature.try_reel("reel.mp4", "Stay curious.")
+    assert report.status == "BUILT" and report.skill == "typewriter-reveal@v1", report.gap
+    assert _steps(fake_model) == ["criteria", "forge", "judge"]
+    forge_call = fake_model.calls[1]
+    assert forge_call.model == "claude-opus-5-5" and [label for label, _ in forge_call.images] == [
+        "reel frames"
+    ]
+    rounds = authority.load(home).caps.forge_attempts
+    assert f"Round 1 of at most {rounds}" in forge_call.prompt and "SECRET" not in forge_call.prompt
+    skill = registry.get(home / "registry", "typewriter-reveal")
+    assert skill.code == loop.deep.skill_code({f["path"]: f["content"] for f in DEEP_FILES})
+    assert skill.code.startswith(DEEP_HEAD) and "def run(input, work)" in skill.code
+    kinds = _kinds(creature)
+    for kind in ("round", "round_score", "other_length", "installed", "run_end"):
+        assert kind in kinds, kind
+    assert len(calls["previews"]) == 1 and len(calls["pairs"]) == 1  # one round: frames, then pairs
+    # the whole clip, then the same skill 2 s shorter, both through the real file checks
+    assert [p.parent.name for p in calls["probes"]] == ["attempt-1", "shorter"]
+    assert [r["output"]["duration_s"] for r in calls["renders"]] == [3.0, 1.0]
+    [other] = [e for e in ledger.read(creature.ledger.path) if e["type"] == "other_length"]
+    assert other["ok"] is True and other["seconds"] == 1.0
+    assert (creature.folder / "attempt-1" / "shorter" / "clip.mp4").exists()
+    assert (creature.folder / "rounds" / "round-01" / "files.json").exists()
