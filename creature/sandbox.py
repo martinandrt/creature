@@ -109,14 +109,17 @@ def run(
     def read_stderr() -> None:
         proc.stderr.read()  # drained so the container never blocks on a full pipe; content is not trusted
 
-    readers = [threading.Thread(target=target, daemon=True) for target in (read_stdout, read_stderr)]
-    for reader in readers:
-        reader.start()
-    try:
-        proc.stdin.write(payload)
-        proc.stdin.close()
-    except BrokenPipeError:
-        pass
+    def write_stdin() -> None:
+        # on its own thread: a stalled container must not block us before the deadline loop
+        try:
+            proc.stdin.write(payload)
+            proc.stdin.close()
+        except (BrokenPipeError, OSError):
+            pass
+
+    threads = [threading.Thread(target=t, daemon=True) for t in (read_stdout, read_stderr, write_stdin)]
+    for thread in threads:
+        thread.start()
 
     killed: Killed = None
     deadline = start + timeout_s
@@ -132,8 +135,15 @@ def run(
     if killed:
         _remove(name)
         proc.kill()
-    proc.wait(timeout=30)
-    readers[0].join(timeout=5)
+    try:
+        proc.wait(timeout=30)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        killed = killed or "timeout"
+    if killed:
+        _remove(name)  # second pass makes "no container left behind" unconditional
+    for thread in threads[:2]:
+        thread.join(timeout=5)
     duration = round(time.monotonic() - start, 3)
 
     if killed:

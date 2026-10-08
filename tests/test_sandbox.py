@@ -82,6 +82,18 @@ def test_huge_output_is_killed():
     assert _leftover_containers() == []
 
 
+def test_memory_hog_is_contained():
+    result = sandbox.run("def run(x):\n    x = [0] * (10**9)\n    return len(x)", {}, timeout_s=20)
+    assert not result.ok
+    assert result.killed == "memory" or "MemoryError" in (result.error or "")
+    assert _leftover_containers() == []
+
+
+def test_large_input_does_not_block():
+    result = sandbox.run("def run(x):\n    return len(x['text'])", {"text": "a" * 2_000_000})
+    assert result.ok and result.output == 2_000_000
+
+
 def test_input_must_be_json():
     result = sandbox.run("def run(x):\n    return x", {1, 2})
     assert not result.ok and "not JSON" in result.error
