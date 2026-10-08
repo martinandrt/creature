@@ -524,11 +524,11 @@ def _preview(
     here: Path,
 ) -> Preview:  # fmt: skip
     total = round(spec.output["duration_s"] * spec.output["fps"])
-    picks = (
-        [reel.times[round(i * (len(reel.times) - 1) / (PAIRS - 1))] for i in range(PAIRS)]
-        if reel.times
-        else [0.0]
-    )
+    # each reel moment once: a surface has only its own few frames, and a repeated pair is paid for twice
+    times = sorted(set(reel.times)) or [0.0]
+    if len(times) > PAIRS:
+        times = sorted({times[round(i * (len(times) - 1) / (PAIRS - 1))] for i in range(PAIRS)})
+    picks = times
     pairs = [(t, min(total - 1, round(t / max(reel.duration_s, 0.001) * total))) for t in picks]
     crops = [
         {**lk, "n": min(total - 1, round(lk["time"] / max(reel.duration_s, 0.001) * total))} for lk in looks

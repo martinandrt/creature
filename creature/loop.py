@@ -292,6 +292,10 @@ class Creature:
             outcome, clips[number] = self.run_skill(
                 code, spec, self.folder / f"{prefix}attempt-{number}", reference
             )
+            # the whole clip's verdict (checks, then the judge's count) goes to the ledger, as the old forge's
+            self.ledger.record(
+                "attempt_result", attempt=number, ok=outcome.ok, detail=outcome.detail, skill=spec.slug
+            )
             if not outcome.ok:
                 return outcome
             return self._other_length(code, spec, self.folder / f"{prefix}attempt-{number}")
