@@ -1,0 +1,17 @@
+# secrets
+.env
+*.env
+!.env.example
+
+# downloaded media and scratch work (raw scraped data never leaves the machine)
+workspace/
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# os
+.DS_Store
