@@ -60,6 +60,10 @@ def sentence(report: Any) -> str:
         return f"Learned {report.skill} in {tries} for {spent}: {passed}."
     if status == "HAVE":
         return f"Already knew it: {report.skill} passed its own stored tests on this text, for {spent}."
+    if status == "DONE" and report.skill == "wishes":
+        return f"Read its own runs and named what it lacks, for {spent}: " + "; ".join(report.notes[:3])
+    if status == "DONE" and str(report.skill).startswith("use:"):
+        return f"Used the installed tool {report.skill[4:]} with no model call, for {spent}."
     if status == "DONE":
         return f"Ran {report.skill} on new text with no model call, for {spent}."
     if status in ("ASK", "REFUSE", "SKIP"):
