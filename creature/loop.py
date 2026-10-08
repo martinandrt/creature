@@ -168,7 +168,15 @@ class Creature:
             image=self.image,
             folder=folder,
         )
-        return list(checked.problems)
+        problems = list(checked.problems)
+        covered = float(spec.output["duration_s"])
+        # a finished piece is reproduced whole, a slice of it is not it (a tutorial's technique may be short)
+        finished = spec.look_matters or len(self.reel.cuts) >= criteria.MIN_CUTS
+        if finished and self.reel.duration_s > max(covered, criteria.MAX_S) * 1.25:
+            problems.append(
+                f"coverage: the clip lasts {covered:.1f} s, the reel {self.reel.duration_s:.1f} s"
+            )
+        return problems
 
     def _match_whole(self, report: Report, source: str, text: str) -> Report | None:
         """The whole reel against the installed skills: a match is run and judged by its own stored tests."""
@@ -239,6 +247,13 @@ class Creature:
             report.gap = spec.reason
             if spec.verdict == "ask":
                 _queue_ask(self.home, self.ledger.run_id, source, spec)
+            return self.finish(report)
+        if spec.kind == "effect" and spec.look_matters and self.reel.duration_s > criteria.ONE_EFFECT_MAX_S:
+            report.gap = (
+                f"the reel lasts {self.reel.duration_s:.1f} s, one effect clip covers at most "
+                f"{criteria.MAX_S:.0f} s: "
+                "it has to be split into screens, and the criteria did not split it"
+            )
             return self.finish(report)
         if spec.kind == "montage" and spec.parts:
             return self.learn_montage(report, spec, source, text, mark=mark)
@@ -447,8 +462,9 @@ class Creature:
                 self.model, self.reel, spec, catalog, cap_usd=self.cap("planner"), feedback=feedback
             )
             t = composer.timeline(
-                spec.slug, choice, catalog, landscape=spec.output["width"] > spec.output["height"]
-            )
+                spec.slug, choice, catalog, landscape=spec.output["width"] > spec.output["height"],
+                reel=self.reel,
+            )  # fmt: skip
             wrong = montage.problems(t)
             if wrong:
                 self.ledger.record("composed", attempt=attempt, ok=False, unknown=unknown, problems=wrong)

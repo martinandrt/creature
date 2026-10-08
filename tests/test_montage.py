@@ -33,12 +33,13 @@ def test_timeline_cuts_every_n_frames_and_the_sources_take_turns():
 
 
 def test_timeline_clamps_length_and_rhythm_to_the_house_range():
-    longest = round(criteria.MAX_S * FPS)
+    longest = round(montage.MAX_S * FPS)  # a montage covers its reel, up to 30 s
     t = _timeline(frames=10_000, every=1)
     assert t["frames"] == longest and t["scenes"][0]["dur"] == montage.MIN_EVERY
     assert _timeline(frames=1)["frames"] == FPS and _timeline(every=10_000)["scenes"][0]["dur"] == 150
     assert montage.frames_for(math.nan) == round(criteria.MIN_S * FPS)
     assert montage.frames_for(99) == longest and montage.frames_for(2.5) == 75
+    assert montage.frames_for(20) == 600
 
 
 def test_problems_names_what_cannot_render():

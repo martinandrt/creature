@@ -595,9 +595,10 @@ def test_a_montage_reel_learns_its_surface_composes_and_saves_a_timeline(montage
     assert registry.get(root, "grid-cards").version == 1
     design = registry.design(root, "grid-promo")
     t = design["timeline"]
+    # as long as the reel (12 s), not as the model said; a reel without cuts gives each source one share
     assert (
-        t["frames"] == 180
-        and len(t["scenes"]) == 45
+        t["frames"] == 360
+        and len(t["scenes"]) == 1
         and t["sources"] == {"a": {"skill": "grid-cards", "version": 1, "params": {}}}
     )
     assert design["tests"]["criteria"] and len(design["tests"]["held_out"]) == 1
@@ -616,10 +617,10 @@ def test_a_montage_reel_learns_its_surface_composes_and_saves_a_timeline(montage
         assert kind in kinds, kind
     assert kinds[-1] == "run_end" and any(n.startswith("gap: a product photo") for n in report.notes)
     [(job, files)] = calls["montages"]
-    assert job["frames"] == 180 and job["sources"] == ["a"] and job["mark_text"] == "STAY"
+    assert job["frames"] == 360 and job["sources"] == ["a"] and job["mark_text"] == "STAY"
     assert set(files) == {"a.mp4"} and job["inks"] == {"dark": "#111111", "light": "#f4f4f4"}
     # the source was rendered at the montage's length, not the 3 s it was learned on
-    assert calls["renders"][-1]["output"]["duration_s"] == 6.0
+    assert calls["renders"][-1]["output"]["duration_s"] == 12.0  # sources render as long as the montage
     assert report.clip == creature.folder / "montage-1" / "montage.mp4"
 
 

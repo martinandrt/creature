@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from creature import montage
+from creature import criteria, montage
 from creature.criteria import Spec
 from creature.llm import Model
 from creature.perceive import Reel
@@ -84,7 +84,7 @@ def choose(
 
 
 def timeline(
-    name: str, choice: dict[str, Any], catalog: list[Skill], *, landscape: bool = False
+    name: str, choice: dict[str, Any], catalog: list[Skill], *, landscape: bool = False, reel: Any = None
 ) -> dict[str, Any]:
     """The choice as a timeline. Unknown names are dropped; the mark is kept inside its size range."""
     by_slug = {s.slug: s for s in catalog}
@@ -111,8 +111,15 @@ def timeline(
                 "height": min(high, max(low, montage._number(mark.get("height"), 0.06))),
             }
         )
+    every = round(montage._number(choice.get("every_frames"), 4))
+    frames = montage.frames_for(montage._number(choice.get("seconds"), 6))
+    if reel is not None and reel.duration_s > 0:
+        # the montage is as long as the reel, and cuts as often as it does; without cuts each screen
+        # gets an equal share, in order
+        frames = montage.frames_for(reel.duration_s)
+        shots = len(reel.cuts) + 1
+        every = round(frames / shots) if len(reel.cuts) >= criteria.MIN_CUTS else frames // max(1, len(order))
+        every = max(montage.MIN_EVERY, every)
     return montage.timeline(
-        name, sources, order, every=round(montage._number(choice.get("every_frames"), 4)),
-        frames=montage.frames_for(montage._number(choice.get("seconds"), 6)), layers=layers,
-        landscape=landscape,
+        name, sources, order, every=every, frames=frames, layers=layers, landscape=landscape
     )  # fmt: skip

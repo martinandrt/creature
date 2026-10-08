@@ -15,6 +15,7 @@ from creature import criteria, workshop
 
 MONTAGE = "montage.mp4"
 MIN_EVERY, MAX_SOURCES, MAX_LAYERS = 2, 6, 2
+MAX_S = 30.0  # a montage covers its reel, up to this long; one effect clip stays within criteria.MAX_S
 SAFE = {"left": 0.06, "right": 0.06, "top": 0.10, "bottom": 0.20}  # share of the frame kept clear
 MAX_STEP_RATIO = 1.5  # inside a scene, one frame's change at most 1.5x the one before or after
 MARK_HEIGHT = (0.03, 0.25)  # a layer's height as a share of the frame's
@@ -39,7 +40,7 @@ def timeline(
 ) -> dict[str, Any]:
     """Expand "a cut every `every` frames through `order`" into scenes and cues. Each scene shows its
     source at the same moment of the source's own time, so every surface keeps moving under the cuts."""
-    frames = max(criteria.FPS, min(round(criteria.MAX_S * criteria.FPS), int(frames)))
+    frames = max(criteria.FPS, min(round(MAX_S * criteria.FPS), int(frames)))
     every = max(MIN_EVERY, int(every))
     scenes, cues = [], []
     for number, start in enumerate(range(0, frames, every) if order else ()):  # no source: no scenes
@@ -69,10 +70,8 @@ def problems(t: dict[str, Any]) -> list[str]:
     found = []
     sources, scenes = t.get("sources") or {}, t.get("scenes") or []
     frames = t.get("frames")
-    if not isinstance(frames, int) or not criteria.FPS <= frames <= round(criteria.MAX_S * criteria.FPS):
-        found.append(
-            f"frames must be a whole number from {criteria.FPS} to {round(criteria.MAX_S * criteria.FPS)}"
-        )
+    if not isinstance(frames, int) or not criteria.FPS <= frames <= round(MAX_S * criteria.FPS):
+        found.append(f"frames must be a whole number from {criteria.FPS} to {round(MAX_S * criteria.FPS)}")
     if not scenes:
         found.append("a montage needs at least one scene")
     if not 1 <= len(sources) <= MAX_SOURCES:
@@ -204,7 +203,7 @@ def frames_for(seconds: float) -> int:
     """Whole frames for a montage length, inside the house range."""
     if not math.isfinite(seconds):
         seconds = criteria.MIN_S
-    return round(min(criteria.MAX_S, max(criteria.MIN_S, seconds)) * criteria.FPS)
+    return round(min(MAX_S, max(criteria.MIN_S, seconds)) * criteria.FPS)
 
 
 # Fixed code (ours) that runs in the workshop: reads every source in step, frame by frame, takes the

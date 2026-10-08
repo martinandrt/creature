@@ -20,6 +20,7 @@ from creature.perceive import Reel
 # House format: every effect returns a clip in exactly this shape, so clips can be chained.
 WIDTH, HEIGHT, FPS = 1080, 1920, 30
 MIN_S, MAX_S = 1.0, 8.0
+ONE_EFFECT_MAX_S = MAX_S * 1.25  # a longer reel is never covered by one effect clip
 CLIP = "clip.mp4"
 DURATION_TOLERANCE_S = 0.1
 MAX_CLIP_BYTES = 50_000_000
@@ -94,6 +95,8 @@ The domain is text and graphic animation that a Python script can render with Pi
   plugin's look that cannot be rebuilt from scratch; or anything in the ASK list below.
 - verdict "refuse": it would need anything in the REFUSE list below.
 - verdict "skip": the reel shows no effect that can be reproduced.
+  Also "skip" when the reel shows or advertises an app, plugin or AI tool that makes the effect for
+  you (auto captions, a filter, a generator): the lesson there is the tool, not a technique.
 
 The frames are a grid of up to 24 in time order, 6 per row, each in its own cell with a grey border and
 its time in seconds under it; half of them come from the middle of the reel's shots. The caption and
@@ -116,9 +119,11 @@ no rates, no exact timings, nothing that happens between two samples. Every crit
 achievable with the user's text: never require more words, lines or characters than it has. Write 4 to 6.
 Some reels are not one effect but a montage: many short shots cut together (the measured cuts below
 say how many), often with one element fixed on top while the backgrounds change. Then set kind
-"montage"; otherwise kind "effect". For a montage, effect, task and criteria describe how the shots are
-put together (the cut rhythm, what stays fixed on top, how the backgrounds alternate), judged on the
-finished montage, and you split the reel:
+"montage"; otherwise kind "effect". When the look is the point (look_matters), the output must cover
+the whole reel, not one moment of it: such a reel longer than 8 s, or one whose frames show more than
+one distinct screen (even joined by soft transitions, without cuts), is a montage. For a montage,
+effect, task and criteria describe how the shots are put together (the cut rhythm, what stays fixed
+on top, how the backgrounds alternate), judged on the finished montage, and you split the reel:
 - surfaces: up to 4 kinds of flat graphic screen that recur in its shots and a script can draw from
   scratch (patterns, grids, cards, typographic layouts), each with a slug, its effect, a task, 3 to 5
   criteria for that screen alone, and frames: the times (as printed under the cells) that show it.
@@ -148,6 +153,7 @@ class Spec:
     transcript_is_speech: bool = True  # False for lyrics: nothing downstream may use the transcript
     param_sources: dict[str, str] = field(default_factory=dict)  # param name -> transcript sentence
     kind: str = "effect"  # effect · montage
+    look_matters: bool = False  # a finished piece: the output covers the whole reel, cut as it is cut
     parts: tuple[Spec, ...] = ()  # a montage's surfaces, each learned and judged on its own
     gaps: tuple[dict[str, str], ...] = ()  # what a montage shows that no script can draw
     frames: tuple[float, ...] = ()  # a surface: the reel times that show it (its reference)
@@ -198,7 +204,9 @@ def write(
         params["palette"] = palette
         sources["palette"] = "measured from the reel's frames"
     output = clip_format(data["duration_s"], landscape=reel.width > reel.height)
-    look = look_checks(reel, output["file"]) if data.get("look_matters") is True else []
+    look_matters = data.get("look_matters") is True
+    # the reel's colours are always checked; its rhythm when the look is the point
+    look = look_checks(reel, output["file"], rhythm=look_matters)
     kind = "montage" if data.get("kind") == "montage" else "effect"
     parts = (
         _surfaces(data.get("surfaces") or [], text, seed, palette, reel, look=bool(look))
@@ -225,6 +233,7 @@ def write(
         transcript_is_speech=data["transcript_is_speech"] is True,
         param_sources=sources,
         kind=kind,
+        look_matters=look_matters,
         parts=parts,
         gaps=gaps,
     )
