@@ -1,12 +1,14 @@
-"""Allow/deny fixtures for the static gate (gate.py, F5), as data.
+"""Allow/deny fixtures for the static gate, as data — for file skills in the workshop.
 
-The gate decides, before any run, whether a generated code skill is even allowed into the
-sandbox. Its rules (PLAN §5/§6): only the allowlisted imports, no banned builtins, and no
-"__" token anywhere (identifier, attribute or string constant). These are ordinary allowlist
-and denylist cases, not exploits; runtime containment is the sandbox's job and is tested there.
+A skill is now `def run(input, work)`: it reads work/in/*, writes work/out/* and returns a JSON
+value, inside the workshop container, which already has no network, no secrets and no mount
+outside /work. The gate is a cheap first filter in front of that container, not the wall. Its
+line is NETWORK: a skill that reaches for the net is refused before a container is started. The
+tools of the trade (subprocess for ffmpeg, Pillow, numpy, pathlib/os for files, json) are
+allowed. The old no-"__" rule is gone: it bought nothing the container does not already give.
 
-Allowed imports for code skills:
-    re json math datetime collections itertools string unicodedata statistics
+PROPOSED policy, confirm with the main session. Not covered yet: the manifest shape
+(capability.json: declared output width/height/fps/duration_s), which is a contract test.
 """
 
 from __future__ import annotations
@@ -22,69 +24,68 @@ class GatePayload:
     note: str
 
 
-# Rejected: an import outside the allowlist, a banned builtin, or any "__" token.
+def _skill(imports: str, body: str) -> str:
+    return f"{imports}\ndef run(input, work):\n    {body}\n    return 'ok'\n"
+
+
+_TOUCH = "open(work + '/out/x.txt', 'w').write('x')"
+
+# Rejected: anything that talks to a network, reaches below Python, or has no entry point.
 _REJECT = [
-    GatePayload("import_os", "import os\ndef run(i): return i['x']", "reject", "import outside allowlist"),
-    GatePayload("import_socket", "import socket\ndef run(i): return i['x']", "reject", "network import"),
+    GatePayload("import_socket", _skill("import socket", _TOUCH), "reject", "network import"),
+    GatePayload("import_urllib", _skill("import urllib.request", _TOUCH), "reject", "network import"),
+    GatePayload("from_urllib", _skill("from urllib.request import urlopen", _TOUCH), "reject", "network"),
+    GatePayload("import_http", _skill("import http.client", _TOUCH), "reject", "network import"),
+    GatePayload("import_ssl", _skill("import ssl", _TOUCH), "reject", "network import"),
+    GatePayload("import_smtplib", _skill("import smtplib", _TOUCH), "reject", "mail is network"),
+    GatePayload("import_ftplib", _skill("import ftplib", _TOUCH), "reject", "network import"),
+    GatePayload("import_requests", _skill("import requests", _TOUCH), "reject", "network, not in the image"),
+    GatePayload("import_ctypes", _skill("import ctypes", _TOUCH), "reject", "below Python"),
     GatePayload(
-        "import_subprocess", "import subprocess\ndef run(i): return i['x']", "reject", "process import"
-    ),
-    GatePayload("import_builtins", "import builtins\ndef run(i): return i['x']", "reject", "builtins import"),
-    GatePayload(
-        "from_import_os",
-        "from os import getcwd\ndef run(i): return getcwd()",
+        "url_via_program",
+        _skill("import subprocess", "subprocess.run(['ffmpeg', '-i', 'http://1.1.1.1/x.mp4', 'out.mp4'])"),
         "reject",
-        "from-import outside allowlist",
+        "network through a program",
     ),
-    GatePayload("call_eval", 'def run(i): return eval("1+1")', "reject", "eval banned"),
-    GatePayload("call_exec", 'def run(i): exec("x=1"); return 1', "reject", "exec banned"),
-    GatePayload("call_compile", 'def run(i): return compile("1", "<s>", "eval")', "reject", "compile banned"),
-    GatePayload("call_open", "def run(i): return open(i['path']).read()", "reject", "open banned"),
-    GatePayload(
-        "call_import_builtin", 'def run(i): return __import__("math")', "reject", "__import__ banned"
-    ),
-    GatePayload("call_getattr", "def run(i): return getattr(i, 'x')", "reject", "getattr banned"),
-    GatePayload("call_vars", "def run(i): return vars(i)", "reject", "vars banned"),
-    GatePayload("call_globals", "def run(i): return globals()", "reject", "globals banned"),
-    GatePayload("call_input", "def run(i): return input()", "reject", "input banned"),
-    GatePayload("call_breakpoint", "def run(i): breakpoint(); return 1", "reject", "breakpoint banned"),
-    GatePayload(
-        "dunder_name_guard",
-        'def run(i): return 1\nif __name__ == "__main__": run({})',
-        "reject",
-        "__ token in a name",
-    ),
-    GatePayload("dunder_attribute", "def run(i): return i.__class__", "reject", "__ token in an attribute"),
-    GatePayload(
-        "dunder_in_string", 'def run(i): return "__secret__"', "reject", "__ token in a string constant"
-    ),
-    GatePayload("no_run", "x = 1", "reject", "no run(input) entry point"),
+    GatePayload("no_run", "x = 1\n", "reject", "no run(input, work) entry point"),
 ]
 
-# Allowed: clean skills that use only the allowlist. A gate that rejects everything is useless.
+# Allowed: the tools of the trade. A gate that rejects ffmpeg is useless for this creature.
 _ALLOW = [
-    GatePayload("plain_add", "def run(i): return i['a'] + i['b']", "allow", "pure arithmetic"),
     GatePayload(
-        "regex", 'import re\ndef run(i): return re.findall(r"\\d+", i["text"])', "allow", "allowed import re"
-    ),
-    GatePayload("math", "import math\ndef run(i): return math.sqrt(i['n'])", "allow", "allowed import math"),
-    GatePayload(
-        "counter",
-        "from collections import Counter\ndef run(i): return dict(Counter(i['xs']))",
+        "ffmpeg_render",
+        _skill(
+            "import subprocess",
+            "subprocess.run(['ffmpeg', '-y', '-f', 'lavfi', '-i', 'color=c=red:s=64x64:d=1',"
+            " work + '/out/clip.mp4'], check=True)",
+        ),
         "allow",
-        "allowed from-import",
-    ),
-    GatePayload(
-        "string_import",
-        "import string\ndef run(i): return string.ascii_lowercase",
-        "allow",
-        "allowed import string",
+        "subprocess for ffmpeg",
     ),
     GatePayload(
-        "single_underscore",
-        "def run(i):\n    _tmp = i['x'] * 2\n    return _tmp",
+        "pillow_numpy",
+        _skill(
+            "import numpy as np\nfrom PIL import Image",
+            "Image.fromarray(np.zeros((8, 8, 3), dtype=np.uint8)).save(work + '/out/a.png')",
+        ),
         "allow",
-        "single underscore is fine",
+        "image libraries",
+    ),
+    GatePayload(
+        "params_and_files",
+        _skill("from pathlib import Path", "Path(work, 'out', 't.txt').write_text(input['text'])"),
+        "allow",
+        "input in, files out",
+    ),
+    GatePayload(
+        "os_for_files", _skill("import os", "os.makedirs(work + '/out', exist_ok=True)"), "allow", "os"
+    ),
+    GatePayload("math_and_text", _skill("import math, re", _TOUCH), "allow", "pure"),
+    GatePayload(
+        "main_guard_is_fine",
+        _skill("", _TOUCH) + "if __name__ == '__main__':\n    run({}, '.')\n",
+        "allow",
+        "the no-__ rule is gone",
     ),
 ]
 
