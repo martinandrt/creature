@@ -54,6 +54,7 @@ _REJECT = [
         "reject",
         "__ token in a name",
     ),
+    GatePayload("dunder_attribute", "def run(i): return i.__class__", "reject", "__ token in an attribute"),
     GatePayload(
         "dunder_in_string", 'def run(i): return "__secret__"', "reject", "__ token in a string constant"
     ),

@@ -24,7 +24,7 @@ class ModelCall:
 class ModelReply:
     data: dict[str, Any]  # structured_output from the CLI
     cost_usd: float  # total_cost_usd from the CLI, list-price equivalent
-    model: str = "claude-haiku-4-5-20251001"
+    model: str = "claude-haiku-5-5"
     input_tokens: int = 0
     output_tokens: int = 0
 
