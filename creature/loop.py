@@ -177,6 +177,7 @@ class Creature:
             cap_usd=self.cap("forge"), try_code=try_code,
         )  # fmt: skip
         report.attempts = built.attempts
+        report.clip = clips.get(built.attempts)  # the last attempt's clip, kept on a failure too
         if not built.ok:
             report.status, report.gap = "FAILED", built.gap
             return self.finish(report)
@@ -196,7 +197,6 @@ class Creature:
         registry.save_design(self.registry, spec.slug, steps, origin=origin)
         self.ledger.record("installed", skill=skill.slug, version=skill.version, design=spec.slug, **cost)
         report.status, report.skill = "BUILT", f"{skill.slug}@v{skill.version}"
-        report.clip = clips.get(built.attempts)
         return self.finish(report)
 
     def run_design(self, name: str, text: str, *, judge: bool = False) -> Report:

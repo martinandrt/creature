@@ -8,8 +8,10 @@ same page is the preview a human approves an install from.
 
 from __future__ import annotations
 
+import dataclasses
 import html
 import json
+import shlex
 from pathlib import Path
 from typing import Any
 
@@ -73,7 +75,7 @@ def render(folder: Path, report: Any, events: list[dict[str, Any]]) -> Path:
     clip = _rel(report.clip, folder)
     reel = _rel(folder / "reel.mp4", folder)
     tone = {"BUILT": "ok", "HAVE": "ok", "DONE": "ok", "ASK": "wait"}.get(report.status, "no")
-    attempt = Path(report.clip).parent if report.clip else None
+    attempt = _attempt_folder(folder, report)
     name = spec.slug if spec else report.skill or "run"
     headline = spec.effect.splitlines()[0][:120] if spec else report.skill or ""
     parts = [
@@ -190,18 +192,33 @@ def _replay(report: Any, events: list[dict[str, Any]]) -> str:
     lines = []
     name = installed["design"] if installed else (report.skill or "").split("@")[0].removeprefix("design:")
     if name:
-        lines.append(f'python -m creature design {name} --text "{task.get("text", "")}"   # no model, $0')
+        lines.append(
+            f"python -m creature design {name} --text {shlex.quote(task.get('text', ''))}   # no model, $0"
+        )
         lines.append(
             f"python -m creature show {name.split(':')[-1]}   # its sealed tests: file checks + criteria"
         )
     if task.get("source"):
         lines.append(
-            f'python -m creature try {_shown(task["source"])} --text "{task.get("text", "")}"'
-            "   # the whole run again"
+            f"python -m creature try {shlex.quote(_shown(task['source']))}"
+            f" --text {shlex.quote(task.get('text', ''))}   # the whole run again"
+            + ("" if str(task["source"]).startswith("http") else " (from the reel's folder)")
         )
     if not lines:
         return ""
     return f"<details open><summary>Replay</summary><pre>{_e(chr(10).join(lines))}</pre></details>"
+
+
+def _attempt_folder(folder: Path, report: Any) -> Path | None:
+    """The folder of the attempt the verdict is about: the last one, even when it crashed before a clip."""
+    last = folder / f"attempt-{report.attempts}"
+    if report.attempts and last.is_dir():
+        return last
+    for pattern in ("have-*", "step-*"):
+        found = sorted(folder.glob(pattern))
+        if found:
+            return found[-1]
+    return Path(report.clip).parent if report.clip else None
 
 
 def _player(label: str, src: str | None) -> str:
@@ -323,8 +340,13 @@ def rebuild(home: Path, run_id: str) -> Path:
     spec = None
     if (folder / "spec.json").is_file():
         data = json.loads((folder / "spec.json").read_text(encoding="utf-8"))
+        known = {f.name for f in dataclasses.fields(Spec)}  # older runs may lack newer fields
         spec = Spec(
-            **{k: tuple(v) if k in ("criteria", "held_out", "checks") else v for k, v in data.items()}
+            **{
+                k: tuple(v) if k in ("criteria", "held_out", "checks") else v
+                for k, v in data.items()
+                if k in known
+            }
         )
     clip = folder / end["clip"] if end.get("clip") else _find_clip(folder, end)
     report = SimpleNamespace(
