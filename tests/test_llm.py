@@ -199,7 +199,8 @@ def test_child_gets_no_secrets_and_an_empty_directory(monkeypatch):
     monkeypatch.setattr(llm.subprocess, "run", fake_run)
     ClaudeCLI(binary="claude").complete(CALL)
     assert "APIFY_TOKEN" not in seen["env"] and "CREATURE_SECRETS" not in seen["env"]
-    assert seen["files"] == [] and seen["input"] == "--prompt"
+    assert seen["files"] == []
+    assert json.loads(seen["input"])["message"]["content"] == [{"type": "text", "text": "--prompt"}]
 
 
 def test_timeout_counts_the_whole_cap(monkeypatch):
@@ -220,3 +221,116 @@ def test_live_call_on_haiku_5_5(run):
     assert answer == {"words": 5}
     [event] = _events(run, "model_call")
     assert event["ok"] and 0 < event["cost_usd"] < 0.05
+
+
+def test_reply_with_missing_keys_is_logged_as_failed(run):
+    class Loose:
+        def complete(self, call):
+            return llm.ModelReply(data={"other": 1}, cost_usd=0.001)
+
+    with pytest.raises(ModelError):
+        Model(Loose(), run, budget_usd=1.0).ask("planner", "s", "p", SCHEMA, cap_usd=0.05)
+    [event] = _events(run, "model_call")
+    assert event["ok"] is False and "words" in event["error"]
+
+
+@pytest.mark.parametrize(
+    ("usage", "model_usage"),
+    [({"input_tokens": "x", "output_tokens": None}, {"m": 5}), ("bad", ["bad"]), ({"output_tokens": -3}, {})],
+)
+def test_parse_survives_garbage_bookkeeping(usage, model_usage):
+    # the call is paid for by now: bad token counts must not lose the reply or its cost
+    reply = llm.parse(_cli_result(usage=usage, modelUsage=model_usage), CALL)
+    assert reply.data == {"words": 5} and reply.cost_usd == 0.0004341
+    assert reply.model == CALL.model and reply.input_tokens >= 0 and reply.output_tokens == 0
+
+
+def _png(path: Path, rgb=(255, 0, 0), size=8) -> Path:
+    # a solid-colour PNG from the standard library, so tests need no imaging package
+    import struct
+    import zlib
+
+    def chunk(kind: bytes, data: bytes) -> bytes:
+        return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data))
+
+    rows = b"".join(b"\x00" + bytes(rgb) * size for _ in range(size))
+    header = struct.pack(">IIBBBBB", size, size, 8, 2, 0, 0, 0)
+    path.write_bytes(
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", header)
+        + chunk(b"IDAT", zlib.compress(rows))
+        + chunk(b"IEND", b"")
+    )
+    return path
+
+
+def test_message_puts_each_image_after_its_label(tmp_path):
+    reel, out = _png(tmp_path / "reel.png"), _png(tmp_path / "out.jpg")
+    call = ModelCall(
+        "judge", llm.MODEL, "sys", "criteria", SCHEMA, 0.05, images=(("reel", reel), ("output", out))
+    )
+    content = json.loads(llm.message(call))["message"]["content"]
+    assert [block["type"] for block in content] == ["text", "image", "text", "image", "text"]
+    assert (
+        content[0]["text"] == "reel:" and content[2]["text"] == "output:" and content[4]["text"] == "criteria"
+    )
+    assert (
+        content[1]["source"]["media_type"] == "image/png"
+        and content[3]["source"]["media_type"] == "image/jpeg"
+    )
+
+
+def test_command_uses_stream_json_both_ways():
+    command = ClaudeCLI(binary="claude").command(CALL)
+    assert command[command.index("--input-format") + 1] == "stream-json"
+    assert command[command.index("--output-format") + 1] == "stream-json" and "--verbose" in command
+
+
+def test_parse_takes_the_last_result_line_of_the_stream():
+    stream = "\n".join(
+        [
+            json.dumps({"type": "system", "subtype": "init"}),
+            "not json",
+            _cli_result(),
+            json.dumps({"type": "x"}),
+        ]
+    )
+    assert llm.parse(stream, CALL).data == {"words": 5}
+
+
+@pytest.mark.parametrize("name", ["missing.png", "frame.gif"])
+def test_bad_image_is_refused_before_the_model_is_reached(fake_model, run, tmp_path, name):
+    if name.endswith(".gif"):
+        (tmp_path / name).write_bytes(b"GIF89a")
+    with pytest.raises(ValueError):
+        _model(fake_model, run).ask(
+            "judge", "s", "p", SCHEMA, cap_usd=0.05, images=(("reel", tmp_path / name),)
+        )
+    assert fake_model.calls == [] and _events(run, "model_call") == []
+
+
+def test_oversized_image_is_refused(fake_model, run, tmp_path, monkeypatch):
+    monkeypatch.setattr(llm, "MAX_IMAGE_BYTES", 10)
+    with pytest.raises(ValueError, match="over"):
+        _model(fake_model, run).ask(
+            "judge", "s", "p", SCHEMA, cap_usd=0.05, images=(("r", _png(tmp_path / "a.png")),)
+        )
+    assert fake_model.calls == []
+
+
+def test_images_reach_the_transport(fake_model, run, tmp_path):
+    fake_model.queue("judge", {"words": 1})
+    image = _png(tmp_path / "a.png")
+    _model(fake_model, run).ask("judge", "s", "p", SCHEMA, cap_usd=0.05, images=(("reel", image),))
+    assert fake_model.calls[0].images == (("reel", image),)
+
+
+@pytest.mark.slow
+def test_live_call_sees_an_image(run, tmp_path):
+    schema = {"type": "object", "properties": {"color": {"type": "string"}}, "required": ["color"]}
+    image = _png(tmp_path / "red.png", rgb=(230, 20, 20), size=64)
+    answer = Model(ClaudeCLI(), run, budget_usd=0.2).ask(
+        "judge", "You name colours in one word.", "What colour fills this image?", schema,
+        cap_usd=0.05, images=(("image", image),),
+    )  # fmt: skip
+    assert "red" in answer["color"].lower()

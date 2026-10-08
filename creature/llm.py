@@ -11,12 +11,14 @@ returns no result. A run can therefore overshoot its budget by at most one call.
 
 from __future__ import annotations
 
+import base64
 import json
 import math
 import os
 import subprocess
 import tempfile
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Protocol
 
 from creature.ledger import Ledger
@@ -33,6 +35,8 @@ ENV_KEEP = (
     "NODE_EXTRA_CA_CERTS", "SSL_CERT_FILE",
 )  # fmt: skip
 INPUT_TOKEN_KEYS = ("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens")
+IMAGE_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg"}
+MAX_IMAGE_BYTES = 5_000_000
 
 
 @dataclass(frozen=True)
@@ -43,6 +47,7 @@ class ModelCall:
     prompt: str
     schema: dict[str, Any]
     max_usd: float
+    images: tuple[tuple[str, Path], ...] = ()  # (label, png or jpeg file), shown before the prompt
 
 
 @dataclass(frozen=True)
@@ -98,16 +103,27 @@ class Model:
         return self.budget_usd - self.ledger.spent_usd
 
     def ask(
-        self, step: str, system: str, prompt: str, schema: dict[str, Any], *, cap_usd: float
+        self,
+        step: str,
+        system: str,
+        prompt: str,
+        schema: dict[str, Any],
+        *,
+        cap_usd: float,
+        images: tuple[tuple[str, Path], ...] = (),
     ) -> dict[str, Any]:
         """Structured answer for one step, or ModelError. A call is logged with its cost or not made."""
         if not (math.isfinite(cap_usd) and cap_usd > 0):
             raise ValueError(f"{step}: cap_usd must be a finite number > 0, got {cap_usd!r}")
+        images = tuple((label, Path(path)) for label, path in images)
+        for _, path in images:
+            _check_image(path)
         remaining = self.remaining_usd
         if remaining < self.reserve_usd:
             self.ledger.record("model_refused", step=step, reason="budget", remaining_usd=round(remaining, 6))
             raise BudgetRefused(f"{step}: ${remaining:.4f} left, a call needs a ${self.reserve_usd} reserve")
-        call = ModelCall(step, self.model, system, prompt, schema, max_usd=round(min(cap_usd, remaining), 6))
+        max_usd = round(min(cap_usd, remaining), 6)
+        call = ModelCall(step, self.model, system, prompt, schema, max_usd=max_usd, images=images)
         try:
             reply = self.transport.complete(call)
         except ModelError as error:
@@ -116,16 +132,14 @@ class Model:
                 max_usd=call.max_usd, cost_usd=error.cost_usd,
             )  # fmt: skip
             raise
-        ok = isinstance(reply.data, dict)
+        problem = _shape_problem(reply.data, schema)
         self.ledger.record(
-            "model_call", step=step, model=reply.model, ok=ok, max_usd=call.max_usd, cost_usd=reply.cost_usd,
-            input_tokens=reply.input_tokens, output_tokens=reply.output_tokens,
+            "model_call", step=step, model=reply.model, ok=problem is None, max_usd=call.max_usd,
+            cost_usd=reply.cost_usd, input_tokens=reply.input_tokens, output_tokens=reply.output_tokens,
+            **({"error": problem} if problem else {}),
         )  # fmt: skip
-        if not ok:
-            raise ModelError(f"{step}: reply is not a JSON object")
-        missing = set(schema.get("required", [])) - reply.data.keys()
-        if missing:
-            raise ModelError(f"{step}: reply lacks required keys {sorted(missing)}")
+        if problem:
+            raise ModelError(f"{step}: {problem}")
         return reply.data
 
 
@@ -137,13 +151,14 @@ class ClaudeCLI:
         self.timeout_s = timeout_s
 
     def command(self, call: ModelCall) -> list[str]:
-        # the prompt goes over stdin: a prompt starting with "--" must never be read as a flag
+        # the prompt goes over stdin as a stream-json message: never read as a flag, and it can carry images
         return [
             self.binary, "-p",
             "--model", call.model, "--fallback-model", FALLBACK_MODEL,
             "--system-prompt", call.system,
             "--tools", "", "--strict-mcp-config", "--setting-sources", "",
-            "--output-format", "json", "--json-schema", json.dumps(call.schema),
+            "--input-format", "stream-json", "--output-format", "stream-json", "--verbose",
+            "--json-schema", json.dumps(call.schema),
             "--max-budget-usd", f"{call.max_usd:.6f}",
         ]  # fmt: skip
 
@@ -152,7 +167,7 @@ class ClaudeCLI:
         with tempfile.TemporaryDirectory(prefix="creature-model-") as empty:
             try:
                 proc = subprocess.run(
-                    self.command(call), input=call.prompt, capture_output=True, text=True,
+                    self.command(call), input=message(call), capture_output=True, text=True,
                     cwd=empty, env=env, timeout=self.timeout_s,
                 )  # fmt: skip
             except subprocess.TimeoutExpired:
@@ -161,31 +176,87 @@ class ClaudeCLI:
         return parse(proc.stdout, call, stderr=proc.stderr)
 
 
+def message(call: ModelCall) -> str:
+    """The one user message, as a stream-json line: each image after its label, then the prompt."""
+    content: list[dict[str, Any]] = []
+    for label, path in call.images:
+        data = base64.b64encode(path.read_bytes()).decode()
+        content.append({"type": "text", "text": f"{label}:"})
+        content.append(
+            {"type": "image", "source": {"type": "base64", "media_type": _media_type(path), "data": data}}
+        )
+    content.append({"type": "text", "text": call.prompt})
+    return json.dumps({"type": "user", "message": {"role": "user", "content": content}}) + "\n"
+
+
 def parse(stdout: str, call: ModelCall, *, stderr: str = "") -> ModelReply:
-    """ModelReply from the CLI's JSON result, or ModelError carrying whatever the call cost."""
-    try:
-        result = json.loads(stdout)
-    except json.JSONDecodeError:
-        raise ModelError(f"CLI gave no JSON: {(stdout or stderr).strip()[:300]}") from None
-    if not isinstance(result, dict):
-        raise ModelError("CLI result is not an object")
+    """ModelReply from the CLI's result line, or ModelError carrying whatever the call cost."""
+    result = _result_line(stdout)
+    if result is None:
+        raise ModelError(f"CLI gave no result: {(stdout or stderr).strip()[-300:]}")
     cost = _cost(result.get("total_cost_usd"), call)
     if result.get("is_error") or result.get("subtype") != "success":
         raise ModelError(f"CLI error: {result.get('subtype')}: {str(result.get('result'))[:300]}", cost)
     data = result.get("structured_output")
     if not isinstance(data, dict):
         raise ModelError("CLI result has no structured_output", cost)
-    usage = result.get("modelUsage") or {}
+    # bookkeeping fields must never fail a call that has already been paid for
+    usage = result.get("modelUsage")
+    usage = (
+        {name: info for name, info in usage.items() if isinstance(info, dict)}
+        if isinstance(usage, dict)
+        else {}
+    )
     # with a fallback the answer comes from whichever model wrote the most
-    model = max(usage, key=lambda name: usage[name].get("outputTokens", 0), default=call.model)
-    tokens = result.get("usage") or {}
+    model = max(usage, key=lambda name: _int(usage[name].get("outputTokens")), default=call.model)
+    tokens = result.get("usage") if isinstance(result.get("usage"), dict) else {}
     return ModelReply(
         data=data,
         cost_usd=cost,
         model=model,
-        input_tokens=sum(int(tokens.get(key, 0)) for key in INPUT_TOKEN_KEYS),
-        output_tokens=int(tokens.get("output_tokens", 0)),
+        input_tokens=sum(_int(tokens.get(key)) for key in INPUT_TOKEN_KEYS),
+        output_tokens=_int(tokens.get("output_tokens")),
     )
+
+
+def _result_line(stdout: str) -> dict[str, Any] | None:
+    # stream-json prints one event per line; the answer and its cost are in the last "result" event
+    for line in reversed(stdout.splitlines()):
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(event, dict) and event.get("type") == "result":
+            return event
+    return None
+
+
+def _media_type(path: Path) -> str:
+    return IMAGE_TYPES[path.suffix.lower()]
+
+
+def _check_image(path: Path) -> None:
+    # checked before the call: a bad image must fail for free, not after the model has been paid
+    if path.suffix.lower() not in IMAGE_TYPES:
+        raise ValueError(f"image {path.name}: only png and jpeg are sent")
+    if not path.is_file():
+        raise ValueError(f"image {path} does not exist")
+    if path.stat().st_size > MAX_IMAGE_BYTES:
+        raise ValueError(f"image {path.name} is over {MAX_IMAGE_BYTES} bytes")
+
+
+def _shape_problem(data: object, schema: dict[str, Any]) -> str | None:
+    if not isinstance(data, dict):
+        return "reply is not a JSON object"
+    missing = set(schema.get("required", [])) - data.keys()
+    return f"reply lacks required keys {sorted(missing)}" if missing else None
+
+
+def _int(value: object) -> int:
+    try:
+        return max(0, int(value or 0))
+    except (TypeError, ValueError):
+        return 0
 
 
 def _cost(value: object, call: ModelCall) -> float:
