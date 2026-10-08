@@ -35,6 +35,7 @@ def timeline(
     every: int,
     frames: int,
     layers: list[dict[str, Any]],
+    landscape: bool = False,
 ) -> dict[str, Any]:
     """Expand "a cut every `every` frames through `order`" into scenes and cues. Each scene shows its
     source at the same moment of the source's own time, so every surface keeps moving under the cuts."""
@@ -53,8 +54,8 @@ def timeline(
     return {
         "name": name,
         "fps": criteria.FPS,
-        "width": criteria.WIDTH,
-        "height": criteria.HEIGHT,
+        "width": criteria.HEIGHT if landscape else criteria.WIDTH,  # the sources' orientation
+        "height": criteria.WIDTH if landscape else criteria.HEIGHT,
         "frames": frames,
         "sources": sources,
         "scenes": scenes,
@@ -242,8 +243,12 @@ def run(input, work):
     size = W * H * 3
     readers = {}
     for sid in input["sources"]:
-        readers[sid] = subprocess.Popen(["ffmpeg", "-v", "error", "-i", f"{work}/in/{sid}.mp4", "-f",
-                                         "rawvideo", "-pix_fmt", "rgb24", "-"], stdout=subprocess.PIPE)
+        # few threads each: one ffmpeg per source plus the encoder would otherwise take a thread per host
+        # core apiece and run into the workshop's process limit
+        source = f"{work}/in/{sid}.mp4"
+        readers[sid] = subprocess.Popen(["ffmpeg", "-v", "error", "-threads", "2", "-i", source,
+                                         "-filter_threads", "1", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"],
+                                        stdout=subprocess.PIPE)
     layers = []
     for layer in input["layers"]:
         alpha = mark_alpha(input, work, max(8, round(layer["height"] * H)))
@@ -256,7 +261,8 @@ def run(input, work):
     path = f"{work}/out/{input['out']}"
     writer = subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s",
                                f"{W}x{H}", "-r", str(input["fps"]), "-i", "-", "-frames:v", str(total),
-                               "-c:v", "libx264", "-pix_fmt", "yuv420p", path], stdin=subprocess.PIPE)
+                               "-c:v", "libx264", "-threads", "2", "-pix_fmt", "yuv420p", path],
+                              stdin=subprocess.PIPE)
     scene_of = []
     for scene in input["scenes"]:
         scene_of += [scene] * scene["dur"]

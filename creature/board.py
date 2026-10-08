@@ -105,7 +105,14 @@ def runs(homes: list[Path]) -> list[dict[str, Any]]:
                     if end
                     else ("RUNNING" if time.time() - _when(events[-1]["ts"]) < STALE_S else "STOPPED"),
                     "source": Path(
-                        str(task.get("source") or task.get("design") or task.get("wish") or task["type"])
+                        str(
+                            task.get("source")
+                            or task.get("design")
+                            or task.get("wish")
+                            or task.get("type")
+                            or (end or {}).get("skill")
+                            or "run"
+                        )
                     ).name,
                     "text": str(task.get("text", "")),
                     "spent": sum(float(e.get("cost_usd") or 0) for e in events),
@@ -176,7 +183,13 @@ def render(homes: list[Path], out: Path) -> Path:
 
 def main(homes: list[Path], out: Path, every: float | None) -> None:
     while True:
-        render([h for h in homes if (h / "runs").is_dir()], out)
+        try:
+            render([h for h in homes if (h / "runs").is_dir()], out)
+        except Exception as error:  # one bad ledger must not freeze the page: say so on it
+            note = f"<p>The board could not be drawn: {html.escape(repr(error))}</p>"
+            out.write_text(
+                f"<!doctype html><meta http-equiv='refresh' content='{REFRESH_S}'>{note}", encoding="utf-8"
+            )
         if not every:
             return
         time.sleep(every)

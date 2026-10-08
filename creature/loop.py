@@ -350,16 +350,30 @@ class Creature:
         composes them; the spine renders, measures and the judge compares the montage with the reel."""
         assert self.reel is not None
         learned: list[str] = []
+        library = bool(self.authority.workshop.assets)
         for part in spec.parts:
-            have = next((s for s in registry.skills(self.registry) if s.slug == part.slug), None)
-            if have:
-                self.ledger.record("part", slug=part.slug, status="have", version=have.version)
-                learned.append(part.slug)
-                continue
             reference = perceive.frames_at(
                 self.reel, part.frames, self.folder / f"part-{part.slug}.png",
                 limits=self.authority.workshop, image=self.image,
             )  # fmt: skip
+            # does an installed skill already draw this screen? Then it is judged by its own stored tests
+            # on the new text, with no forge call; only when it fails is the screen learned anew
+            have, why = planner.match_part(
+                self.model, part.effect, part.task, reference, registry.skills(self.registry),
+                cap_usd=self.cap("planner"), library=library,
+            )  # fmt: skip
+            if have:
+                own = registry.spec_of(have, text)
+                outcome, _ = self.run_skill(
+                    have.code, own, self.folder / f"have-{part.slug}", have.path / registry.REFERENCE
+                )
+                self.ledger.record(
+                    "part", slug=part.slug, status="have" if outcome.ok else "have-failed", skill=have.slug,
+                    version=have.version, reason=why, detail=outcome.detail,
+                )  # fmt: skip
+                if outcome.ok:
+                    learned.append(have.slug)
+                    continue
             skill, built, _ = self.learn_one(part, source, reference, prefix=f"{part.slug}-")
             report.attempts += built.attempts if built else 0
             self.ledger.record(
@@ -374,8 +388,12 @@ class Creature:
             report.notes.append(f"gap: {gap['what']} (needs {gap['needs']})")
         if spec.gaps:
             self.ledger.record("gaps", gaps=list(spec.gaps))
-        effects = [s for s in registry.skills(self.registry) if s.capability.get("kind") != "tool"]
-        catalog = [s for s in effects if s.slug in learned]
+        # the composer sees every installed effect it may run here, this run's surfaces first
+        effects = [
+            s for s in registry.skills(self.registry)
+            if s.capability.get("kind") != "tool" and (library or not s.capability.get("assets"))
+        ]  # fmt: skip
+        catalog = sorted(effects, key=lambda s: s.slug not in learned)
         if not catalog:
             report.status, report.gap = "FAILED", "no surface could be learned"
             return self.finish(report)
@@ -384,7 +402,9 @@ class Creature:
             choice, unknown = composer.choose(
                 self.model, self.reel, spec, catalog, cap_usd=self.cap("planner"), feedback=feedback
             )
-            t = composer.timeline(spec.slug, choice, catalog)
+            t = composer.timeline(
+                spec.slug, choice, catalog, landscape=spec.output["width"] > spec.output["height"]
+            )
             wrong = montage.problems(t)
             if wrong:
                 self.ledger.record("composed", attempt=attempt, ok=False, unknown=unknown, problems=wrong)
@@ -580,7 +600,12 @@ class Creature:
             if self.needs_library(skill):
                 return None, [self.needs_library(skill)], None
             base = registry.spec_of(skill, text)
-            output = {**base.output, "duration_s": t["frames"] / t["fps"]}
+            output = {
+                **base.output,
+                "width": t["width"],
+                "height": t["height"],
+                "duration_s": t["frames"] / t["fps"],
+            }
             spec = dataclasses.replace(
                 base, params={**base.params, **source.get("params", {}), **styled}, output=output,
                 checks=tuple(criteria.checks_for(output)),
@@ -657,6 +682,10 @@ class Creature:
                 return self.finish(report)
             report.status = "DONE"
             return self.finish(report)
+        if style or mark:
+            report.notes.append(
+                "--style and --mark apply to a montage design (a timeline); this design is steps"
+            )
         texts = [text] if isinstance(text, str) else list(text)
         self.ledger.record(
             "design_task", design=name, text=" | ".join(texts), texts=texts, steps=len(recipe["steps"]),
