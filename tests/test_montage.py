@@ -201,3 +201,19 @@ def test_a_choice_with_no_known_source_is_a_timeline_problems_rejects_not_a_cras
     t = composer.timeline("promo", choice, [_skill("grid-cards")])
     assert t["sources"] == {} and t["scenes"] == []
     assert any("sources" in p for p in montage.problems(t))
+
+
+def test_a_skill_named_twice_is_one_source_that_the_order_repeats():
+    # six lockstep decoders of three skills named twice killed a 2 GB workshop: a skill renders once
+    catalog = [_skill("grid-cards"), _skill("type-wall"), _skill("stripe-bg")]
+    choice = {
+        "sources": ["grid-cards", "type-wall", "grid-cards", "stripe-bg", "type-wall", "grid-cards"],
+        "every_frames": 5,
+        "seconds": 3,
+        "mark": {"use": False},
+        "reason": "",
+    }
+    t = composer.timeline("promo", choice, catalog)
+    assert [s["skill"] for s in t["sources"].values()] == ["grid-cards", "type-wall", "stripe-bg"]
+    assert [s["source"] for s in t["scenes"][:6]] == ["a", "b", "a", "c", "b", "a"]
+    assert montage.problems(t) == []

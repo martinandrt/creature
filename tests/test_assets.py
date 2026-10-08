@@ -192,3 +192,11 @@ def test_the_workshop_reads_the_library_and_cannot_write_it(lib):
     assert seen["/assets/README.md"] == 30
     assert (lib / "tvary" / "kruh.svg").read_text() == KRUH and not (lib / "tvary" / "new.svg").exists()
     assert seen["nested_hidden_readable"] is True  # hence the digest test above
+
+
+def test_a_declared_asset_path_never_leaves_the_library():
+    # capability.json records what the skill reads under /assets; a path with ".." points elsewhere
+    # (on the host, _existing would resolve it outside the library) and must be dropped, never recorded
+    code = "A = '/assets/../etc/passwd'\nB = '/assets/tvary/../../x.svg'\nC = '/assets/tvary/kruh.svg'\n"
+    files = {"frame.py": code}
+    assert deep.used_assets(files, ["/assets/./pisma/../font.ttf"]) == ["/assets/tvary/kruh.svg"]
