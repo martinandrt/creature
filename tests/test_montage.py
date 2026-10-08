@@ -99,9 +99,10 @@ def test_smooth_fails_a_dropped_frame_and_skips_cuts_and_stills():
     assert verdict._smooth(linear, {0}, 1.5) is None
     dropped = [*linear[:10], 12.0, *linear[11:]]  # one frame missing: the step doubles once
     problem = verdict._smooth(dropped, {0}, 1.5)
-    assert problem and problem.startswith("smooth:") and "2.0x" in problem
+    assert problem and problem.startswith("smooth:")
     assert verdict._smooth(dropped, {0, 10, 11}, 1.5) is None  # the same jump on a cut is a cut
-    assert verdict._smooth([6.0, 0.2, 6.0], {0}, 1.5) is None  # a still frame is not motion
+    typed = [3.0, 0.0, 0.0, 3.0, 0.0, 0.0, 3.0, 0.0, 0.0]  # a letter every third frame is not a stutter
+    assert verdict._smooth(typed, {0}, 1.5) is None
     assert verdict._smooth([], {0}, 1.5) == "smooth: the clip's motion could not be measured"
 
 
@@ -191,3 +192,12 @@ def test_save_timeline_keeps_only_a_valid_timeline_over_known_skills(root):
     with pytest.raises(FileExistsError):
         registry.taken(root, "grid-cards")
     registry.taken(root, "fresh-name")
+
+
+def test_a_choice_with_no_known_source_is_a_timeline_problems_rejects_not_a_crash():
+    # the composer may name skills that are not in the catalog; every one dropped must leave a timeline
+    # that problems() rejects (no sources), so the spine feeds it back instead of dying on it
+    choice = {"sources": ["ghost"], "every_frames": 4, "seconds": 5, "mark": {"use": False}, "reason": ""}
+    t = composer.timeline("promo", choice, [_skill("grid-cards")])
+    assert t["sources"] == {} and t["scenes"] == []
+    assert any("sources" in p for p in montage.problems(t))

@@ -185,3 +185,46 @@ def test_a_stream_that_stops_decoding_is_a_finding_not_a_traceback(tmp_path):
     assert checked.problems
     assert not any("Error" in problem for problem in checked.problems), checked.problems
     assert checked.probe.get("readable") and checked.probe.get("frames")  # ffprobe did read the file
+
+
+MOVE_CODE = r"""
+import subprocess
+from PIL import Image, ImageDraw
+def run(input, work):
+    W, H = 1080, 1920
+    if input["stutter"]:
+        xs = [100 + 20 * i for i in range(30)]  # linear, 20 px a frame
+        xs[15] = xs[14]  # one frame shown twice
+    else:
+        xs = [int(round(100 + (1 - (1 - min(1.0, i / 12)) ** 3) * 580)) for i in range(30)]  # ease-out, hold
+    for i, x in enumerate(xs):
+        img = Image.new("RGB", (W, H), (0, 0, 0))
+        ImageDraw.Draw(img).rectangle((x, 760, x + 400, 1160), fill=(255, 255, 255))
+        img.save(f"{work}/f_{i:03d}.png")
+    subprocess.run(["ffmpeg", "-v", "error", "-r", "30", "-i", f"{work}/f_%03d.png", "-pix_fmt", "yuv420p",
+                    "-c:v", "libx264", f"{work}/out/clip.mp4"], check=True)
+    return xs
+"""
+
+
+@pytest.mark.docker
+def test_smooth_passes_an_eased_move_and_fails_a_frame_shown_twice(tmp_path):
+    # motion design eases: a cubic ease-out over 12 frames is smooth motion and must pass. A frame shown
+    # twice (the stutter the check is for) must fail: its 0 step is the defect, not a still frame
+    limits = dataclasses.replace(authority.load(REPO).workshop, timeout_s=90)
+    image = workshop.ensure_image(REPO / "workshop")
+    output = criteria.clip_format(1.0)
+    smooth = {"kind": "smooth", "file": "clip.mp4", "cuts": [0], "max_ratio": 1.5}
+
+    def check(stutter):
+        made = workshop.run(MOVE_CODE, {"stutter": stutter}, limits=limits, image=image)
+        assert made.ok, made.error
+        folder = tmp_path / ("stutter" if stutter else "eased")
+        folder.mkdir()
+        checks = (*criteria.checks_for(output), smooth)
+        return verdict.check(made.outputs, checks, limits=limits, image=image, folder=folder)
+
+    eased = check(False)
+    assert eased.problems == (), eased.problems
+    held = check(True)
+    assert any(p.startswith("smooth:") for p in held.problems), held.problems

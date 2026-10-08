@@ -464,3 +464,148 @@ def test_design_run_renders_its_page_and_rebuild_needs_no_model(world, fake_mode
     assert "DONE" in _page(report) and "no model call" in _page(report) and silent.calls == []
     again = page.rebuild(world, report.run_id)
     assert again == report.folder / page.PAGE and "DONE" in again.read_text(encoding="utf-8")
+
+
+# --- montage ---------------------------------------------------------------------
+
+SURFACE = ["Cards sit on a grid.", "Each card carries a title.", "The grid fills the frame."]
+MONTAGE_REPLY = {
+    **REPLY,
+    "slug": "grid-promo",
+    "effect": "Fast-cut montage of graphic screens",
+    "task": "Cut the surfaces every few frames with the mark on top.",
+    "duration_s": 6.0,
+    "kind": "montage",
+    "surfaces": [
+        {"slug": "grid-cards", "effect": "A grid of cards", "task": "Draw cards.", "frames": [0.5, 1.5],
+         "criteria": SURFACE},
+    ],
+    "gaps": [{"what": "a product photo", "needs": "footage"}],
+}  # fmt: skip
+CHOICE = {
+    "sources": ["grid-cards"],
+    "every_frames": 4,
+    "seconds": 6,
+    "mark": {"use": True, "x": 0.5, "y": 0.85, "height": 0.06},
+    "reason": "one surface, the mark on top",
+}
+MONTAGE_RESULT = workshop.WorkshopResult(
+    True, {"frames": 180, "scenes": 45, "inks": ["dark"], "layers": [[440, 1500, 200, 108]]},
+    {"montage.mp4": b"montage"}, None, None, 0.5, "",
+)  # fmt: skip
+
+
+def _judge_of(criteria_texts, *passes):
+    return {
+        "criteria": [
+            {"criterion": c, "pass": p, "evidence": "seen"}
+            for c, p in zip(criteria_texts, passes, strict=True)
+        ],
+        "verdict": "pass",
+        "reason": "ok",
+    }
+
+
+@pytest.fixture
+def montage_world(world, monkeypatch):
+    """The reel is a montage: frames_at and the montage render are faked, everything else as in world."""
+    monkeypatch.setattr(
+        loop.perceive, "frames_at", lambda reel, times, target, **k: (target.write_bytes(PNG), target)[1]
+    )
+    calls = {"renders": [], "montages": []}
+
+    def run(code, input, files=None, **kwargs):
+        if code == loop.montage.MONTAGE_CODE:
+            calls["montages"].append((input, files))
+            return MONTAGE_RESULT
+        calls["renders"].append(input)
+        return RENDER
+
+    monkeypatch.setattr(loop.workshop, "run", run)
+    return world, calls
+
+
+def _learn_montage(home, fake):
+    fake.queue("criteria", MONTAGE_REPLY).queue("forge", {"code": CODE, "approach": "pillow"})
+    fake.queue("judge", _judge_of(SURFACE, True, True, True))  # the surface, by its own criteria
+    fake.queue("compose", CHOICE).queue("judge", _judge(True, True, True))  # the montage, by the reel's
+    creature = _creature(home, fake)
+    return creature, creature.try_reel("reel.mp4", "Stay curious.")
+
+
+def test_a_montage_reel_learns_its_surface_composes_and_saves_a_timeline(montage_world, fake_model):
+    home, calls = montage_world
+    creature, report = _learn_montage(home, fake_model)
+    assert report.status == "BUILT" and report.skill == "design:grid-promo", report.gap
+    assert _steps(fake_model) == ["criteria", "forge", "judge", "compose", "judge"]
+    fake_model.assert_drained()
+    root = home / "registry"
+    assert registry.get(root, "grid-cards").version == 1
+    design = registry.design(root, "grid-promo")
+    t = design["timeline"]
+    assert (
+        t["frames"] == 180
+        and len(t["scenes"]) == 45
+        and t["sources"] == {"a": {"skill": "grid-cards", "version": 1, "params": {}}}
+    )
+    assert design["tests"]["criteria"] and len(design["tests"]["held_out"]) == 1
+    assert registry._index(root)["designs"]["grid-promo"]["kind"] == "timeline"
+    kinds = _kinds(creature)
+    for kind in (
+        "spec",
+        "part",
+        "installed",
+        "gaps",
+        "composed",
+        "montage_source",
+        "montage",
+        "montage_judged",
+    ):
+        assert kind in kinds, kind
+    assert kinds[-1] == "run_end" and any(n.startswith("gap: a product photo") for n in report.notes)
+    [(job, files)] = calls["montages"]
+    assert job["frames"] == 180 and job["sources"] == ["a"] and job["mark_text"] == "STAY"
+    assert set(files) == {"a.mp4"} and job["inks"] == {"dark": "#111111", "light": "#f4f4f4"}
+    # the source was rendered at the montage's length, not the 3 s it was learned on
+    assert calls["renders"][-1]["output"]["duration_s"] == 6.0
+    assert report.clip == creature.folder / "montage-1" / "montage.mp4"
+
+
+def test_a_saved_timeline_replays_with_the_users_style_at_no_cost(montage_world, fake_model, tmp_path):
+    home, calls = montage_world
+    _learn_montage(home, fake_model)
+    style = {"colors": {"night": "#1B2135", "paper": "#EBEDF2"}, "fonts": {"title": "Barlow"}}
+    mark = tmp_path / "logo.png"
+    mark.write_bytes(PNG)
+    silent = FakeModel()
+    creature = _creature(home, silent)
+    report = creature.run_design("grid-promo", "New words here", mark=mark, style=style)
+    assert report.status == "DONE" and silent.calls == [] and report.spent_usd == 0, report.gap
+    source_input = calls["renders"][-1]
+    assert source_input["text"] == "New words here" and source_input["params"]["palette"] == [
+        "#1B2135",
+        "#EBEDF2",
+    ]
+    assert source_input["params"]["fonts"] == {"title": loop.montage.FONT_FILES["Barlow"]}
+    job, files = calls["montages"][-1]
+    assert job["inks"] == {"dark": "#1B2135", "light": "#EBEDF2"} and files["mark.png"] == mark
+    [task] = [e for e in ledger.read(creature.ledger.path) if e["type"] == "design_task"]
+    assert task["kind"] == "timeline" and task["style"] is True and task["mark"] is True
+    assert report.clip == creature.folder / "montage" / "montage.mp4"
+
+
+def test_a_choice_naming_no_known_skill_is_fed_back_not_rendered(montage_world, fake_model):
+    # the composer's first choice names nothing in the catalog: the spine must say so and ask again,
+    # never crash and never send an empty timeline to the workshop
+    home, calls = montage_world
+    fake_model.queue("criteria", MONTAGE_REPLY).queue("forge", {"code": CODE, "approach": "a"})
+    fake_model.queue("judge", _judge_of(SURFACE, True, True, True))
+    fake_model.queue("compose", {**CHOICE, "sources": ["ghost"]})
+    fake_model.queue("compose", CHOICE).queue("judge", _judge(True, True, True))
+    creature = _creature(home, fake_model)
+    report = creature.try_reel("reel.mp4", "Stay curious.")
+    assert report.status == "BUILT", report.gap
+    assert _steps(fake_model) == ["criteria", "forge", "judge", "compose", "compose", "judge"]
+    assert len(calls["montages"]) == 1  # the empty choice never reached the workshop
+    assert "Your last montage failed" in fake_model.calls[4].prompt
+    assert _kinds(creature).count("composed") == 2 and _kinds(creature)[-1] == "run_end"
