@@ -70,7 +70,8 @@ def sentence(report: Any) -> str:
         word = {"ASK": "Asked a human for", "REFUSE": "Refused", "SKIP": "Skipped"}[status]
         return f"{word}: {report.gap.splitlines()[0][:240] if report.gap else 'no reason given'} ({spent})."
     gap = report.gap.splitlines()[0][:240] if report.gap else "no reason recorded"
-    return f"Failed after {report.attempts} attempts ({spent}). Missing: {gap}"
+    tries = "rounds" if any(Path(report.folder).glob("*rounds")) else "attempts"
+    return f"Failed after {report.attempts} {tries} ({spent}). Missing: {gap}"
 
 
 def render(folder: Path, report: Any, events: list[dict[str, Any]]) -> Path:
@@ -106,6 +107,15 @@ def render(folder: Path, report: Any, events: list[dict[str, Any]]) -> Path:
     if attempt is not None and (attempt / "skill.py").exists():
         code = (attempt / "skill.py").read_text(encoding="utf-8")
         parts.append(f"<details><summary>The skill's code</summary><pre>{_e(code)}</pre></details>")
+    else:  # a round-forge run that never finished: its last round's files
+        rounds = sorted(folder.glob("*rounds/round-*/files.json"))
+        if rounds:
+            files = json.loads(rounds[-1].read_text(encoding="utf-8"))
+            shown = "\n\n".join(f"--- {name}\n{text}" for name, text in sorted(files.items()))
+            parts.append(
+                f"<details><summary>The skill's files after its last round ({_e(rounds[-1].parent.name)})"
+                f"</summary><pre>{_e(shown)}</pre></details>"
+            )
     parts.append(
         f"<p class='h'>Authority fingerprint unchanged: {_e(report.fingerprint_same)} · "
         f"every step is in the run's ledger ({_e(report.run_id)}.jsonl)</p></main>"
@@ -173,6 +183,9 @@ def _describe(e: dict[str, Any]) -> str:
         "evolve": ("skill", "from_version"),
         "design_step": ("skill", "version", "checks"),
         "design_join": ("parts", "frames", "checks"),
+        "round": ("round", "ok", "done", "note"),
+        "round_score": ("round", "score", "best_round"),
+        "other_length": ("seconds", "ok"),
         "install_refused": ("changed",),
         "run_end": ("status", "fingerprint_same", "changed"),
     }.get(kind, ())
