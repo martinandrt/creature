@@ -16,8 +16,13 @@ An agent that grows its own capabilities from short videos, while its authority 
 
 ```bash
 uv sync
-uv run pytest
+uv run pytest && uv run ruff check . && uv run ruff format --check .   # the one check
+uv run pytest -m slow                                                   # live model and network tests
 ```
+
+Tests are offline by default: no network, no model calls (a scripted fake model stands in), no secrets,
+and every test gets its own temporary registry. The run fails if the real `registry/` changes during it.
+Sandbox tests are marked `docker` and are listed as skipped when the Docker daemon is not reachable.
 
 ## What is real, simulated or missing
 
