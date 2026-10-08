@@ -7,6 +7,7 @@ Every step and every dollar goes to the run's ledger.
 
 from __future__ import annotations
 
+import dataclasses
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -134,7 +135,7 @@ class Creature:
 
         spec = criteria.write(
             self.model, self.reel, text, cap_usd=self.cap("criteria"), seed=self.ledger.run_id,
-            model_name=self.model_for("criteria"),
+            refuse=self.authority.refuse, ask=self.authority.ask, model_name=self.model_for("criteria"),
         )  # fmt: skip
         report.spec = spec
         self.ledger.record(
@@ -176,7 +177,13 @@ class Creature:
         origin = {"reel": source, "run": self.ledger.run_id, "author": self.reel.author if self.reel else ""}
         cost = {"learn_usd": round(self.ledger.spent_usd - before, 6), "forge_attempts": built.attempts}
         skill = registry.install(
-            self.registry, spec, built.code, origin=origin, cost=cost, reference=reference
+            self.registry,
+            spec,
+            built.code,
+            origin=origin,
+            cost=cost,
+            reference=reference,
+            staging=self.folder,
         )
         self.installed += 1
         steps = [{"skill": skill.slug, "version": skill.version, "params": spec.params}]
@@ -185,6 +192,81 @@ class Creature:
         report.status, report.skill = "BUILT", f"{skill.slug}@v{skill.version}"
         report.clip = clips.get(built.attempts)
         return self.finish(report)
+
+    def run_design(self, name: str, text: str, *, judge: bool = False) -> Report:
+        """Run a saved design on new text: its skills in order, no planner, no forge. With judge=False
+        (the default) no model is called at all: only the workshop and the fixed file checks run."""
+        report = Report(self.ledger.run_id, "FAILED", self.folder, skill=f"design:{name}")
+        recipe = registry.design(self.registry, name)
+        self.ledger.record("design_task", design=name, text=text, steps=len(recipe["steps"]), judge=judge)
+        clips: list[Path] = []
+        for number, step in enumerate(recipe["steps"], start=1):
+            skill = registry.get(self.registry, step["skill"], step["version"])  # sealed tests checked here
+            spec = dataclasses.replace(registry.spec_of(skill, text), params=step.get("params", {}))
+            folder = self.folder / f"step-{number}-{skill.slug}"
+            folder.mkdir(parents=True, exist_ok=True)
+            ran = workshop.run(
+                skill.code, forge.skill_input(spec), limits=self.authority.workshop, image=self.image
+            )
+            if not ran.ok:
+                self.ledger.record(
+                    "design_step", step=number, skill=skill.slug, version=skill.version, ok=False,
+                    error=(ran.error or "")[:300],
+                )  # fmt: skip
+                report.gap = f"step {number} ({skill.slug}) failed: {ran.error}"
+                return self.finish(report)
+            checked = verdict.check(
+                ran.outputs, spec.checks, limits=self.authority.workshop, image=self.image, folder=folder
+            )
+            ok = not checked.problems
+            judged = None
+            if ok and judge and checked.strip:
+                (folder / "strip.png").write_bytes(checked.strip)
+                reference = skill.path / registry.REFERENCE
+                judged = verdict.judge(
+                    self.model, spec, reference, folder / "strip.png", cap_usd=self.cap("judge")
+                )
+                ok = judged.ok
+            self.ledger.record(
+                "design_step", step=number, skill=skill.slug, version=skill.version, ok=ok,
+                checks=list(checked.problems) or "all passed", judged=judged.ok if judged else None,
+                seconds=ran.duration_s,
+            )  # fmt: skip
+            if not ok:
+                report.gap = f"step {number} ({skill.slug}): " + "; ".join(
+                    checked.problems or ["judge said no"]
+                )
+                return self.finish(report)
+            clips.append(folder / spec.output["file"])
+        report.clip = clips[0] if len(clips) == 1 else self.join(clips)
+        report.status = "DONE"
+        return self.finish(report)
+
+    def join(self, clips: list[Path]) -> Path:
+        """Clips of a design share one format, so they are joined without re-encoding."""
+        files = {f"part{i}.mp4": clip for i, clip in enumerate(clips)}
+        ran = workshop.run(
+            JOIN_CODE, {"parts": sorted(files)}, files, limits=self.authority.workshop, image=self.image
+        )
+        if not ran.ok or "joined.mp4" not in ran.outputs:
+            raise RuntimeError(f"joining clips failed: {ran.error}")
+        out = self.folder / "joined.mp4"
+        out.write_bytes(ran.outputs["joined.mp4"])
+        return out
+
+
+# Fixed code (ours) that runs in the workshop: concatenates same-format clips.
+JOIN_CODE = r"""
+import subprocess
+
+def run(input, work):
+    with open(f"{work}/list.txt", "w") as f:
+        for name in input["parts"]:
+            f.write(f"file '{work}/in/{name}'\n")
+    subprocess.run(["ffmpeg", "-v", "error", "-f", "concat", "-safe", "0", "-i", f"{work}/list.txt",
+                    "-c", "copy", f"{work}/out/joined.mp4"], check=True)
+    return {"parts": len(input["parts"])}
+"""
 
 
 def _spec_dict(spec: criteria.Spec) -> dict[str, Any]:

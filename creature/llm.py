@@ -147,8 +147,15 @@ class ClaudeCLI:
     """Transport over the pinned Claude Code CLI (`claude -p`)."""
 
     def __init__(self, binary: str | None = None, *, timeout_s: float = 180.0) -> None:
-        self.binary = binary or os.environ.get("CREATURE_CLAUDE") or resolve_binary()
+        self._binary = binary or os.environ.get("CREATURE_CLAUDE")
         self.timeout_s = timeout_s
+
+    @property
+    def binary(self) -> str:
+        # resolved on first use: a run that never calls the model never touches the CLI
+        if self._binary is None:
+            self._binary = resolve_binary()
+        return self._binary
 
     def command(self, call: ModelCall) -> list[str]:
         # the prompt goes over stdin as a stream-json message: never read as a flag, and it can carry images

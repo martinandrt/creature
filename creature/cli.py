@@ -20,6 +20,10 @@ def main(argv: list[str] | None = None) -> int:
     tried = sub.add_parser("try", help="try on my text what this reel shows")
     tried.add_argument("reel", help="Instagram reel URL or a local .mp4")
     tried.add_argument("--text", required=True, help="my input text")
+    designed = sub.add_parser("design", help="run a learned design on new text (no model calls by default)")
+    designed.add_argument("name")
+    designed.add_argument("--text", required=True, help="my input text")
+    designed.add_argument("--judge", action="store_true", help="also ask the judge (a paid model call)")
     sub.add_parser("list", help="learned skills and designs")
     shown = sub.add_parser("show", help="one skill: manifest and tests")
     shown.add_argument("slug")
@@ -44,6 +48,18 @@ def main(argv: list[str] | None = None) -> int:
             print(f"clip: {report.clip}")
         print(f"run: {report.folder}")
         return 0 if report.status in ("HAVE", "BUILT") else 1
+    if args.command == "design":
+        from creature.loop import Creature
+
+        report = Creature(root).run_design(args.name, args.text, judge=args.judge)
+        print(f"{report.status}  {report.skill}")
+        if report.gap:
+            print(f"gap: {report.gap[:400]}")
+        print(f"spent: ${report.spent_usd:.4f}  authority unchanged: {report.fingerprint_same}")
+        if report.clip:
+            print(f"clip: {report.clip}")
+        print(f"run: {report.folder}")
+        return 0 if report.status == "DONE" else 1
     if args.command == "list":
         for skill in registry.skills(root / "registry"):
             learned = skill.capability.get("cost", {}).get("learn_usd", 0)

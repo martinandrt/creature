@@ -25,6 +25,7 @@ PROBE_CODE = r"""
 import json, subprocess
 
 FIT = "scale=180:320:force_original_aspect_ratio=decrease,pad=180:320:(ow-iw)/2:(oh-ih)/2"
+GRID = "margin=8:padding=8:color=0x7f7f7f"  # grey borders keep cells apart
 
 def run(input, work):
     clip = f"{work}/in/{input['file']}"
@@ -55,7 +56,8 @@ def run(input, work):
                                "-pix_fmt", "gray", "-"], capture_output=True, check=True).stdout
         luma.append(max(gray) if gray else 0)  # brightest pixel: a small glyph on black is not black
     subprocess.run(["ffmpeg", "-v", "error", "-start_number", "1", "-i", f"{work}/frame_%02d.png",
-                    "-vf", f"tile=6x{-(-count // 6)}", "-frames:v", "1", f"{work}/out/strip.png"], check=True)
+                    "-vf", f"tile=6x{-(-count // 6)}:{GRID}", "-frames:v", "1",
+                    f"{work}/out/strip.png"], check=True)
     return {"readable": True, "video": True, "codec": v.get("codec_name"), "pix_fmt": v.get("pix_fmt"),
             "width": v.get("width"), "height": v.get("height"), "fps": fps, "frames": frames,
             "duration_s": frames / fps if fps else 0.0, "luma": luma, "times": times}
@@ -85,8 +87,10 @@ JUDGE_SCHEMA = {
 JUDGE_SYSTEM = """You judge whether a rendered clip reproduces the TECHNIQUE of a motion design effect
 shown in a reference reel. Compare technique only: ignore the words, fonts, colours and layout. The
 reference reel is a tutorial, so many of its frames show an editing app; use the frames that show the
-effect. Each image is a strip of frames in time order, 6 per row: 12 from the reel, and 18 from the
-clip running from its first frame to its last.
+effect. Each image is a grid of frames in time order, 6 per row: 12 from the reel, and 18 from the
+clip running from its first frame to its last. Every frame is its own cell, separated by grey borders:
+read positions inside each cell, never across cells, and never take a cell's place in the grid for
+movement.
 Judge each criterion from the clip's frames alone. Answer every criterion, in the order given, copying
 its text exactly. pass is true only if the frames clearly show it; when unsure, false. Evidence
 describes the frames only: never mention or quote another criterion."""

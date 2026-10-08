@@ -14,6 +14,7 @@ learned again becomes a new version; older versions stay, so a skill can evolve 
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -25,6 +26,7 @@ from typing import Any
 from creature.criteria import SLUG, Spec
 
 INDEX = "index.json"
+SEALED = ("skill.py", "tests.json", "reference.png")  # hashed at install, checked on every read
 REFERENCE = "reference.png"
 DESIGNS = "designs"
 DESIGN_NAME = re.compile(r"[a-z][a-z0-9-]{2,40}")
@@ -71,14 +73,23 @@ def _write_json(path: Path, data: Any) -> None:
 
 
 def install(
-    root: Path, spec: Spec, code: str, *, origin: dict[str, Any], cost: dict[str, Any], reference: Path
+    root: Path,
+    spec: Spec,
+    code: str,
+    *,
+    origin: dict[str, Any],
+    cost: dict[str, Any],
+    reference: Path,
+    staging: Path | None = None,
 ) -> Skill:
     """Install a skill that passed. A slug that exists gets the next version, which becomes active."""
     if not SLUG.fullmatch(spec.slug):
         raise ValueError(f"bad slug {spec.slug!r}")
     index = _index(root)
     entry = index["skills"].get(spec.slug, {"versions": []})
-    version = max(entry["versions"], default=0) + 1
+    # a folder left by a crash before the index write still takes its number
+    on_disk = [int(p.name) for p in (root / spec.slug).glob("*") if p.name.isdigit()]
+    version = max([*entry["versions"], *on_disk], default=0) + 1
     folder = root / spec.slug / str(version)
     if folder.exists():
         raise FileExistsError(f"{folder} already exists")
@@ -97,26 +108,36 @@ def install(
         "cost": cost,
     }
     tests = {"checks": list(spec.checks), "criteria": list(spec.criteria), "held_out": list(spec.held_out)}
-    staging = Path(tempfile.mkdtemp(dir=root, prefix=".install-"))
-    (staging / "skill.py").write_text(code, encoding="utf-8")
+    # built outside the registry (in the run's folder), then moved in whole: a failed install leaves
+    # its half-built folder with the run as evidence and nothing in the registry
+    parent = staging if staging is not None else root.parent
+    parent.mkdir(parents=True, exist_ok=True)
+    built = Path(tempfile.mkdtemp(dir=parent, prefix="install-"))
+    (built / "skill.py").write_text(code, encoding="utf-8")
     # the reel frames this skill was judged against; later uses are judged against them again
-    (staging / REFERENCE).write_bytes(Path(reference).read_bytes())
-    (staging / "SKILL.md").write_text(skill_md(spec, version, origin), encoding="utf-8")
-    _write_json(staging / "capability.json", capability)
-    _write_json(staging / "tests.json", tests)
+    (built / REFERENCE).write_bytes(Path(reference).read_bytes())
+    (built / "SKILL.md").write_text(skill_md(spec, version, origin), encoding="utf-8")
+    _write_json(built / "tests.json", tests)
+    capability["sha256"] = {name: _sha256(built / name) for name in SEALED}
+    _write_json(built / "capability.json", capability)
     folder.parent.mkdir(parents=True, exist_ok=True)
-    os.replace(staging, folder)
+    os.replace(built, folder)
     entry = {"versions": [*entry["versions"], version], "active": version, "effect": spec.effect}
     index["skills"][spec.slug] = entry
     _write_json(root / INDEX, index)
     return get(root, spec.slug)
 
 
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else "missing"
+
+
 def skill_md(spec: Spec, version: int, origin: dict[str, Any]) -> str:
     seconds = spec.output["duration_s"]
+    first_line = (spec.effect.splitlines() or [""])[0][:200]
     return (
         f"---\nname: {spec.slug}\n"
-        f"description: {spec.effect.splitlines()[0][:200]} Use it to animate a short text in this style.\n"
+        f"description: {first_line} Use it to animate a short text in this style.\n"
         "---\n\n"
         f"# {spec.slug} (v{version})\n\n{spec.effect}\n\n"
         f"- Input: `text`, optional `params` (defaults from the tutorial: {json.dumps(spec.params)}).\n"
@@ -135,10 +156,15 @@ def get(root: Path, slug: str, version: int | None = None) -> Skill:
         raise KeyError(f"no skill {slug!r}")
     version = version or entry["active"]
     folder = root / slug / str(version)
+    capability = json.loads((folder / "capability.json").read_text(encoding="utf-8"))
+    sealed = capability.get("sha256", {})
+    for name in SEALED:
+        if sealed.get(name) != _sha256(folder / name):
+            raise ValueError(f"{slug} v{version}: {name} changed after install (tests are sealed)")
     return Skill(
         slug=slug,
         version=version,
-        capability=json.loads((folder / "capability.json").read_text(encoding="utf-8")),
+        capability=capability,
         code=(folder / "skill.py").read_text(encoding="utf-8"),
         tests=json.loads((folder / "tests.json").read_text(encoding="utf-8")),
         path=folder,

@@ -32,6 +32,7 @@ STRIP_CODE = r"""
 import json, subprocess
 
 FIT = "scale=180:320:force_original_aspect_ratio=decrease,pad=180:320:(ow-iw)/2:(oh-ih)/2"
+GRID = "margin=8:padding=8:color=0x7f7f7f"  # grey borders keep cells apart
 
 def run(input, work):
     video = f"{work}/in/reel.mp4"
@@ -50,7 +51,7 @@ def run(input, work):
                         "-vf", FIT,
                         f"{work}/frame_{i:02d}.png"], check=True)
     subprocess.run(["ffmpeg", "-v", "error", "-i", f"{work}/frame_%02d.png",
-                    "-vf", f"tile={input['columns']}x{input['rows']}", "-frames:v", "1",
+                    "-vf", f"tile={input['columns']}x{input['rows']}:{GRID}", "-frames:v", "1",
                     f"{work}/out/strip.png"], check=True)
     return {"duration_s": duration, "width": stream["width"], "height": stream["height"],
             "fps": round(float(num) / float(den), 3) if float(den) else 0.0, "times": times}
