@@ -48,7 +48,9 @@ def run(input, work):
     picks = sorted({round(i * (frames - 1) / (count - 1)) for i in range(count)}) if frames > 1 else [0]
     times = [round(n / fps, 3) if fps else 0.0 for n in picks]
     select = "+".join(f"eq(n\\,{n})" for n in picks)
-    subprocess.run(["ffmpeg", "-v", "error", "-i", clip, "-vf", f"select='{select}',{FIT}", "-vsync", "vfr",
+    landscape = (v.get("width") or 0) > (v.get("height") or 0)
+    subprocess.run(["ffmpeg", "-v", "error", "-i", clip, "-vf", f"select='{select}',{fit(landscape)}",
+                    "-vsync", "vfr",
                     f"{work}/frame_%03d.png"], check=True)
     import os
     tiles = [f"{work}/frame_{i:03d}.png" for i in range(1, len(picks) + 1)]
@@ -60,7 +62,7 @@ def run(input, work):
             # brightest pixel: a small glyph on black is not black
             luma.append(max(tile.convert("L").getdata()))
     if tiles:
-        sheets(tiles, times, f"{work}/out/strip")
+        sheets(tiles, times, f"{work}/out/strip", landscape)
     diffs = []
     if input.get("diffs"):  # how much each frame differs from the next, on a small grey copy
         small = subprocess.run(["ffmpeg", "-v", "error", "-i", clip, "-vf", "scale=135:240", "-f", "rawvideo",
@@ -139,6 +141,7 @@ def check(
     folder: Path,
 ) -> Checked:
     """Evaluate file checks (data) against the attempt's outputs. Unknown kinds fail closed."""
+    folder.mkdir(parents=True, exist_ok=True)  # every caller gets its folder, the clip is written there
     names = {c.get("file") for c in checks}
     if len(names) != 1:
         return Checked(("checks must name exactly one file",), {}, None)

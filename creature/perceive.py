@@ -75,13 +75,14 @@ def run(input, work):
         duration = min(duration, float(stream["duration"]))
     num, den = stream["avg_frame_rate"].split("/")
     cuts = cuts_of(video, input["cut_score"])
+    landscape = stream["width"] > stream["height"]
     times = pick(duration, cuts, input["frames"])
     tiles = []
     for i, t in enumerate(times):
         path = f"{work}/frame_{i:03d}.png"
-        grab(video, t, path, FIT)
+        grab(video, t, path, fit(landscape))
         tiles.append(path)
-    sheets(tiles, times, f"{work}/out/strip")
+    sheets(tiles, times, f"{work}/out/strip", landscape)
     audio = any(s.get("codec_type") == "audio" for s in streams)
     if audio:
         subprocess.run(["ffmpeg", "-v", "error", "-i", video, "-vn", "-ac", "1", "-ar", "16000",
@@ -187,9 +188,9 @@ def run(input, work):
     tiles = []
     for i, t in enumerate(input["times"]):
         path = f"{work}/frame_{i:03d}.png"
-        grab(f"{work}/in/reel.mp4", t, path, FIT)
+        grab(f"{work}/in/reel.mp4", t, path, fit(input.get("landscape", False)))
         tiles.append(path)
-    sheets(tiles, input["times"], f"{work}/out/strip")
+    sheets(tiles, input["times"], f"{work}/out/strip", input.get("landscape", False))
     return len(tiles)
 """
 )
@@ -201,7 +202,11 @@ def frames_at(
     """A sheet of the reel's frames at `times` (at most one sheet), written to `target`."""
     picked = list(times[:24]) or list(reel.times)
     result = workshop.run(
-        FRAMES_AT_CODE, {"times": picked}, {"reel.mp4": reel.video}, limits=limits, image=image
+        FRAMES_AT_CODE,
+        {"times": picked, "landscape": reel.width > reel.height},
+        {"reel.mp4": reel.video},
+        limits=limits,
+        image=image,
     )
     if not result.ok or "strip.png" not in result.outputs:
         raise PerceiveError(f"could not take the frames: {result.error}")

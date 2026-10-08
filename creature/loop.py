@@ -134,7 +134,7 @@ class Creature:
         report = Report(self.ledger.run_id, "FAILED", self.folder)
         try:
             return self._try_reel(report, source, text, mark)
-        except (ModelError, ValueError, perceive.PerceiveError) as error:
+        except Exception as error:  # whatever breaks, the run ends with its ledger and page
             # a paid call that gave no usable answer (over its cap, refused, malformed): the run ends
             # cleanly with what it has, its page and its ledger, instead of a traceback
             report.status, report.gap = "FAILED", f"{type(error).__name__}: {error}"
@@ -298,6 +298,7 @@ class Creature:
         output = criteria.clip_format(seconds, landscape=spec.output["width"] > spec.output["height"])
         other = dataclasses.replace(spec, output=output, checks=tuple(criteria.checks_for(output)))
         ran = workshop.run(code, forge.skill_input(other), limits=self.authority.workshop, image=self.image)
+        (folder / "shorter").mkdir(parents=True, exist_ok=True)
         problems = [f"the script failed: {ran.error}"] if not ran.ok else list(
             verdict.check(ran.outputs, other.checks, limits=self.authority.workshop, image=self.image,
                           folder=folder / "shorter").problems

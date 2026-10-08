@@ -205,24 +205,26 @@ def run(input, work):
     tiles, times = [], []
     for i, (t, n) in enumerate(input["pairs"]):
         reel_tile, out_tile = f"{work}/r_{i:02d}.png", f"{work}/o_{i:02d}.png"
-        grab(f"{work}/in/reel.mp4", t, reel_tile, FIT)
-        subprocess.run(["ffmpeg", "-v", "error", "-i", f"{work}/in/f_{n:04d}.png", "-vf", FIT, out_tile],
+        grab(f"{work}/in/reel.mp4", t, reel_tile, fit(input["landscape"]))
+        shape = fit(input["landscape"])
+        subprocess.run(["ffmpeg", "-v", "error", "-i", f"{work}/in/f_{n:04d}.png", "-vf", shape, out_tile],
                        check=True)
         tiles += [reel_tile, out_tile]
         times += [t, t]
-    sheets(tiles, times, f"{work}/out/pairs")
+    sheets(tiles, times, f"{work}/out/pairs", input["landscape"])
     # a number, no model: how far the output's frames are from the reel's (small colour copies), plus a
     # penalty for each main colour of the output that is not one of the reel's
     diffs = []
     for i in range(len(input["pairs"])):
         with Image.open(f"{work}/r_{i:02d}.png") as a, Image.open(f"{work}/o_{i:02d}.png") as b:
-            small = [np.asarray(x.convert("RGB").resize((54, 96)), dtype=np.float32) for x in (a, b)]
+            size = (96, 54) if input["landscape"] else (54, 96)
+            small = [np.asarray(x.convert("RGB").resize(size), dtype=np.float32) for x in (a, b)]
         diffs.append(float(np.abs(small[0] - small[1]).mean()))
     outs = [f"{work}/o_{i:02d}.png" for i in range(len(input["pairs"]))]
     allowed = [np.array([int(c[k:k + 2], 16) for k in (1, 3, 5)]) for c in input["palette"]]
     misses = 0
     if allowed:
-        for color in palette(outs, 6, 270, 480):
+        for color in palette(outs, 6, *((480, 270) if input["landscape"] else (270, 480))):
             rgb = np.array([int(color["hex"][k:k + 2], 16) for k in (1, 3, 5)])
             if color["share"] >= 0.10 and min(np.abs(rgb - a).sum() for a in allowed) > 90:
                 misses += 1
@@ -448,7 +450,12 @@ def _preview(
     colors = [
         c["hex"] for c in getattr(reel, "palette", ()) if isinstance(c, dict) and c.get("share", 0) >= 0.03
     ]
-    job = {"pairs": pairs, "crops": crops, "palette": colors}
+    job = {
+        "pairs": pairs,
+        "crops": crops,
+        "palette": colors,
+        "landscape": spec.output["width"] > spec.output["height"],
+    }
     made = workshop.run(PAIRS_CODE, job, files, limits=limits, image=image)
     if not made.ok:
         return Preview((), f"the preview sheet failed: {made.error}")

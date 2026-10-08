@@ -42,8 +42,16 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 TILE_W, TILE_H, LABEL_H, GAP, COLUMNS, PER_SHEET = 270, 480, 30, 8, 6, 24
-FIT = (f"scale={TILE_W}:{TILE_H}:force_original_aspect_ratio=decrease,"
-       f"pad={TILE_W}:{TILE_H}:(ow-iw)/2:(oh-ih)/2")
+
+def tile(landscape=False):
+    # a landscape video gets landscape tiles: the picture fills the tile instead of a letterbox
+    return (480, 270, 4, 16) if landscape else (TILE_W, TILE_H, COLUMNS, PER_SHEET)
+
+def fit(landscape=False):
+    w, h, _, _ = tile(landscape)
+    return f"scale={w}:{h}:force_original_aspect_ratio=decrease,pad={w}:{h}:(ow-iw)/2:(oh-ih)/2"
+
+FIT = fit(False)
 LABEL_FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf"
 
 def grab(video, t, path, vf=None):
@@ -55,22 +63,23 @@ def grab(video, t, path, vf=None):
             return path
     raise RuntimeError(f"no frame could be read near {t} s")
 
-def sheets(tiles, times, prefix):
+def sheets(tiles, times, prefix, landscape=False):
     font = ImageFont.truetype(LABEL_FONT, 22)
+    tw, th, columns, per_sheet = tile(landscape)
     names = []
-    for start in range(0, len(tiles), PER_SHEET):
-        chunk = tiles[start:start + PER_SHEET]
-        rows, cols = -(-len(chunk) // COLUMNS), min(COLUMNS, len(chunk))
-        sheet = Image.new("RGB", (GAP + cols * (TILE_W + GAP), GAP + rows * (TILE_H + LABEL_H + GAP)),
-                          (127, 127, 127))
+    for start in range(0, len(tiles), per_sheet):
+        chunk = tiles[start:start + per_sheet]
+        rows, cols = -(-len(chunk) // columns), min(columns, len(chunk))
+        size = (GAP + cols * (tw + GAP), GAP + rows * (th + LABEL_H + GAP))
+        sheet = Image.new("RGB", size, (127, 127, 127))
         draw = ImageDraw.Draw(sheet)
         for j, path in enumerate(chunk):
-            x, y = GAP + (j % COLUMNS) * (TILE_W + GAP), GAP + (j // COLUMNS) * (TILE_H + LABEL_H + GAP)
-            with Image.open(path) as tile:
-                sheet.paste(tile.convert("RGB"), (x, y))
-            draw.rectangle((x, y + TILE_H, x + TILE_W - 1, y + TILE_H + LABEL_H - 1), fill=(0, 0, 0))
-            draw.text((x + 8, y + TILE_H + 3), f"{times[start + j]:.2f} s", fill=(255, 255, 255), font=font)
-        name = prefix + ("" if start == 0 else f"-{start // PER_SHEET + 1}") + ".png"
+            x, y = GAP + (j % columns) * (tw + GAP), GAP + (j // columns) * (th + LABEL_H + GAP)
+            with Image.open(path) as picture:
+                sheet.paste(picture.convert("RGB"), (x, y))
+            draw.rectangle((x, y + th, x + tw - 1, y + th + LABEL_H - 1), fill=(0, 0, 0))
+            draw.text((x + 8, y + th + 3), f"{times[start + j]:.2f} s", fill=(255, 255, 255), font=font)
+        name = prefix + ("" if start == 0 else f"-{start // per_sheet + 1}") + ".png"
         sheet.save(name)
         names.append(name)
     return names
@@ -82,10 +91,11 @@ def cuts_of(video, score):
     return sorted({round(float(t), 3) for t in re.findall(r"pts_time:([0-9.]+)", found.stderr)})
 
 def palette(paths, size, width, height):
-    # only the picture: the tiles are padded to 270x480, and the padding is not a colour of the reel
-    scale = min(TILE_W / width, TILE_H / height)
+    # only the picture: the tiles are padded to the tile size, and the padding is not a colour of the reel
+    tw, th, _, _ = tile(width > height)
+    scale = min(tw / width, th / height)
     w, h = max(1, int(width * scale)), max(1, int(height * scale))
-    x0, y0 = (TILE_W - w) // 2 + 1, (TILE_H - h) // 2 + 1
+    x0, y0 = (tw - w) // 2 + 1, (th - h) // 2 + 1
     crops = [np.asarray(Image.open(p).convert("RGB"))[y0:y0 + h - 2, x0:x0 + w - 2] for p in paths]
     pixels = np.concatenate([c.reshape(-1, 3)[::37] for c in crops])
     pixels = pixels.astype(np.float32)
