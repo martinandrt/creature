@@ -1,0 +1,62 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Creature</title>
+<style>
+:root{--bg:#f6f5f2;--fg:#1b1d22;--mute:#6b6f78;--line:#dddad3;--card:#fff;--ok:#1f7a45;--bad:#b3261e;--acc:#1b2135}
+@media (prefers-color-scheme:dark){:root{--bg:#14161b;--fg:#e8e6e1;--mute:#9a9ea6;--line:#2b2e35;--card:#1c1f25;--acc:#d4a574}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,sans-serif}
+header{padding:18px 24px;border-bottom:1px solid var(--line);display:flex;gap:16px;align-items:center}
+h1{font-size:18px;margin:0}select,textarea,button{font:inherit;color:inherit}
+select{padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+main{display:grid;grid-template-columns:minmax(220px,1fr) minmax(280px,1.2fr) minmax(280px,1.2fr);gap:20px;padding:20px 24px}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);margin:0 0 10px}
+.skill{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-top:1px solid var(--line)}
+.sw{display:flex;gap:2px;flex:none;margin-top:4px}.sw i{width:12px;height:12px;border-radius:3px;border:1px solid var(--line)}
+.skill b{font-size:13px}.skill small{display:block;color:var(--mute);font-size:12px}
+textarea{width:100%;min-height:180px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);resize:vertical}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+button{padding:8px 14px;border-radius:8px;border:1px solid var(--acc);background:var(--acc);color:var(--bg);cursor:pointer}
+button.ghost{background:transparent;color:var(--fg);border-color:var(--line)}button:disabled{opacity:.5;cursor:wait}
+video{width:100%;border-radius:8px;background:#000;max-height:60vh}
+.st{font-weight:700}.DONE,.BUILT,.HAVE{color:var(--ok)}.FAILED{color:var(--bad)}
+.runs div{padding:6px 0;border-top:1px solid var(--line);font-size:13px}.mute{color:var(--mute)}
+pre{white-space:pre-wrap;font-size:12px;color:var(--mute);margin:8px 0 0}a{color:inherit}
+</style>
+<header><h1>Creature</h1><select id="home"></select><span class="mute" id="sum"></span></header>
+<main>
+<section><h2>What this home can do</h2><div id="skills"></div></section>
+<section><h2>Script: one line per shot</h2>
+<textarea id="lines">Night shift.
+Seventeen reels.
+One creature.
+Zero new authority.</textarea>
+<div class="row"><button id="make">Make (~$0.02)</button><label><input type="checkbox" id="style"> my style</label></div>
+<div class="row"><select id="design"></select><button class="ghost" id="replay">Replay ($0)</button></div>
+<p class="mute" id="note">Make: one cheap call picks a learned screen per line, a judge checks it. Replay: a saved design on your lines, no model.</p>
+</section>
+<section><h2>Result</h2><div id="result" class="mute">Nothing yet.</div><h2 style="margin-top:16px">Last runs</h2><div class="runs" id="runs"></div></section>
+</main>
+<script>
+const $=id=>document.getElementById(id);let home="";
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const file=p=>`/file?home=${encodeURIComponent(home)}&path=${encodeURIComponent(p)}`;
+async function j(u,o){const r=await fetch(u,o);const d=await r.json();if(!r.ok)throw new Error(d.error||r.status);return d}
+async function homes(){const hs=await j("/api/homes");$("home").innerHTML=hs.map(h=>`<option>${esc(h)}</option>`).join("");
+ home=hs.includes("mikro-s-knihovnou")?"mikro-s-knihovnou":hs[0];$("home").value=home;load()}
+async function load(){const d=await j("/api/home?name="+encodeURIComponent(home));
+ $("sum").textContent=`${d.skills.length} skills · ${d.designs.length} designs`;
+ $("skills").innerHTML=d.skills.map(s=>`<div class="skill"><span class="sw">${(s.colors||[]).map(c=>`<i style="background:${esc(c)}"></i>`).join("")}</span><div><b>${esc(s.slug)}</b><small>${esc(s.effect)}</small><small>${s.tone?esc(s.tone)+" · ":""}${s.seconds??"?"} s${s.text_share!=null?" · text "+Math.round(s.text_share*100)+" %":""}</small></div></div>`).join("")||'<span class="mute">Nothing learned yet.</span>';
+ $("design").innerHTML=d.designs.slice().reverse().map(x=>`<option value="${esc(x.name)}">${esc(x.name)} (${x.steps} ${x.steps==1?"step":"steps"})</option>`).join("");
+ $("runs").innerHTML=d.runs.map(r=>`<div><span class="st ${esc(r.status)}">${esc(r.status)}</span> ${r.spent!=null?"$"+Number(r.spent).toFixed(3):""} <span class="mute">${esc(r.what)}</span>${r.clip?` · <a href="${file(r.clip)}" target="_blank">clip</a>`:""} · <a href="${file(r.run+"/page.html")}" target="_blank">page</a></div>`).join("")}
+function show(job){const ok=["DONE","BUILT","HAVE"].includes(job.status);
+ $("result").innerHTML=`<div class="st ${esc(job.status)}">${esc(job.status||"?")}</div>${job.spent?`<div class="mute">${esc(job.spent)}</div>`:""}${job.clip?`<video src="${file(job.clip)}" controls autoplay loop></video>`:""}${job.run?`<div class="row"><a href="${file(job.run+"/page.html")}" target="_blank">run page</a><a href="${file(job.run+"/POSTUP.md")}" target="_blank">POSTUP.md</a></div>`:""}${!ok&&job.gap?`<pre>${esc(job.gap)}</pre>`:""}`}
+async function go(kind){const lines=$("lines").value.split("\n").map(s=>s.trim()).filter(Boolean);
+ const body={home,lines,style:$("style").checked,design:$("design").value};
+ ["make","replay"].forEach(b=>$(b).disabled=true);$("result").innerHTML='<span class="mute">Working… (make takes a minute or two)</span>';
+ try{const {job}=await j("/api/"+kind,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+  for(;;){await new Promise(r=>setTimeout(r,2000));const s=await j("/api/job?id="+job);if(s.state==="done"){show(s);break}}
+ }catch(e){$("result").innerHTML=`<pre>${esc(e.message)}</pre>`}
+ ["make","replay"].forEach(b=>$(b).disabled=false);load()}
+$("home").onchange=e=>{home=e.target.value;load()};$("make").onclick=()=>go("make");$("replay").onclick=()=>go("design");homes();
+</script></html>
