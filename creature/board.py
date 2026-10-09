@@ -51,12 +51,17 @@ border-radius:6px;padding:2px 10px;cursor:pointer}
 .mute{color:var(--mute)}img,video{max-width:100%;max-height:360px;border-radius:6px;background:#000;display:block}
 ol{margin:4px 0 0 18px;padding:0}li{margin:0 0 2px}a{color:inherit}
 #err{margin:0 0 12px}#err:empty{display:none}
+.arch{opacity:.55;padding:6px 12px}
+.archh{font-size:15px;margin:24px 0 8px;color:var(--mute)}
 """
 
 PLAYER = "controls muted loop playsinline preload='metadata'"  # many runs on one page: first frame only
 OUTPUT_PLAYER = (
     "controls loop playsinline preload='metadata'"  # the creature's clip may carry sound: not muted
 )
+
+
+ARCHIVE = "archiv.txt"  # next to the board: reels the author set aside, shown last on one line each
 
 
 def _when(ts: str) -> float:
@@ -388,10 +393,28 @@ def snapshot(homes: list[Path], base: Path, now: float) -> dict[str, Any]:
             key += "+"
         seen.add(key)
         by_source.setdefault(r["source"], []).append((key, r))
-    listed = []
+    # reels the author archived (archiv.txt next to the page, one file name a line): last, one line each
+    try:
+        archived = {line.strip() for line in (base / ARCHIVE).read_text(encoding="utf-8").splitlines()}
+    except OSError:
+        archived = set()
+    listed, shelved = [], []
     for source, members in sorted(by_source.items(), key=lambda kv: (-kv[1][-1][1]["start"], kv[0])):
+        if source in archived:
+            r = members[-1][1]
+            cost = sum(m["spent"] for _, m in members)
+            line = (
+                f"<section class='grp arch'><div class='head'><span class='st {r['status']}'>"
+                f"{r['status']}</span><b>{html.escape(source)}</b><span class='mute'>{len(members)} běhů · "
+                f"{html.escape(r['home'])}</span><span>${cost:.3f}</span></div></section>"
+            )
+            shelved.append({"id": f"src:{source}", "sig": _sig(line), "html": line})
+            continue
         group = _group(members, base, now)
         listed.append({"id": f"src:{source}", "sig": _sig(group), "html": group})
+    if shelved:
+        head = f"<h2 class='archh'>Archiv: odložené reely ({len(shelved)})</h2>"
+        listed += [{"id": "archiv", "sig": _sig(head), "html": head}, *shelved]
     return {
         "updated": f"{datetime.fromtimestamp(now):%H:%M:%S}",
         "homes": ", ".join(h.name for h in homes),
