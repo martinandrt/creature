@@ -58,6 +58,16 @@ class Desk:
             if (p / "authority.json").is_file() and (p / "registry").is_dir()
         )
 
+    def home_list(self) -> list[dict[str, Any]]:
+        """The homes worth opening: those with at least one learned skill, with how many."""
+        counted = []
+        for name in self.home_names():
+            skills = registry.skills(self.homes / name / "registry")
+            count = sum(1 for skill in skills if skill.capability.get("kind") != "tool")
+            if count:
+                counted.append({"name": name, "skills": count})
+        return counted
+
     def home(self, name: str) -> Path:
         if name not in self.home_names():
             raise KeyError(f"no home {name!r}")
@@ -386,7 +396,7 @@ class Handler(BaseHTTPRequestHandler):
             if url.path == "/":
                 self._send(200, PAGE.encode(), "text/html; charset=utf-8")
             elif url.path == "/api/homes":
-                self._json(self.desk.home_names())
+                self._json(self.desk.home_list())
             elif url.path == "/api/run":
                 self._json(self.desk.run(query.get("home", ""), query.get("run", "")))
             elif url.path == "/reel":

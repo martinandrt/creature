@@ -16,6 +16,10 @@ def desk(world, fake_model):
 
 def test_it_lists_homes_skills_designs_and_runs(desk, world):
     assert desk.home_names() == [world.name]
+    assert desk.home_list() == [{"name": world.name, "skills": 1}]
+    (world.parent / "empty" / "registry").mkdir(parents=True)
+    (world.parent / "empty" / "authority.json").write_text("{}")
+    assert [h["name"] for h in desk.home_list()] == [world.name]  # nothing learned: not offered
     seen = desk.describe(world.name)
     assert [s["slug"] for s in seen["skills"]] == ["typewriter-reveal"]
     assert seen["designs"] == [{"name": "typewriter-reveal", "steps": 1}]

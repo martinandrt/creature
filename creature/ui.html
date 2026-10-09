@@ -19,8 +19,22 @@ button{font-family:inherit}
 
 header{display:flex;align-items:center;gap:24px;padding:16px 32px;border-bottom:1px solid var(--line);position:relative}
 h1{font:800 30px/1 var(--sans);letter-spacing:.03em;margin:0;text-transform:uppercase}h1 span{color:var(--acc)}
-select{font:500 17px var(--mono);color:var(--text);background:transparent;border:0;border-bottom:1px solid var(--line);padding:4px 2px;border-radius:0;max-width:100%}
-select option,select optgroup{background:var(--bg);color:var(--text)}
+.dd{position:relative;min-width:0}
+.dd>button{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:14px;width:100%;min-height:46px;padding:8px 14px;border:1px solid var(--line);background:var(--panel);cursor:pointer;font:600 18px var(--mono);color:var(--text);border-radius:var(--r)}
+.dd>button:hover,.dd.open>button{border-color:var(--acc)}
+.dd .v{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dd .m{margin-left:auto;flex:none;color:var(--mute);font:500 14px var(--mono)}
+.dd .chev{flex:none;width:9px;height:9px;border-right:2px solid var(--acc);border-bottom:2px solid var(--acc);transform:translateY(-3px) rotate(45deg);transition:transform .15s}
+.dd.open .chev{transform:translateY(2px) rotate(-135deg)}
+.dd ul{display:none;position:absolute;left:0;min-width:100%;top:calc(100% + 4px);z-index:20;margin:0;padding:6px 0;list-style:none;background:var(--panel);border:1px solid var(--acc);max-height:min(60vh,520px);overflow:auto}
+.dd.up ul{top:auto;bottom:calc(100% + 4px)}
+.dd.open ul{display:block}
+.dd li{display:flex;gap:18px;align-items:baseline;padding:10px 14px;cursor:pointer;font:500 17px var(--mono);white-space:nowrap}
+.dd li:hover,.dd li.kb{background:rgba(212,165,116,.14)}
+.dd li.on{color:var(--acc)}.dd li.on .v::before{content:"● ";font-size:11px;vertical-align:2px}
+.dd li.g{cursor:default;background:none;font:500 12px var(--mono);text-transform:uppercase;letter-spacing:.14em;color:var(--mute);padding:12px 14px 4px}
+.dd li.bad{opacity:.45}
+#home{width:min(420px,60vw)}#design{flex:1;min-width:240px}
 #skillsbtn{all:unset;cursor:pointer;font:500 16px var(--mono);color:var(--mute)}#skillsbtn b{color:var(--text);font-size:20px}#skillsbtn:hover{color:var(--acc)}
 #skills{display:none;position:absolute;left:0;right:0;top:100%;z-index:5;background:var(--panel);border-bottom:1px solid var(--line);
   padding:14px 32px 18px;columns:3;column-gap:36px;max-height:60vh;overflow:auto}
@@ -47,12 +61,12 @@ textarea{flex:1;min-height:200px;width:100%;background:transparent;border:0;colo
 #edit{all:unset;cursor:pointer;font:500 14px var(--mono);color:var(--mute);margin-top:10px}#edit:hover{color:var(--acc)}#edit[hidden]{display:none}
 
 .acts{display:grid;grid-template-columns:auto 1fr;gap:12px 18px;align-items:center;padding-top:18px;border-top:1px solid var(--line)}
-.acts button{height:56px;min-width:150px;padding:0 24px;font:800 22px var(--sans);text-transform:uppercase;letter-spacing:.05em;cursor:pointer;border-radius:var(--r)}
+.acts>button{height:56px;min-width:150px;padding:0 24px;font:800 22px var(--sans);text-transform:uppercase;letter-spacing:.05em;cursor:pointer;border-radius:var(--r)}
 #make{background:var(--acc);color:var(--ink);border:2px solid var(--acc)}
 #replay{background:transparent;color:var(--text);border:2px solid var(--line)}#replay:not(:disabled):hover{border-color:var(--text)}
 button:disabled{opacity:.35;cursor:not-allowed}
 .what b{color:var(--text);font-weight:700}
-.rp{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline}
+.rp{display:flex;flex-direction:column;gap:6px;align-items:stretch}
 #rnote.bad{color:var(--bad)}
 
 .frame{height:min(64vh,720px);aspect-ratio:9/16;background:var(--panel);position:relative;overflow:hidden;border-radius:var(--r)}
@@ -79,10 +93,10 @@ button:disabled{opacity:.35;cursor:not-allowed}
  #skills{columns:1;padding:12px 18px}
 }
 @media (max-width:600px){textarea{font-size:22px}#picks .t{font-size:18px}h1{font-size:24px}
- .acts{grid-template-columns:1fr}.acts button{width:100%}.col{padding:14px 12px}}
+ .acts{grid-template-columns:1fr}.acts>button{width:100%}.col{padding:14px 12px}}
 </style>
-<header><h1>Crea<span>t</span>ure</h1><select id="home" title="home: one creature with its own skills, runs and budget"></select>
-<button id="skillsbtn"><b id="nskills">0</b> skills</button>
+<header><h1>Crea<span>t</span>ure</h1><div class="dd" id="home"></div>
+<button id="skillsbtn">what it learned <span id="nskills" hidden></span>▾</button>
 <div id="skills"></div></header>
 <main>
 <section class="col s">
@@ -93,7 +107,7 @@ One creature.
 Zero new authority.</textarea><div id="picks"></div><button id="edit" hidden>✎ edit script</button></div>
  <div class="acts">
   <button id="make">Make</button><span class="sub what"><b>new video</b> · AI picks a screen per line · ~$0.02</span>
-  <button id="replay">Replay</button><span class="sub rp"><select id="design" title="saved video to replay"></select><span id="rnote"></span></span>
+  <button id="replay">Replay</button><span class="sub rp"><span class="dd" id="design"></span><span id="rnote"></span></span>
  </div>
 </section>
 <section class="col">
@@ -113,26 +127,38 @@ if(new URLSearchParams(location.search).has("video"))document.body.classList.add
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const file=p=>`/file?home=${encodeURIComponent(home)}&path=${encodeURIComponent(p)}`;
 const usd=x=>"$"+Number(x||0).toFixed(3);
-const TEST=/^(opus-|creature-|lilium-|dbg-)/;  // comparison and test homes: listed, but apart
+const FIRST=["mikro-s-knihovnou","uceni-ok"];  // the night's two main homes; the rest are one reel each or comparisons
+let pick={home:"",design:""},homeList=[];
 async function j(u,o){const r=await fetch(u,o);const d=await r.json();if(!r.ok)throw new Error(d.error||r.status);return d}
-async function homes(){const hs=await j("/api/homes");const opt=h=>`<option>${esc(h)}</option>`;
- $("home").innerHTML=hs.filter(h=>!TEST.test(h)).map(opt).join("")+`<optgroup label="tests">${hs.filter(h=>TEST.test(h)).map(opt).join("")}</optgroup>`;
- home=hs.includes("mikro-s-knihovnou")?"mikro-s-knihovnou":hs[0];$("home").value=home;const c=await j("/api/current");if(!c.job)await load()}
+async function homes(){const hs=await j("/api/homes");
+ homeList=hs;const names=hs.map(h=>h.name);home=names.includes("mikro-s-knihovnou")?"mikro-s-knihovnou":names[0]||"";homeMenu();const c=await j("/api/current");if(!c.job)await load()}
+function dropdown(el,items,current,onpick,empty){  // items: {value,label,meta,group,bad}
+ const now=items.find(x=>x.value===current);
+ el.innerHTML=`<button type="button"><span class="v">${esc(now?now.label:empty||"—")}</span>${now&&now.meta?`<span class="m">${esc(now.meta)}</span>`:""}<span class="chev"></span></button><ul>${items.map(x=>x.group?`<li class="g">${esc(x.group)}</li>`:`<li data-v="${esc(x.value)}" class="${x.value===current?"on":""} ${x.bad?"bad":""}"><span class="v">${esc(x.label)}</span><span class="m">${esc(x.meta||"")}</span></li>`).join("")}</ul>`;
+ el.querySelector("button").onclick=e=>{e.stopPropagation();const open=!el.classList.contains("open");document.querySelectorAll(".dd.open").forEach(d=>d.classList.remove("open"));
+  if(!open||!items.length)return;const r=el.getBoundingClientRect();el.classList.toggle("up",innerHeight-r.bottom<320&&r.top>innerHeight-r.bottom);el.classList.add("open")};
+ el.querySelectorAll("li[data-v]").forEach(li=>li.onclick=e=>{e.stopPropagation();el.classList.remove("open");onpick(li.dataset.v)})}
+document.addEventListener("click",()=>document.querySelectorAll(".dd.open").forEach(d=>d.classList.remove("open")));
+document.addEventListener("keydown",e=>{if(e.key==="Escape")document.querySelectorAll(".dd.open").forEach(d=>d.classList.remove("open"))});
+function homeMenu(){const it=h=>({value:h.name,label:h.name,meta:`${h.skills} skills`});
+ const top=FIRST.map(n=>homeList.find(h=>h.name===n)).filter(Boolean),rest=homeList.filter(h=>!FIRST.includes(h.name)).sort((a,b)=>b.skills-a.skills);
+ dropdown($("home"),[...top.map(it),...(rest.length?[{group:"other homes"}]:[]),...rest.map(it)],home,setHome)}
+function designMenu(){const n=count();
+ dropdown($("design"),designs.map(x=>({value:x.name,label:x.name,meta:`${x.steps} ${x.steps==1?"line":"lines"}`,bad:!fits(x,n)})),pick.design,v=>{pick.design=v;designMenu();check()},"nothing saved yet")}
 let gen=0;  // a newer home choice wins: answers for an older one are dropped
 function blank(){["frame","learned"].forEach(id=>$(id).innerHTML='<div class="dot"></div>');$("lname").textContent=$("mname").textContent="—";
  ["under","lsub","picks"].forEach(id=>$(id).innerHTML="");sources=[];editing()}
 async function load(){const g=gen;const d=await j("/api/home?name="+encodeURIComponent(home));if(g!==gen)return;
  $("nskills").textContent=d.skills.length;
  $("skills").innerHTML=d.skills.map(s=>`<details><summary><span class="sw">${(s.colors||[]).map(c=>`<i style="background:${esc(c)}"></i>`).join("")}</span>${esc(s.slug)}</summary><p>${esc(s.effect)}<br><span class="sub">${s.tone?esc(s.tone)+" · ":""}${s.seconds??"?"} s${s.text_share!=null?" · text "+Math.round(s.text_share*100)+" %":""}</span></p></details>`).join("")||"Nothing learned yet.";
- const keep=$("design").value;designs=d.designs.slice().sort((a,b)=>(b.name.startsWith("make")-a.name.startsWith("make"))||b.name.localeCompare(a.name,undefined,{numeric:true}));
- $("design").innerHTML=designs.map(x=>`<option value="${esc(x.name)}">${esc(x.name)} · ${x.steps} ${x.steps==1?"line":"lines"}</option>`).join("")||"<option value=''>nothing saved yet</option>";
- if(designs.some(x=>x.name===keep))$("design").value=keep;else fit();
+ const keep=pick.design;designs=d.designs.slice().sort((a,b)=>(b.name.startsWith("make")-a.name.startsWith("make"))||b.name.localeCompare(a.name,undefined,{numeric:true}));
+ if(designs.some(x=>x.name===keep))pick.design=keep;else{pick.design="";fit()}designMenu();
  check();
  if(!shown){const best=d.runs.find(r=>r.status==="DONE"&&r.clip&&r.spent>0)||d.runs.find(r=>r.clip);if(best)show(best.run)}}
 function count(){return $("lines").value.split("\n").map(s=>s.trim()).filter(Boolean).length}
 const fits=(d,n)=>!!d&&(n===1||n===d.steps);  // replay takes one text for every step, or one per step
-function fit(){const n=count();const d=designs.find(x=>x.steps===n)||designs.find(x=>x.steps===1);if(d)$("design").value=d.name}
-function check(){const n=count();const d=designs.find(x=>x.name===$("design").value);const ok=fits(d,n);
+function fit(){const n=count();const d=designs.find(x=>x.steps===n)||designs.find(x=>x.steps===1)||designs[0];pick.design=d?d.name:"";designMenu()}
+function check(){const n=count();const d=designs.find(x=>x.name===pick.design);const ok=fits(d,n);
  $("rnote").textContent=!d?"":ok?"same video, your words · no AI · $0":`needs ${d.steps} ${d.steps==1?"line":"lines"}, you have ${n}`;
  $("rnote").className=d&&!ok?"bad":"";$("replay").disabled=busy||!ok;$("make").disabled=busy||!n}
 function source(x){if(!x){$("learned").innerHTML='<div class="dot"></div>';$("lname").textContent="—";$("lsub").innerHTML="";return}
@@ -164,7 +190,7 @@ function done(job,lines){if(job.run){show(job.run);return}const p=job.progress||
  $("under").innerHTML=`<span class="st ${esc(st)}">${esc(st)}</span><span>${usd(p.spent)}</span><span>${p.calls||0} AI calls</span>`;
  if(job.kind==="make")picks(lines,p.picks)}
 async function go(kind){const lines=$("lines").value.split("\n").map(s=>s.trim()).filter(Boolean);
- const body={home,lines,style:false,sound:false,design:$("design").value};
+ const body={home,lines,style:false,sound:false,design:pick.design};
  try{const {job}=await j("/api/"+kind,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
   await follow(job,kind,lines)}catch(e){fail(e)}}
 function fail(e){$("frame").innerHTML=`<div class="state"><div class="word ERROR">ERROR</div><div class="sub">${esc(e.message)}</div></div>`;busy=false;check()}
@@ -176,11 +202,11 @@ async function follow(job,kind,lines){busy=true;check();editing();$("under").inn
  }catch(e){fail(e);return}
  busy=false;load()}
 async function resume(){const c=await j("/api/current");if(!c.job)return false;
- if(c.home!==home){home=c.home;$("home").value=home}$("lines").value=(c.lines||[]).join("\n");
+ if(c.home!==home){home=c.home;homeMenu()}$("lines").value=(c.lines||[]).join("\n");
  shown="(running)";await load();follow(c.job,c.kind,c.lines||[]);return true}
-$("home").onchange=e=>{home=e.target.value;shown="";gen++;blank();load()};
+function setHome(h){if(h===home)return;home=h;homeMenu();shown="";gen++;blank();load()}
 $("make").onclick=()=>go("make");$("replay").onclick=()=>go("design");
-$("lines").oninput=()=>{if(!fits(designs.find(x=>x.name===$("design").value),count()))fit();check()};$("design").onchange=check;
+$("lines").oninput=()=>{if(!fits(designs.find(x=>x.name===pick.design),count()))fit();else designMenu();check()};
 $("edit").onclick=editing;$("playboth").onclick=()=>{["va","vb"].forEach(id=>{const v=$(id);if(v){v.currentTime=0;v.play()}})};
 $("skillsbtn").onclick=()=>$("skills").classList.toggle("open");homes().then(resume);
 </script></html>
