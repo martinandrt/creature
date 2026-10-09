@@ -180,8 +180,19 @@ def _describe(e: dict[str, Any]) -> str:
             f"sound added: {len(e.get('sounds', []))} sounds, {on}, "
             f"rms {e.get('rms_db')} dBFS, peak {e.get('peak_db')} dBFS"
         )
+    if kind == "make_choice":
+        picks = " · ".join(f"{s['line']}→{s['skill']}" for s in e.get("shots", []))
+        return f"composition {e.get('attempt')}: {picks}; {e.get('reason', '')}"[:600]
+    if kind == "make_judged":
+        bad = [r["line"] for r in e.get("lines", []) if not r.get("ok")]
+        verdict_ = "passed" if e.get("ok") else f"failed (lines {bad}, one piece: {e.get('one_piece')})"
+        return f"judge {verdict_}: {e.get('feedback', '')}"[:600]
     keys = {
         "run_start": ("image",),
+        "make_task": ("lines", "style"),
+        "make_shot": ("line", "skill", "checks"),
+        "card": ("skill", "tone", "background", "text_share", "moving_share", "error"),
+        "cards_task": ("skills",),
         "task": ("text",),
         "design_task": ("design", "text"),
         "perceived": ("duration_s",),

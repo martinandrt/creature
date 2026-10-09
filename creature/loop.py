@@ -30,6 +30,8 @@ from creature import (
     verdict,
     workshop,
 )
+from creature import card as card_mod
+from creature import make as maker
 from creature import wishes as wishes_mod
 from creature.forge import Outcome
 from creature.ledger import Ledger
@@ -869,9 +871,174 @@ class Creature:
         report.status = "DONE"
         return self.finish(report)
 
-    def join(self, clips: list[Path], frames: int) -> tuple[Path | None, list[str]]:
+    def cards(self, skills: list[registry.Skill]) -> dict[str, dict[str, Any]]:
+        """Each skill's style card; a missing one is measured now (two renders and fixed code, no model)
+        and written through the registry. A skill whose card cannot be measured is left out."""
+        found = {}
+        for skill in skills:
+            have = registry.card(skill)
+            if not card_mod.without_error(have):
+                have = card_mod.measure(
+                    skill,
+                    self.folder / "cards" / skill.slug,
+                    limits=self.authority.workshop,
+                    image=self.image,
+                )
+                self.ledger.record("card", skill=skill.slug, version=skill.version, **have)
+                if "error" in have:
+                    continue
+                registry.save_card(self.registry, skill.slug, skill.version, have)
+            found[skill.slug] = have
+        return found
+
+    def measure_cards(self) -> Report:
+        """`creature cards`: measure every effect's missing style card. No model."""
+        report = Report(self.ledger.run_id, "FAILED", self.folder, skill="cards")
+        effects = [s for s in registry.skills(self.registry) if s.capability.get("kind") != "tool"]
+        self.ledger.record("cards_task", skills=len(effects))
+        have = self.cards(effects)
+        report.notes.append(f"{len(have)} of {len(effects)} skills have a style card")
+        report.status = "DONE" if len(have) == len(effects) else "FAILED"
+        if report.status == "FAILED":
+            report.gap = f"{len(effects) - len(have)} cards could not be measured (see the card events)"
+        return self.finish(report)
+
+    def make(self, lines: list[str], *, style: dict[str, Any] | None = None) -> Report:
+        """`creature make --script`: one line of the script per shot. One cheap model call picks a skill
+        for every line from the catalog with style cards; each shot plays its skill's whole learned length
+        with its line as text; no mark on top. Fixed checks and one judge call with fixed criteria decide;
+        a failed result is composed again with the judge's feedback, at most twice. No forge."""
+        report = Report(self.ledger.run_id, "FAILED", self.folder, skill="make")
+        try:
+            return self._make(report, [str(x).strip() for x in lines if str(x).strip()], style)
+        except Exception as error:  # whatever breaks, the run ends with its ledger and page
+            report.status, report.gap = "FAILED", f"{type(error).__name__}: {error}"
+            return self.finish(report)
+
+    def _make(self, report: Report, lines: list[str], style: dict[str, Any] | None) -> Report:
+        self.ledger.record("make_task", lines=lines, style=bool(style))
+        if not lines:
+            report.gap = "the script has no lines"
+            return self.finish(report)
+        effects = [
+            s for s in registry.skills(self.registry)
+            if s.capability.get("kind") != "tool" and not self.needs_library(s)
+        ]  # fmt: skip
+        cards = self.cards(effects)
+        catalog = [(s, cards[s.slug]) for s in effects if s.slug in cards]
+        if not catalog:
+            report.gap = "no skill with a style card to compose from"
+            return self.finish(report)
+        styled, notes = montage.style_params(style)
+        for note in notes:
+            self.ledger.record("style_note", note=note)
+        shots_done: dict[tuple[str, int, str], tuple[Path | None, int, list[str], Path | None]] = {}
+        feedback = ""
+        for attempt in range(1, 1 + 1 + maker.RETRIES):
+            choice, unknown = maker.choose(
+                self.model, lines, catalog, cap_usd=self.cap("planner"), feedback=feedback
+            )
+            chosen = maker.shots(choice, lines, catalog)
+            self.ledger.record(
+                "make_choice", attempt=attempt, reason=str(choice.get("reason", ""))[:400], unknown=unknown,
+                shots=[
+                    {"line": i + 1, "text": lines[i], "skill": s.slug if s else None, "why": why[:200]}
+                    for i, (s, why) in enumerate(chosen)
+                ],
+            )  # fmt: skip
+            missing = [i + 1 for i, (s, _) in enumerate(chosen) if s is None]
+            if missing:
+                feedback = (
+                    f"lines {missing} got no skill from the catalog: name one exact catalog name per line"
+                )
+                continue
+            folder = self.folder / f"make-{attempt}"
+            clips, strips, cues, frames, failed = [], [], [], 0, ""
+            for number, (skill, _) in enumerate(chosen, start=1):
+                key = (skill.slug, skill.version, lines[number - 1])
+                if key not in shots_done:
+                    shots_done[key] = self._make_shot(number, skill, lines[number - 1], styled, folder)
+                clip, count, problems, strip = shots_done[key]
+                if problems or clip is None:
+                    failed = f"line {number} ({skill.slug}): " + "; ".join(problems or ["no clip"])
+                    break
+                cues.append({"frame": frames, "kind": "cut"})
+                clips.append(clip)
+                strips.append(strip)
+                frames += count
+            if failed:
+                feedback = f"{failed}. Choose another skill for that line."
+                continue
+            if len(clips) == 1:
+                joined, problems = clips[0], []
+            else:
+                joined, problems = self.join(clips, frames, folder)
+                self.ledger.record(
+                    "design_join", parts=len(clips), frames=frames, checks=problems or "all passed"
+                )
+            if problems or joined is None:
+                report.gap = "joining the shots: " + "; ".join(problems)
+                return self.finish(report)
+            spans = maker.spans([c["frame"] for c in cues], frames)
+            judged = maker.judge(self.model, lines, spans, strips, cap_usd=self.cap("judge"))
+            self.ledger.record("make_judged", attempt=attempt, **judged)
+            if judged["ok"]:
+                name = registry.free_name(self.registry, "make")
+                steps = [
+                    {
+                        "skill": s.slug,
+                        "version": s.version,
+                        "params": {**s.capability.get("params", {}), **styled},
+                    }
+                    for s, _ in chosen
+                ]
+                origin = {"composed_by": "make", "run": self.ledger.run_id, "lines": lines}
+                registry.save_design(self.registry, name, steps, origin=origin)
+                report.notes.append(f"design: {name} (replay: creature design {name} --text <each line>)")
+                report.status, report.clip, report.cues = "DONE", joined, cues
+                return self.finish(report)
+            feedback = judged["feedback"]
+            report.clip = joined  # the last try stays on the page, even when it did not pass
+        report.gap = f"the judge did not pass it after {1 + maker.RETRIES} compositions: {feedback}"[:1000]
+        return self.finish(report)
+
+    def _make_shot(
+        self, number: int, skill: registry.Skill, text: str, styled: dict[str, Any], folder: Path
+    ) -> tuple[Path | None, int, list[str], Path | None]:
+        """One line on its skill, at the skill's whole learned length: clip, frames, problems, strip."""
+        base = registry.spec_of(skill, text)
+        spec = dataclasses.replace(
+            base, params={**base.params, **styled},
+            checks=tuple(criteria.checks_for(base.output)) if styled else base.checks,
+        )  # fmt: skip
+        place = folder / f"shot-{number}-{skill.slug}"
+        ran = workshop.run(
+            skill.code, forge.skill_input(spec), limits=self.authority.workshop, image=self.image
+        )
+        if not ran.ok:
+            self.ledger.record(
+                "make_shot", line=number, skill=skill.slug, ok=False, error=str(ran.error)[:300]
+            )
+            return None, 0, [f"the script failed: {ran.error}"], None
+        checked = verdict.check(ran.outputs, spec.checks, limits=self.authority.workshop, image=self.image,
+                                folder=place)  # fmt: skip
+        strip = None
+        if checked.strip:
+            strip = place / "strip.png"
+            strip.write_bytes(checked.strip)
+        self.ledger.record(
+            "make_shot", line=number, skill=skill.slug, version=skill.version, ok=not checked.problems,
+            checks=list(checked.problems) or "all passed", seconds=ran.duration_s,
+        )  # fmt: skip
+        frames = round(spec.output["duration_s"] * spec.output["fps"])
+        return place / spec.output["file"], frames, list(checked.problems), strip
+
+    def join(
+        self, clips: list[Path], frames: int, folder: Path | None = None
+    ) -> tuple[Path | None, list[str]]:
         """Clips of a design share one format, so they are joined without re-encoding. The result
         must hold exactly the steps' frames together, checked by the same fixed file checks."""
+        folder = folder or self.folder
         files = {f"part{i:02d}.mp4": clip for i, clip in enumerate(clips)}
         ran = workshop.run(
             JOIN_CODE, {"parts": sorted(files)}, files, limits=self.authority.workshop, image=self.image
@@ -883,9 +1050,9 @@ class Creature:
                   "duration_s": frames / fps}  # fmt: skip
         checked = verdict.check(  # also writes the joined clip into the run's folder
             ran.outputs, tuple(criteria.checks_for(output)), limits=self.authority.workshop,
-            image=self.image, folder=self.folder,
+            image=self.image, folder=folder,
         )  # fmt: skip
-        return self.folder / JOINED, list(checked.problems)
+        return folder / JOINED, list(checked.problems)
 
 
 # Fixed code (ours) that runs in the workshop: concatenates same-format clips.

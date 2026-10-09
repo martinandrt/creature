@@ -1,4 +1,4 @@
-"""Command line: creature try · design · compose · list · show · queue · page · overview.
+"""Command line: creature try · design · compose · make · cards · list · show · queue · page · overview.
 
 The state root is --home or $CREATURE_HOME. Keys come from the file named by $CREATURE_SECRETS.
 """
@@ -35,6 +35,12 @@ def main(argv: list[str] | None = None) -> int:
     composed.add_argument("parts", nargs="+", help="design or skill names, in the order they play")
     composed.add_argument("--every", type=int, help="a montage of skill names instead: a cut every N frames")
     composed.add_argument("--seconds", type=float, default=7.0, help="the montage's length")
+    made = sub.add_parser(
+        "make", help="a video from my script, one line per shot (one cheap model call + judge)"
+    )
+    made.add_argument("--script", required=True, help="a text file: one line of the script per shot")
+    made.add_argument("--style", help="a JSON file with my colours and fonts, used over the learned ones")
+    sub.add_parser("cards", help="measure each skill's style card (renders and fixed code, no model)")
     sub.add_parser("list", help="learned skills and designs")
     shown = sub.add_parser("show", help="one skill: manifest and tests")
     shown.add_argument("slug")
@@ -94,6 +100,32 @@ def main(argv: list[str] | None = None) -> int:
         if report.clip:
             print(f"clip: {report.clip}")
         print(f"run: {report.folder}")
+        return 0 if report.status == "DONE" else 1
+    if args.command == "make":
+        from creature.loop import Creature
+
+        style = json.loads(Path(args.style).read_text(encoding="utf-8")) if args.style else None
+        lines = Path(args.script).read_text(encoding="utf-8").splitlines()
+        report = Creature(root).make(lines, style=style)
+        print(f"{report.status}  make")
+        for note in report.notes:
+            print(note)
+        if report.gap:
+            print(f"gap: {report.gap[:400]}")
+        print(f"spent: ${report.spent_usd:.4f}  authority unchanged: {report.fingerprint_same}")
+        if report.clip:
+            print(f"clip: {report.clip}")
+        print(f"run: {report.folder}")
+        return 0 if report.status == "DONE" else 1
+    if args.command == "cards":
+        from creature.loop import Creature
+
+        report = Creature(root).measure_cards()
+        for note in report.notes:
+            print(note)
+        if report.gap:
+            print(f"gap: {report.gap[:400]}")
+        print(f"{report.status}  run: {report.folder}")
         return 0 if report.status == "DONE" else 1
     if args.command == "compose" and args.every:
         from creature import montage

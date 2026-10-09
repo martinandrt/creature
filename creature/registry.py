@@ -33,6 +33,7 @@ from creature.criteria import SLUG, Spec
 INDEX = "index.json"
 SEALED = ("skill.py", "tests.json", "reference.png")  # hashed at install, checked on every read
 REFERENCE = "reference.png"
+CARD = "card.json"  # the style card, measured from the skill's own renders (not sealed)
 DESIGNS = "designs"
 DESIGN_NAME = re.compile(r"[a-z][a-z0-9-]{2,40}")
 INPUTS = {
@@ -335,6 +336,27 @@ def save_timeline(
     index["designs"][name] = {"steps": len(t["sources"]), "kind": "timeline", "origin": origin}
     _write_json(root / INDEX, index)
     return design
+
+
+@_writes
+def save_card(root: Path, slug: str, version: int, card: dict[str, Any]) -> None:
+    """A skill's style card (measured by fixed code, see card.py), beside its sealed files. Not sealed:
+    it describes the skill and can be measured again; it never changes what the skill does."""
+    entry = _index(root)["skills"].get(slug)
+    if entry is None or version not in entry["versions"]:
+        raise KeyError(f"no skill {slug!r} v{version}")
+    _write_json(root / slug / str(version) / CARD, card)
+
+
+def card(skill: Skill) -> dict[str, Any] | None:
+    path = skill.path / CARD
+    if not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return data if isinstance(data, dict) else None
 
 
 def _not_a_tool(root: Path, slug: str, version: int) -> None:
