@@ -687,7 +687,7 @@
   {
    "home": "creature-test",
    "run": "20261008T224532Z-3ac658",
-   "reel": "DcLzGYovY9B.mp4",
+   "reel": "removed-by-author.mp4",
    "status": "FAILED",
    "spent_usd": 0.1004,
    "task": "task",
@@ -2622,9 +2622,9 @@
    "assets_declared": []
   },
   {
-   "home": "opus-DcLzGYovY9B",
+   "home": "opus-removed-by-author",
    "run": "20261009T002059Z-c17d72",
-   "reel": "DcLzGYovY9B.mp4",
+   "reel": "removed-by-author.mp4",
    "status": "FAILED",
    "spent_usd": 1.0634,
    "task": "task",
@@ -2650,9 +2650,9 @@
    "assets_declared": []
   },
   {
-   "home": "opus-DcLzGYovY9B",
+   "home": "opus-removed-by-author",
    "run": "20261009T003212Z-5673e7",
-   "reel": "DcLzGYovY9B.mp4",
+   "reel": "removed-by-author.mp4",
    "status": "FAILED",
    "spent_usd": 0.0842,
    "task": "task",
@@ -2680,9 +2680,9 @@
    "assets_declared": []
   },
   {
-   "home": "opus-DcLzGYovY9B",
+   "home": "opus-removed-by-author",
    "run": "20261009T004831Z-1d2b2b",
-   "reel": "DcLzGYovY9B.mp4",
+   "reel": "removed-by-author.mp4",
    "status": "FAILED",
    "spent_usd": 0.0862,
    "task": "task",
@@ -2705,9 +2705,9 @@
    "assets_declared": []
   },
   {
-   "home": "opus-DcLzGYovY9B",
+   "home": "opus-removed-by-author",
    "run": "20261009T005401Z-eb9100",
-   "reel": "DcLzGYovY9B.mp4",
+   "reel": "removed-by-author.mp4",
    "status": "FAILED",
    "spent_usd": 0.4755,
    "task": "task",
