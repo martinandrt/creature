@@ -1,3 +1,4 @@
+import dataclasses
 import json
 
 import pytest
@@ -157,3 +158,18 @@ def test_a_tool_is_never_a_step_of_a_design(root, ref):
     with pytest.raises(ValueError, match="tool"):
         registry.save_design(root, "solo", [{"skill": "count-cuts", "version": 1}], origin={})
     assert registry.designs(root) == []
+
+
+def test_a_skill_remembers_whether_it_was_learned_from_a_finished_piece(root, ref):
+    # a reuse of a finished piece's skill must cover the whole new reel; a technique from a tutorial need not
+    piece = registry.install(
+        root, dataclasses.replace(_spec("brand-film"), look_matters=True), "# v1", origin=ORIGIN, cost=COST,
+        reference=ref,
+    )  # fmt: skip
+    technique = registry.install(root, _spec("caret-blink"), "# v1", origin=ORIGIN, cost=COST, reference=ref)
+    assert registry.spec_of(piece, "x").look_matters and not registry.spec_of(technique, "x").look_matters
+    # installed before the flag was recorded: unknown counts as a finished piece
+    old = dataclasses.replace(
+        technique, capability={k: v for k, v in technique.capability.items() if k != "look_matters"}
+    )
+    assert registry.spec_of(old, "x").look_matters

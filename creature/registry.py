@@ -112,6 +112,7 @@ def install(
         "origin": origin,
         "cost": cost,
         "assets": list(assets or []),  # library files it reads at /assets: it needs that library to run
+        "look_matters": spec.look_matters,  # learned from a finished piece: a reuse must cover a whole reel
     }
     tests = {"checks": list(spec.checks), "criteria": list(spec.criteria), "held_out": list(spec.held_out)}
     # built outside the registry (in the run's folder), then moved in whole: a failed install leaves
@@ -203,6 +204,9 @@ def spec_of(skill: Skill, text: str) -> Spec:
         held_out=tuple(tests["held_out"]),
         checks=tuple(tests["checks"]),
         param_sources=cap.get("param_sources", {}),
+        # unknown for a skill installed before this was recorded: taken as a finished piece, so a reuse
+        # must cover the whole reel (a false "I have it" costs more than a second look)
+        look_matters=cap.get("look_matters", True) is not False,
     )
 
 
