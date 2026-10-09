@@ -21,6 +21,7 @@ def main(argv: list[str] | None = None) -> int:
     tried = sub.add_parser("try", help="try on my text what this reel shows")
     tried.add_argument("reel", help="Instagram reel URL or a local .mp4")
     tried.add_argument("--text", required=True, help="my input text")
+    sub.add_parser("practice", help="return to my own failures, within the practice budget in authority.json")
     designed = sub.add_parser("design", help="run a learned design on new text (no model calls by default)")
     designed.add_argument("name")
     designed.add_argument(
@@ -68,6 +69,18 @@ def main(argv: list[str] | None = None) -> int:
         print(f"run: {report.folder}")
         print(f"page: {report.folder / 'page.html'}")
         return 0 if report.status in ("HAVE", "BUILT") else 1
+    if args.command == "practice":
+        from creature.practice import practice  # imports Docker and the model only when needed
+
+        done = practice(root)
+        for back in done.returns:
+            took = ", ".join(back.took) or "nothing"
+            line = f"{back.reel}  return {back.attempt}: {back.status}  ${back.spent_usd:.4f}"
+            print(f"{line}  from the registry: {took}")
+        total = f"{len(done.returns)} returns, spent ${done.spent_usd:.4f}"
+        print(f"practice {done.run}: {total}, ended: {done.stopped}")
+        return 0
+
     if args.command == "design":
         from creature.loop import Creature
 

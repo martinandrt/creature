@@ -127,7 +127,12 @@ def runs(homes: list[Path], now: float | None = None) -> list[dict[str, Any]]:
             folder = path.with_suffix("")
             end = next((e for e in events if e["type"] == "run_end"), None)
             task = next(
-                (e for e in events if e["type"] in ("task", "design_task", "tool_task", "wishes_task")), {}
+                (
+                    e
+                    for e in events
+                    if e["type"] in ("task", "design_task", "tool_task", "wishes_task", "practice_task")
+                ),
+                {},
             )
             clip = folder / end["clip"] if end and end.get("clip") else None
             design = str(task.get("design") or "") if task.get("type") == "design_task" else ""

@@ -47,6 +47,7 @@ class Caps:
     forge_attempts: int
     new_skills_per_run: int
     step_cap_usd: dict[str, float]
+    practice_budget_usd: float = 0.0  # the most `creature practice` may spend in all; none: no practice
 
 
 @dataclass(frozen=True)
@@ -92,6 +93,9 @@ def load(home: str | Path) -> Authority:
             forge_attempts=_number(caps, "forge_attempts", integer=True, minimum=1),
             new_skills_per_run=_number(caps, "new_skills_per_run", integer=True, minimum=0),
             step_cap_usd={str(step): _number(steps, step, positive=True) for step in steps},
+            practice_budget_usd=_number(caps, "practice_budget_usd", minimum=0)
+            if "practice_budget_usd" in caps
+            else 0.0,
         ),
         workshop=Limits(
             timeout_s=_number(shop, "timeout_s", positive=True),
