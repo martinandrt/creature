@@ -125,7 +125,7 @@ Zero new authority.</textarea><div id="picks"></div><button id="edit" hidden>✎
  <div id="how"><svg id="flow" viewBox="0 0 600 336" preserveAspectRatio="xMidYMid meet" role="img" aria-label="how the creature works"></svg></div>
  <div class="acts">
   <button id="make">Make</button><span class="sub what"><b>new video</b> · AI picks a screen per line · ~$0.02 · ~2 min</span>
-  <button id="replay">Replay</button><span class="sub rp"><span class="dd" id="design"></span><span id="rnote"></span></span>
+  <button id="replay">Replay</button><span class="sub rp"><span class="cap">Saved video · same cuts, your words</span><span class="dd" id="design"></span><span id="rnote"></span></span>
  </div>
 </section>
 <section class="col">
@@ -160,11 +160,13 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")document.querySelect
 function homeMenu(){const it=h=>({value:h.name,label:h.name,meta:`${h.skills} ${h.skills==1?"skill":"skills"}`});
  const top=FIRST.map(n=>homeList.find(h=>h.name===n)).filter(Boolean),rest=homeList.filter(h=>!FIRST.includes(h.name)).sort((a,b)=>b.skills-a.skills);
  dropdown($("home"),[...top.map(it),...(rest.length?[{group:"other homes"}]:[]),...rest.map(it)],home,setHome)}
+const short=x=>x.replace(/-/g," ").replace(/\b(title|card|reveal|intro)\b/g,"").trim()||x;
+const named=x=>x.first?`“${x.first}”${x.steps>1?" …":""}`:[...new Set((x.skills||[]).map(short))].join(" → ")||x.name;
 function designMenu(){const n=count();
- dropdown($("design"),designs.map(x=>({value:x.name,label:x.name,meta:`${x.steps} ${x.steps==1?"line":"lines"}`,bad:!fits(x,n)})),pick.design,v=>{pick.design=v;designMenu();check()},"nothing saved yet")}
+ dropdown($("design"),designs.map(x=>({value:x.name,label:named(x),meta:(fits(x,n)?`${x.steps} ${x.steps==1?"shot":"shots"}`:`needs ${x.steps} ${x.steps==1?"line":"lines"}`)+` · ${x.name}`,bad:!fits(x,n)})),pick.design,v=>{pick.design=v;designMenu();check()},"nothing saved yet")}
 let gen=0;  // a newer home choice wins: answers for an older one are dropped
 function blank(){["frame","learned"].forEach(id=>$(id).innerHTML='<div class="dot"></div>');$("lname").textContent=$("mname").textContent="—";
- ["under","lsub","picks"].forEach(id=>$(id).innerHTML="");sources=[];editing()}
+ ["under","lsub","picks"].forEach(id=>$(id).innerHTML="");sources=[];lastPicks=null;editing()}
 async function load(){const g=gen;const d=await j("/api/home?name="+encodeURIComponent(home));if(g!==gen)return;
  $("nskills").textContent=d.skills.length;
  $("skills").innerHTML=d.skills.map(s=>`<button class="sk" data-slug="${esc(s.slug)}" title="${esc(s.effect)}"><span class="sw">${(s.colors||[]).map(c=>`<i style="background:${esc(c)}"></i>`).join("")}</span><span class="n">${esc(s.slug)}</span><span class="m">${[s.tone,s.seconds!=null?s.seconds+" s":"",s.text_share!=null?"text "+Math.round(s.text_share*100)+" %":""].filter(Boolean).map(esc).join(" · ")}</span><span class="e">${esc(s.effect)}</span></button>`).join("")||'<div class="none">Nothing learned yet.</div>';
@@ -179,7 +181,7 @@ const fits=(d,n)=>!!d&&(n===1||n===d.steps);  // replay takes one text for every
 function fit(){const n=count();const d=designs.find(x=>x.steps===n)||(n===1&&designs[0]);if(d)pick.design=d.name;else if(!designs.some(x=>x.name===pick.design))pick.design=designs[0]?designs[0].name:"";designMenu()}
 function check(){const n=count();const d=designs.find(x=>x.name===pick.design);const ok=fits(d,n);
  const sizes=[...new Set(designs.map(x=>x.steps))].sort((a,b)=>a-b);
- $("rnote").textContent=!d?"":ok?"same video, your words · no AI · $0":designs.some(x=>x.steps===n)?`needs ${d.steps} ${d.steps==1?"line":"lines"}, you have ${n}`:`no saved video has ${n} lines · write ${[...new Set([1,...sizes])].join(", ")}`;
+ $("rnote").textContent=!d?"":ok?`replays ${named(d)} with your ${n} ${n==1?"line":"lines"} · no AI · $0`:designs.some(x=>x.steps===n)?`needs ${d.steps} ${d.steps==1?"line":"lines"}, you have ${n}`:`no saved video has ${n} lines · write ${[...new Set([1,...sizes])].join(", ")}`;
  $("rnote").className=d&&!ok?"bad":"";$("replay").disabled=busy||!ok;$("make").disabled=busy||!n}
 function source(x,play){if(!x){$("learned").innerHTML='<div class="dot"></div>';$("lname").textContent="—";$("lsub").innerHTML="";return}
  const url=x.src?(x.src.startsWith("file:")?file(x.src.slice(5)):`/reel?home=${encodeURIComponent(home)}&${x.src.slice(5)}`):null;
@@ -195,14 +197,17 @@ async function show(run){shown=run;const g=gen;const r=await j(`/api/run?home=${
  $("mname").textContent=r.kind==="learn"?"learning run":`${r.lines.length} ${r.lines.length==1?"line":"lines"} · ${r.kind==="design"?"replay":r.kind}`;
  sources=r.learned||[];
  $("under").innerHTML=`<span class="st ${esc(st)}">${esc(st)}</span><span>${usd(p.spent)}</span><span>${p.calls||0} AI calls</span>${r.seconds!=null?`<span>${r.seconds} s</span>`:""}<a href="/h/${encodeURIComponent(home)}/${encodeURIComponent(run)}/page.html" target="_blank">details</a>${r.clip&&r.gap&&st!=="DONE"?`<span class="why">${esc(r.gap.split(/(?<=\.)\s/)[0].slice(0,140))}</span>`:""}`;
- remember();editing();if(r.kind==="make"||r.kind==="design"){$("lines").value=r.lines.join("\n");if(r.kind==="make")picks(r.lines,p.picks)}
+ remember();lastPicks=null;editing();if(r.kind==="make"||r.kind==="design"){$("lines").value=r.lines.join("\n");if(r.kind==="make")picks(r.lines,p.picks)}
  const first=((p.picks||[]).find(x=>x.skill)||{}).skill;source(sources.find(x=>x.src&&x.skill===first)||sources.find(x=>x.src)||sources[0]);
  check()}
 function picks(lines,list){if(!list||!list.length)return;const by={};list.forEach(p=>by[p.line]=p);
  $("picks").innerHTML=lines.map((l,i)=>{const p=by[i+1];return `<div><span class="t">${esc(l)}</span>${p&&p.skill?`<button class="chip" data-skill="${esc(p.skill)}" title="${esc(p.why)}">${esc(p.skill)}</button>`:`<span class="chip none">—</span>`}</div>`}).join("");
  $("picks").querySelectorAll("button.chip").forEach(c=>c.onclick=()=>source(sources.find(x=>x.skill===c.dataset.skill),true));
- $("picks").classList.add("on");$("lines").style.display="none";$("edit").hidden=false}
-function editing(){$("picks").classList.remove("on");$("lines").style.display="";$("edit").hidden=true}
+ lastPicks={lines:lines.slice(),list};$("picks").classList.add("on");$("lines").style.display="none";$("edit").hidden=false;$("edit").textContent="✎ edit script"}
+let lastPicks=null;
+function editing(){$("picks").classList.remove("on");$("lines").style.display="";$("edit").hidden=!lastPicks;$("edit").textContent="← back to the shots";backable()}
+function backable(){if(lastPicks&&$("lines").value.split("\n").map(x=>x.trim()).filter(Boolean).join("\n")!==lastPicks.lines.join("\n")){lastPicks=null;$("edit").hidden=true}}
+function toggleEdit(){if($("picks").classList.contains("on"))editing();else if(lastPicks)picks(lastPicks.lines,lastPicks.list)}
 function working(p){const w=(p&&p.word)||"STARTING";const of=p&&p.of?p.of:0;const step=p?p.step:0;
  const share=w==="JUDGED"?100:w==="JOINING"||w==="JUDGING"?92:of?Math.round(85*step/of)+(w==="RENDERING"?5:0):5;
  $("frame").innerHTML=`<div class="state"><div class="word RUNNING">${esc(w)}</div><div class="sub">${w==="RENDERING"&&of?`shot ${Math.min(step+1,of)} / ${of}`:""}${p&&p.attempt>1?` · try ${p.attempt}`:""}${p&&p.calls?` · ${p.calls} AI calls`:""}</div><div class="line"><i style="width:${share}%"></i></div></div>`}
@@ -215,7 +220,7 @@ async function go(kind){const lines=$("lines").value.split("\n").map(s=>s.trim()
  try{const {job}=await j("/api/"+kind,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
   await follow(job,kind,lines)}catch(e){fail(e)}}
 function fail(e){$("frame").innerHTML=`<div class="state"><div class="word ERROR">ERROR</div><div class="sub">${esc(e.message)}</div></div>`;busy=false;check()}
-async function follow(job,kind,lines){busy=true;check();editing();$("under").innerHTML="";
+async function follow(job,kind,lines){busy=true;check();lastPicks=null;editing();$("under").innerHTML="";
  $("mname").textContent=`${lines.length} ${lines.length==1?"line":"lines"} · ${kind==="make"?"make":"replay"}`;working(null);
  try{for(;;){const s=await j("/api/job?id="+job);
    if(s.state==="done"){done(s,lines);break}working(s.progress);if(kind==="make")picks(lines,s.progress&&s.progress.picks);
@@ -231,8 +236,8 @@ const back=new URLSearchParams(location.hash.slice(1));history.scrollRestoration
 addEventListener("beforeunload",()=>{try{sessionStorage.setItem("y",String(scrollY))}catch(e){}});
 function scrollBack(){let y=0;try{y=+sessionStorage.getItem("y")||0}catch(e){}if(y)setTimeout(()=>scrollTo(0,y),60)}
 $("make").onclick=()=>go("make");$("replay").onclick=()=>go("design");
-$("lines").oninput=()=>{if(!fits(designs.find(x=>x.name===pick.design),count()))fit();else designMenu();check()};
-$("edit").onclick=editing;$("playboth").onclick=()=>{["va","vb"].forEach(id=>{const v=$(id);if(v){v.currentTime=0;v.play()}})};
+$("lines").oninput=()=>{backable();if(!fits(designs.find(x=>x.name===pick.design),count()))fit();else designMenu();check()};
+$("edit").onclick=toggleEdit;$("lines").addEventListener("keydown",e=>{if(e.key==="Escape"&&lastPicks)toggleEdit()});$("playboth").onclick=()=>{["va","vb"].forEach(id=>{const v=$(id);if(v){v.currentTime=0;v.play()}})};
 function skillsOpen(on){$("skills").classList.toggle("open",on);$("skillsbtn").classList.toggle("on",on)}
 async function origin(slug){const g=gen;const x=await j(`/api/skill?home=${encodeURIComponent(home)}&skill=${encodeURIComponent(slug)}`);if(g===gen)source(x||{skill:slug})}
 $("skillsbtn").onclick=e=>{e.stopPropagation();document.querySelectorAll(".dd.open").forEach(d=>d.classList.remove("open"));skillsOpen(!$("skills").classList.contains("open"))};

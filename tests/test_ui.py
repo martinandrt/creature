@@ -22,7 +22,9 @@ def test_it_lists_homes_skills_designs_and_runs(desk, world):
     assert [h["name"] for h in desk.home_list()] == [world.name]  # nothing learned: not offered
     seen = desk.describe(world.name)
     assert [s["slug"] for s in seen["skills"]] == ["typewriter-reveal"]
-    assert seen["designs"] == [{"name": "typewriter-reveal", "steps": 1}]
+    assert seen["designs"] == [
+        {"name": "typewriter-reveal", "steps": 1, "first": None, "skills": ["typewriter-reveal"]}
+    ]
     assert seen["runs"][0]["status"] == "BUILT"
     with pytest.raises(KeyError):
         desk.describe("../etc")

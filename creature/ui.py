@@ -98,7 +98,11 @@ class Desk:
         for design in registry.designs(root / "registry"):
             data = registry.design(root / "registry", design)
             if "steps" in data:
-                designs.append({"name": design, "steps": len(data["steps"])})
+                lines = (data.get("origin") or {}).get("lines") or []
+                designs.append({
+                    "name": design, "steps": len(data["steps"]), "first": lines[0] if lines else None,
+                    "skills": [step.get("skill") for step in data["steps"]],
+                })  # fmt: skip
         return {"name": name, "skills": skills, "designs": designs, "runs": self.runs(root)}
 
     def runs(self, root: Path, last: int = 12) -> list[dict[str, Any]]:
