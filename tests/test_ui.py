@@ -229,3 +229,11 @@ def test_a_poll_survives_a_half_written_ledger_line(desk, world):
     seen = desk.job("j1")
     assert seen["state"] == "running"
     assert seen["progress"]["calls"] == sum(1 for e in whole if e["type"] == "model_call")
+
+
+def test_learn_lists_the_learning_runs(desk, world):
+    run = desk.describe(world.name)["runs"][0]["run"]
+    seen = desk.learning()
+    assert [(r["home"], r["run"], r["status"]) for r in seen] == [(world.name, run, "BUILT")]
+    (world.parent / ".hidden").write_text("reel\n")
+    assert desk.learning() == []

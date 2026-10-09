@@ -129,6 +129,26 @@ class Desk:
             })  # fmt: skip
         return found
 
+    def learning(self) -> list[dict[str, Any]]:
+        """The night's learning runs in every offered home, newest first: the reel, the end, the cost."""
+        found = []
+        for home in self.home_list():
+            for path in (self.homes / home["name"] / "runs").glob("*.jsonl"):
+                try:
+                    events = written(path)
+                except (OSError, ValueError):
+                    continue
+                task = next((e for e in events if e["type"] == "task"), None)
+                end = next((e for e in events if e["type"] == "run_end"), None)
+                if task is None or end is None or self.hides(task.get("source")):
+                    continue
+                found.append({
+                    "home": home["name"], "run": path.stem, "status": end.get("status", ""),
+                    "reel": _reel_name(task.get("source")), "spent": end.get("spent_usd"),
+                    "skill": end.get("skill") or "", "clip": bool(end.get("clip")),
+                })  # fmt: skip
+        return sorted(found, key=lambda r: r["run"], reverse=True)
+
     def start(self, kind: str, data: dict[str, Any]) -> str:
         """One job at a time: `make` from lines, or `design` replay with one text per step."""
         if not self.lock.acquire(blocking=False):
@@ -448,6 +468,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(200, PAGE.encode(), "text/html; charset=utf-8")
             elif url.path == "/api/homes":
                 self._json(self.desk.home_list())
+            elif url.path == "/api/learning":
+                self._json(self.desk.learning())
             elif url.path == "/api/run":
                 self._json(self.desk.run(query.get("home", ""), query.get("run", "")))
             elif url.path == "/reel":
