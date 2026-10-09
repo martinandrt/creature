@@ -95,6 +95,27 @@ chained two learned skills (typewriter-caret, word-pop-color-flip) into one join
 model calls in the ledger. A design is saved for every learned skill under its own name, and
 `creature compose <name> <part> <part>` makes a new one from existing ones ($0).
 
+## 4b. A video from a script — `make` (PAID, small: one compose call at the planner cap + one judge call per try)
+
+```bash
+printf 'Capabilities may grow.\nAuthority may not.\nBy dawn it learned.\n' > script.txt
+uv run python -m creature cards                     # $0: a style card per learned screen (two renders, fixed code)
+uv run python -m creature make --script script.txt  # one line per shot; a passing result is saved as design make[-N]
+uv run python -m creature design make --text "…" --text "…" --text "…"   # replay at $0, one text per shot
+```
+
+- Needs the `make` branch merged (f9015c3). Each line gets one learned screen, chosen by a single cheap
+  call from the catalog of style cards; each shot plays its screen's whole learned length; fixed checks
+  on every shot and on the join; one judge call with fixed criteria (readable, nothing over the words,
+  one piece); at most two recompositions; no forge. Money: ≤ 3 × planner cap + ≤ 3 × judge cap (~$0.02).
+- Pick a home whose screens draw the user's text: the card says `text takes N % of the frame`; a screen
+  with 0 % keeps its learned text (5 of 14 in `mikro-s-knihovnou` do). A screen whose card cannot be
+  measured is named in the output ("… no style card, left out of the catalog").
+- QA verified `cards` at $0 on a copy of `opus-Db3DFh8Nr5y` (see the note on probe texts below); `make`
+  itself not run by QA (paid). Every run and every installed screen also gets `POSTUP.md`, written from
+  the ledger by fixed code (`creature postup` rewrites them for every finished run, $0); hidden criteria
+  never appear in it.
+
 ## 5. Martin's style file — only on a montage design (depends on a finished montage run)
 
 ```bash
