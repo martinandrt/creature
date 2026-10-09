@@ -214,3 +214,18 @@ def test_a_reel_the_author_hid_is_not_shown(desk, world):
     assert desk.reel(world.name, "typewriter-reveal") is None
     with pytest.raises(PermissionError):
         desk.file(world.name, f"{run}/page.html")
+
+
+def test_a_poll_survives_a_half_written_ledger_line(desk, world):
+    run = desk.describe(world.name)["runs"][0]["run"]
+    path = world / "runs" / f"{run}.jsonl"
+    whole = ui.ledger.read(path)
+    with path.open("a", encoding="utf-8") as ledger:
+        ledger.write('{"type": "make_shot", "line": 2, "ski')  # the writer is mid-line, no newline yet
+    desk.jobs["j1"] = {
+        "kind": "make", "home": world.name, "state": "running", "started": 0.0, "out": "",
+        "lines": 2, "texts": ["a", "b"], "known": [], "run": run,
+    }  # fmt: skip
+    seen = desk.job("j1")
+    assert seen["state"] == "running"
+    assert seen["progress"]["calls"] == sum(1 for e in whole if e["type"] == "model_call")

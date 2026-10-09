@@ -212,7 +212,7 @@ class Desk:
         else:
             new = sorted(p for p in runs.glob("*.jsonl") if p.name not in found["known"])
             path = new[-1] if new else None
-        progress = progress_of(ledger.read(path), found["lines"]) if path and path.is_file() else {}
+        progress = progress_of(written(path), found["lines"]) if path and path.is_file() else {}
         return {k: v for k, v in found.items() if k != "known"} | {"progress": progress}
 
     def run(self, home: str, run: str) -> dict[str, Any]:
@@ -379,6 +379,12 @@ def _result(out: str, homes: Path) -> dict[str, Any]:
         if key in found and "/runs/" in found[key]:
             found[key] = found[key].split("/runs/", 1)[1]
     return found
+
+
+def written(path: Path) -> list[dict[str, Any]]:
+    """A running ledger's whole lines: the line the run is still writing waits for the next poll."""
+    text = path.read_text(encoding="utf-8")
+    return [json.loads(line) for line in text[: text.rfind("\n") + 1].split("\n") if line]
 
 
 def byte_range(header: str | None, size: int) -> tuple[int, int] | None:

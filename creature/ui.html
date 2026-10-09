@@ -99,6 +99,7 @@ button:disabled{opacity:.35;cursor:not-allowed}
 .st{font-weight:700}.DONE,.BUILT,.HAVE{color:var(--ok)}.FAILED,.ERROR{color:var(--bad)}.RUNNING{color:var(--acc)}
 
 
+@media (max-height:820px){#how{display:none}}
 @media (max-width:1200px){
  body{font-size:18px}
  header{flex-wrap:wrap;gap:10px 20px;padding:14px 18px}
@@ -172,6 +173,7 @@ async function load(){const g=gen;const d=await j("/api/home?name="+encodeURICom
  $("skills").innerHTML=d.skills.map(s=>`<button class="sk" data-slug="${esc(s.slug)}" title="${esc(s.effect)}"><span class="sw">${(s.colors||[]).map(c=>`<i style="background:${esc(c)}"></i>`).join("")}</span><span class="n">${esc(s.slug)}</span><span class="m">${[s.tone,s.seconds!=null?s.seconds+" s":"",s.text_share!=null?"text "+Math.round(s.text_share*100)+" %":""].filter(Boolean).map(esc).join(" · ")}</span><span class="e">${esc(s.effect)}</span></button>`).join("")||'<div class="none">Nothing learned yet.</div>';
  $("skills").querySelectorAll(".sk").forEach(b=>b.onclick=e=>{e.stopPropagation();skillsOpen(false);origin(b.dataset.slug)});
  const keep=pick.design;designs=d.designs.slice().sort((a,b)=>(b.name.startsWith("make")-a.name.startsWith("make"))||b.name.localeCompare(a.name,undefined,{numeric:true}));
+ const one=new Set();designs=designs.filter(x=>{const k=x.first?x.first+"|"+x.steps:x.name;return one.has(k)?false:one.add(k)});  // one row per script, the newest
  if(designs.some(x=>x.name===keep))pick.design=keep;else{pick.design="";fit()}designMenu();
  check();
  if(!shown){const best=d.runs.find(r=>r.status==="DONE"&&r.clip&&r.spent>0)||d.runs.find(r=>r.clip),was=back.get("run");back.delete("run");
@@ -200,7 +202,8 @@ async function show(run){shown=run;const g=gen;const r=await j(`/api/run?home=${
  remember();lastPicks=null;editing();if(r.kind==="make"||r.kind==="design"){$("lines").value=r.lines.join("\n");if(r.kind==="make")picks(r.lines,p.picks)}
  const first=((p.picks||[]).find(x=>x.skill)||{}).skill;source(sources.find(x=>x.src&&x.skill===first)||sources.find(x=>x.src)||sources[0]);
  check()}
-function reason(gap){const all=gap.split(/(?<=\.)\s+/);return (all.find(x=>/problem|fail|not |no /i.test(x))||all.slice(0,2).join(" ")).slice(0,240)}
+function reason(gap){const n=(gap.match(/after (\d+) compositions/i)||[])[1],body=gap.replace(/^the judge did not pass it after \d+ compositions:\s*/i,""),all=body.split(/(?<=\.)\s+/);
+ const i=all.findIndex(x=>/problem|fail|not |no |never|missing|cover/i.test(x));return (n?`judge refused ${n} compositions · `:"")+(i>=0?all.slice(i,i+2):all.slice(0,2)).join(" ").slice(0,240)}
 function picks(lines,list){if(!list||!list.length)return;const by={};list.forEach(p=>by[p.line]=p);
  $("picks").innerHTML=lines.map((l,i)=>{const p=by[i+1];return `<div><span class="t">${esc(l)}</span>${p&&p.skill?`<button class="chip" data-skill="${esc(p.skill)}" title="${esc(p.why)}">${esc(p.skill)}</button>`:`<span class="chip none">—</span>`}</div>`}).join("");
  $("picks").querySelectorAll("button.chip").forEach(c=>c.onclick=()=>source(sources.find(x=>x.skill===c.dataset.skill),true));
@@ -223,7 +226,7 @@ async function go(kind){const lines=$("lines").value.split("\n").map(s=>s.trim()
 function fail(e){$("frame").innerHTML=`<div class="state"><div class="word ERROR">ERROR</div><div class="sub">${esc(e.message)}</div></div>`;busy=false;check()}
 async function follow(job,kind,lines){busy=true;check();lastPicks=null;editing();$("under").innerHTML="";
  $("mname").textContent=`${lines.length} ${lines.length==1?"line":"lines"} · ${kind==="make"?"make":"replay"}`;working(null);
- try{for(;;){const s=await j("/api/job?id="+job);
+ try{for(let miss=0;;){let s;try{s=await j("/api/job?id="+job);miss=0}catch(e){if(++miss>=3)throw e;await new Promise(r=>setTimeout(r,1500));continue}
    if(s.state==="done"){done(s,lines);break}working(s.progress);if(kind==="make")picks(lines,s.progress&&s.progress.picks);
    await new Promise(r=>setTimeout(r,1500))}
  }catch(e){fail(e);return}
