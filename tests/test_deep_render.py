@@ -125,3 +125,47 @@ def test_the_layout_retimes_to_another_length(env, tmp_path):
     found = _edges(env, tmp_path, pngs=previews)
     assert found["png"]["f_0010.png"] == 100 + 20 * 5  # design frame 5.0
     assert found["png"]["f_0059.png"] == int(100 + 20 * 29.5)  # design frame 29.5, float time
+
+
+# fixed code (ours): a reel and two incompressible output frames, to push the pair sheet over a cap
+NOISE_CODE = r"""
+import subprocess
+import numpy as np
+from PIL import Image
+
+def run(input, work):
+    source = "testsrc2=size=1080x1920:rate=30:duration=1"
+    subprocess.run(["ffmpeg", "-v", "error", "-f", "lavfi", "-i", source,
+                    "-pix_fmt", "yuv420p", f"{work}/out/reel.mp4"], check=True)
+    rng = np.random.default_rng(0)
+    for n in range(2):
+        noise = rng.integers(0, 255, (1920, 1080, 3), dtype=np.uint8)
+        Image.fromarray(noise).save(f"{work}/out/f_{n:04d}.png")
+    return {}
+"""
+
+
+@pytest.mark.parametrize("cap", [10_000_000, 60_000])
+def test_every_preview_image_is_made_to_fit_the_model_cap(env, tmp_path, cap):
+    # 9. 10.: a 10-brentclouse pairs sheet over 5 MB ended the run before the builder saw it
+    limits, image = env
+    made = workshop.run(NOISE_CODE, {}, limits=limits, image=image)
+    assert made.ok, made.error
+    files = {}
+    for name, data in made.outputs.items():
+        (tmp_path / name).write_bytes(data)
+        files[name] = tmp_path / name
+    job = {
+        "pairs": [[0.2, 0], [0.6, 1]],
+        "crops": [],
+        "palette": [],
+        "landscape": False,
+        "max_bytes": cap,
+    }
+    ran = workshop.run(deep.PAIRS_CODE, job, files, limits=limits, image=image)
+    assert ran.ok, ran.error
+    pngs = {name: data for name, data in ran.outputs.items() if name.endswith(".png")}
+    sizes = {name: len(data) for name, data in pngs.items()}
+    assert pngs and all(size <= cap for size in sizes.values()), sizes
+    if cap > 1_000_000:  # uncapped, the same sheet is bigger than the small cap: the shrink is exercised
+        assert max(sizes.values()) > 60_000, sizes

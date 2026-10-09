@@ -20,7 +20,8 @@ NAME = "POSTUP.md"
 STEPS = {  # what each event says in the rounds, in ledger order
     "plan", "have_try", "evolve", "composed", "part", "forge_attempt", "round", "round_score",
     "attempt_result", "other_length", "install_refused", "design_step", "design_join", "montage_source",
-    "montage", "make_catalog", "make_choice", "make_shot", "make_judged", "practice_return", "gaps", "scored",
+    "montage", "make_catalog",
+    "make_choice", "card", "cards_task", "make_shot", "make_judged", "practice_return", "gaps", "scored",
 }  # fmt: skip
 SHOWN_SPEC = ("effect", "task", "reason", "verdict", "params")  # never held_out
 

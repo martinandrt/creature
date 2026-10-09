@@ -258,6 +258,16 @@ def run(input, work):
         if side.width > 1500:
             side = side.resize((1500, max(1, round(side.height * 1500 / side.width))))
         side.save(f"{work}/out/crop_{k}.png")
+    # every image goes to the model, which takes at most max_bytes: smaller until it fits
+    # (9. 10.: a 10-brentclouse pairs sheet over 5 MB ended the run)
+    for name in os.listdir(f"{work}/out"):
+        path = f"{work}/out/{name}"
+        while name.endswith(".png") and os.path.getsize(path) > input["max_bytes"]:
+            with Image.open(path) as picture:
+                if picture.width <= 200:
+                    break
+                smaller = picture.resize((picture.width * 7 // 10, picture.height * 7 // 10))
+            smaller.save(path)
     return {"pairs": len(input["pairs"]), "crops": len(input["crops"]), "score": score,
             "frame_diff": round(sum(diffs) / max(1, len(diffs)), 2), "palette_misses": misses}
 """
@@ -783,6 +793,7 @@ def _preview(
         "crops": crops,
         "palette": colors,
         "landscape": spec.output["width"] > spec.output["height"],
+        "max_bytes": MAX_IMAGE_BYTES,
     }
     made = workshop.run(PAIRS_CODE, job, files, limits=limits, image=image)
     if not made.ok:
@@ -790,6 +801,8 @@ def _preview(
     shown: list[tuple[str, Path]] = []
     for name in sorted(made.outputs):
         (here / name).write_bytes(made.outputs[name])
+        if len(made.outputs[name]) > MAX_IMAGE_BYTES:  # still too big: not shown, the round goes on
+            continue
         label = (
             "pairs: reel left, yours right"
             if name.startswith("pairs")
