@@ -24,7 +24,7 @@ from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 from creature import ledger, registry
 
@@ -417,6 +417,10 @@ class Handler(BaseHTTPRequestHandler):
                 if not path.is_file():
                     raise PermissionError("font not in the asset library")
                 self._send(200, path.read_bytes(), "font/ttf")
+            elif url.path.startswith("/h/"):  # a run's own page, at a path where its relative links resolve
+                name, _, path = url.path[3:].partition("/")
+                body, kind = self.desk.file(unquote(name), unquote(path))
+                self._send(200, body, kind)
             elif url.path == "/file":
                 body, kind = self.desk.file(query.get("home", ""), query.get("path", ""))
                 self._send(200, body, kind)

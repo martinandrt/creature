@@ -178,7 +178,7 @@ async function show(run){shown=run;const g=gen;const r=await j(`/api/run?home=${
  $("frame").innerHTML=r.clip?`<video id="vb" src="${file(r.clip)}" loop playsinline preload="auto" controls muted></video>`:`<div class="state"><div class="word ${esc(st)}">${esc(st)}</div><div class="sub">${esc(r.gap.slice(0,160))}</div></div>`;
  $("mname").textContent=r.kind==="learn"?"learning run":`${r.lines.length} ${r.lines.length==1?"line":"lines"} · ${r.kind==="design"?"replay":r.kind}`;
  sources=r.learned||[];
- $("under").innerHTML=`<span class="st ${esc(st)}">${esc(st)}</span><span>${usd(p.spent)}</span><span>${p.calls||0} AI calls</span>${r.seconds!=null?`<span>${r.seconds} s</span>`:""}<a href="${file(run+"/page.html")}" target="_blank">details</a>`;
+ $("under").innerHTML=`<span class="st ${esc(st)}">${esc(st)}</span><span>${usd(p.spent)}</span><span>${p.calls||0} AI calls</span>${r.seconds!=null?`<span>${r.seconds} s</span>`:""}<a href="/h/${encodeURIComponent(home)}/${encodeURIComponent(run)}/page.html" target="_blank">details</a>`;
  editing();if(r.kind==="make"||r.kind==="design"){$("lines").value=r.lines.join("\n");if(r.kind==="make")picks(r.lines,p.picks)}
  const first=((p.picks||[]).find(x=>x.skill)||{}).skill;source(sources.find(x=>x.src&&x.skill===first)||sources.find(x=>x.src)||sources[0]);
  check()}
