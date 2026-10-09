@@ -130,10 +130,10 @@ async function load(){const d=await j("/api/home?name="+encodeURIComponent(home)
 let shown="";
 async function show(run){shown=run;const r=await j(`/api/run?home=${encodeURIComponent(home)}&run=${encodeURIComponent(run)}`);
  const p=r.progress||{};const st=r.status;
- $("frame").innerHTML=r.clip?`<video id="vb" src="${file(r.clip)}" autoplay loop playsinline ${$("sound").checked?"":"muted"}></video>`:`<div class="state"><div class="word ${esc(st)}">${esc(st)}</div><div class="sub">${esc(r.gap.slice(0,160))}</div></div>`;
+ $("frame").innerHTML=r.clip?`<video id="vb" src="${file(r.clip)}" loop playsinline preload="auto" controls ${$("sound").checked?"":"muted"}></video>`:`<div class="state"><div class="word ${esc(st)}">${esc(st)}</div><div class="sub">${esc(r.gap.slice(0,160))}</div></div>`;
  $("mname").textContent=`${r.lines.length} ${r.lines.length==1?"line":"lines"} · ${r.kind}`;
  const src=(r.learned||[]).find(x=>x.has_video)||(r.learned||[])[0];
- $("learned").innerHTML=src&&src.has_video?`<video id="va" src="/reel?home=${encodeURIComponent(home)}&skill=${encodeURIComponent(src.skill)}" autoplay loop muted playsinline></video>`:'<div class="dot"></div>';
+ $("learned").innerHTML=src&&src.has_video?`<video id="va" src="/reel?home=${encodeURIComponent(home)}&skill=${encodeURIComponent(src.skill)}" loop muted playsinline preload="auto" controls></video>`:'<div class="dot"></div>';
  $("lname").textContent=src?src.reel:"—";
  $("under").innerHTML=`<span class="st ${esc(st)}">${esc(st)}</span><span>$${Number(p.spent||0).toFixed(3)}</span><span>${p.calls||0} model calls</span>${r.seconds!=null?`<span>${r.seconds} s</span>`:""}<a href="${file(run+"/page.html")}" target="_blank">run page</a><a href="${file(run+"/POSTUP.md")}" target="_blank">POSTUP</a>`;
  $("under2").innerHTML=(r.learned||[]).map(x=>`<span>${esc(x.skill)} learned from ${esc(x.reel)}${x.learn_usd!=null?` · $${Number(x.learn_usd).toFixed(2)}`:""}${x.attempts?` · ${x.attempts} attempts`:""}</span>`).join("");
@@ -147,7 +147,7 @@ function working(p){const w=(p&&p.word)||"STARTING";const of=p&&p.of?p.of:0;cons
  const share=w==="JUDGED"?100:of?Math.round(85*step/of)+(w==="RENDERING"?5:0):5;
  $("frame").innerHTML=`<div class="state"><div class="word RUNNING">${esc(w)}</div><div class="sub">${w==="RENDERING"&&of?`shot ${Math.min(step+1,of)} / ${of}`:""}${p&&p.attempt>1?` · composition ${p.attempt}`:""}${p&&p.calls?` · ${p.calls} model calls`:""}</div><div class="line"><i style="width:${share}%"></i></div></div>`}
 function done(job,lines){if(job.run){show(job.run);return}const p=job.progress||{};const st=job.status||p.word||"?";
- $("frame").innerHTML=job.clip?`<video src="${file(job.clip)}" autoplay loop playsinline ${$("sound").checked?"":"muted"} controls></video>`:`<div class="state"><div class="word ${esc(st)}">${esc(st)}</div><div class="sub">${esc((job.gap||"").slice(0,160))}</div></div>`;
+ $("frame").innerHTML=job.clip?`<video src="${file(job.clip)}" loop playsinline preload="auto" controls ${$("sound").checked?"":"muted"} controls></video>`:`<div class="state"><div class="word ${esc(st)}">${esc(st)}</div><div class="sub">${esc((job.gap||"").slice(0,160))}</div></div>`;
  $("under").innerHTML=`<span class="st ${esc(st)}">${esc(st)}</span><span>$${Number(p.spent||0).toFixed(3)}</span><span>${p.calls||0} model calls</span>${job.run?`<a href="${file(job.run+"/page.html")}" target="_blank">run page</a><a href="${file(job.run+"/POSTUP.md")}" target="_blank">POSTUP</a>`:""}`;
  if(job.kind==="make")picks(lines,p.picks)}
 async function go(kind){const lines=$("lines").value.split("\n").map(s=>s.trim()).filter(Boolean);
