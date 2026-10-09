@@ -322,9 +322,10 @@ def run(input, work):
         # few threads each: one ffmpeg per source plus the encoder would otherwise take a thread per host
         # core apiece and run into the workshop's process limit
         source = f"{work}/in/{sid}.mp4"
-        readers[sid] = subprocess.Popen(["ffmpeg", "-v", "error", "-threads", "2", "-i", source,
-                                         "-filter_threads", "1", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"],
-                                        stdout=subprocess.PIPE)
+        # a source shorter than the montage plays again from its start (-stream_loop): each keeps its own time
+        readers[sid] = subprocess.Popen(["ffmpeg", "-v", "error", "-threads", "2", "-stream_loop", "-1",
+                                         "-i", source, "-filter_threads", "1", "-f", "rawvideo",
+                                         "-pix_fmt", "rgb24", "-"], stdout=subprocess.PIPE)
     layers = []
     for layer in input["layers"]:
         safe = input.get("safe") or {"left": 0, "right": 0, "top": 0, "bottom": 0}
@@ -374,7 +375,8 @@ def run(input, work):
     writer.stdin.close()
     if writer.wait() != 0:
         raise RuntimeError("encoding the montage failed")
-    for reader in readers.values():
+    for reader in readers.values():  # looping readers never end by themselves
+        reader.kill()
         reader.stdout.close()
         reader.wait()
     return {"frames": total, "scenes": len(input["scenes"]), "inks": chosen,

@@ -709,11 +709,13 @@ class Creature:
             if self.needs_library(skill):
                 return None, [self.needs_library(skill)], None
             base = registry.spec_of(skill, text)
+            # the length the screen was learned and tested at (never longer than the montage): its code was
+            # never asked for later frames; the montage loops it (9. 10.: 3 s screens asked for 15 s crashed)
             output = {
                 **base.output,
                 "width": t["width"],
                 "height": t["height"],
-                "duration_s": t["frames"] / t["fps"],
+                "duration_s": min(float(base.output["duration_s"]), t["frames"] / t["fps"]),
             }
             spec = dataclasses.replace(
                 base, params={**base.params, **source.get("params", {}), **styled}, output=output,
