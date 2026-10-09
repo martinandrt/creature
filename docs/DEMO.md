@@ -62,6 +62,14 @@ uv run python -m creature try <reel URL or .mp4> --text "Capabilities may grow. 
 - Pick the reel from the batch that behaved: `lilium-s-knihovnou` or `mikro-s-knihovnou` have their
   ledgers; `creature-test` after the batch ends. Do not reuse their homes for the recording: the story
   needs an empty registry at the start.
+- **Not a four-screen montage reel from an empty home.** LILIUM with the closed library
+  (`lilium-kucharka`, 00:11–00:37 UTC): $3.77 of the $4.00 budget, 26 min, two of four screens learned
+  ($0.69 and $1.63), the third stopped on a plateau, the fourth and the montage refused for budget
+  (`$0.228 left, a call needs a $0.25 reserve`), `FAILED`, fingerprint unchanged. On camera take an
+  effect reel (one skill, 2–10 rounds) or a montage whose screens are already in the registry
+  (`mikro-s-knihovnou` rerun: all four reused, $0.11, no forge call).
+- One run at a time while recording: the Docker VM has 7.65 GiB for every container together; the
+  night's parallel loops (ten 4 GiB workshops at once) had renders killed by OOM mid-round.
 
 ## 3. What it learned ($0, verified)
 
