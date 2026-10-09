@@ -45,11 +45,60 @@ def _sources(env, tmp_path, count, size="1080x1920"):
     return clips
 
 
-def _timeline(clips, *, every, landscape=False, layers=()):
+def _timeline(clips, *, every, landscape=False, layers=(), frames=60):
     sources = {sid: {"skill": f"s-{sid}", "version": 1, "params": {}} for sid in clips}
     return montage.timeline(
-        "m", sources, list(clips), every=every, frames=60, layers=list(layers), landscape=landscape
+        "m", sources, list(clips), every=every, frames=frames, layers=list(layers), landscape=landscape
     )
+
+
+THUMBS_CODE = r"""
+import subprocess
+from PIL import Image
+
+def run(input, work):
+    found = {}
+    for k in input["frames"]:
+        path = f"{work}/t_{k}.png"
+        subprocess.run(["ffmpeg", "-v", "error", "-i", f"{work}/in/montage.mp4", "-vf", f"select=eq(n\\,{k})",
+                        "-vsync", "vfr", "-frames:v", "1", path], check=True)
+        with Image.open(path) as im:
+            found[str(k)] = list(im.convert("L").resize((24, 40)).getdata())
+    return found
+"""
+
+
+BOX_CODE = r"""
+import subprocess
+from PIL import Image, ImageDraw
+
+def run(input, work):
+    writer = subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s",
+                               "1080x1920", "-r", "30", "-i", "-", "-frames:v", "90", "-c:v", "libx264",
+                               "-pix_fmt", "yuv420p", f"{work}/out/clip.mp4"], stdin=subprocess.PIPE)
+    for n in range(90):
+        img = Image.new("RGB", (1080, 1920), "black")
+        x = 100 + round(600 * n / 89)
+        ImageDraw.Draw(img).rectangle((x, 760, x + 400, 1160), fill="white")
+        writer.stdin.write(img.tobytes())
+    writer.stdin.close()
+    assert writer.wait() == 0
+    return "ok"
+"""
+
+
+def _thumbs(env, tmp_path, montage_bytes, frames):
+    """Small grey thumbnails of the given montage frames, measured in the workshop."""
+    limits, image = env
+    path = tmp_path / "thumbs-montage.mp4"
+    path.write_bytes(montage_bytes)
+    ran = workshop.run(THUMBS_CODE, {"frames": frames}, {"montage.mp4": path}, limits=limits, image=image)
+    assert ran.ok, ran.error
+    return {int(k): v for k, v in ran.value.items()}
+
+
+def _apart(a, b):
+    return sum(abs(x - y) for x, y in zip(a, b, strict=True)) / len(a)
 
 
 def _render(env, t, clips, tmp_path, text="Stay curious."):
@@ -92,6 +141,24 @@ def test_a_long_mark_is_drawn_smaller_inside_the_safe_zone(env, tmp_path):
     # with no logo the mark is a monogram (one letter), never the word: at most a quarter of the width
     assert w <= min(zone, round(1080 * montage.MARK_MAX_WIDTH)) and h <= round(0.12 * 1920), (w, h)
     assert checked.problems == (), checked.problems
+
+
+def test_a_short_source_loops_through_a_longer_montage(env, tmp_path):
+    # uceni-ok 01-hvmudvlab: screens learned at 3 s were rendered at the montage's 15 s and their frame()
+    # crashed past its designed frames ("N of 4 render workers failed"); now a source renders at its own
+    # length and the montage plays it again from the start: a 3 s source fills a 9 s montage, repeating
+    limits, image = env
+    made = workshop.run(BOX_CODE, {}, limits=limits, image=image)  # a 400 px box sliding 600 px in 3 s
+    assert made.ok, made.error
+    clips = {"a": tmp_path / "a.mp4"}
+    clips["a"].write_bytes(made.outputs["clip.mp4"])
+    t = _timeline(clips, every=270, frames=270)  # one scene over the whole 9 s
+    ran, checked = _render(env, t, clips, tmp_path)
+    assert ran.value["frames"] == 270 and checked.probe["frames"] == 270
+    thumbs = _thumbs(env, tmp_path, ran.outputs[montage.MONTAGE], [0, 45, 90, 180])
+    assert _apart(thumbs[0], thumbs[90]) < 4 and _apart(thumbs[0], thumbs[180]) < 4  # started again
+    assert _apart(thumbs[0], thumbs[45]) > 15  # and it does move in between
+    assert checked.problems == (), checked.problems  # the restart inside the scene passes the fixed checks
 
 
 def test_a_mark_pushed_to_the_edge_stays_inside_the_safe_zone_in_landscape_too(env, tmp_path):
