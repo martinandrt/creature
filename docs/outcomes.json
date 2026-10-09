@@ -1,0 +1,40 @@
+{
+ "runs": 174,
+ "status": {
+  "FAILED": 90,
+  "FAILED real": 63,
+  "STOPPED": 22,
+  "BUILT": 34,
+  "HAVE": 8,
+  "DONE": 10,
+  "ASK": 6,
+  "SKIP": 4,
+  "FAILED infrastructure": 27
+ },
+ "infrastructure": {
+  "container cut off": 7,
+  "our bug: screens rendered past their learned length (fixed in 32b2d11)": 9,
+  "timeout under load": 9,
+  "our bug: the montage code": 1,
+  "our bug: preview image over the model's 5 MB cap (fixed)": 1
+ },
+ "examples": {
+  "FAILED": "creature-deep/20261008T215955Z-08bae6",
+  "STOPPED": "creature-deep/20261008T222107Z-970aea",
+  "BUILT": "creature-nastroj/20261008T215241Z-a287c4",
+  "HAVE": "creature-test/20261008T212428Z-5b5da0",
+  "DONE": "creature-test/20261008T213921Z-e6d87a",
+  "ASK": "creature-test/20261008T222636Z-b389fd",
+  "SKIP": "creature-test/20261008T223007Z-33ac32",
+  "container cut off": "lilium-s-knihovnou/20261008T223513Z-b0bfa1: Check failed: the montage failed: BrokenPipeError: [Errno 32] Broken pipe (skill.py line 72)",
+  "our bug: screens rendered past their learned length (fixed in 32b2d11)": "mikro-s-knihovnou/20261009T001755Z-69b935: Check failed: source b (badge-and-icons): the script failed: RuntimeError: 1 of 4 render workers failed (see the log) (skill.py line 86)",
+  "timeout under load": "mikro-s-knihovnou/20261009T004841Z-c2f8ff: Check failed: the montage failed: killed: timeout",
+  "our bug: the montage code": "opus-DcEZYsvtgQX/20261008T233452Z-55bc6c: Check failed: the montage failed: ValueError: operands could not be broadcast together with shapes (134,1080,3) (134,1103,1)  (skill.py line 76)",
+  "our bug: preview image over the model's 5 MB cap (fixed)": "uceni-ok/20261009T004807Z-79482a: ValueError: image pairs.png is over 5000000 bytes"
+ },
+ "real_examples": [
+  "creature-deep/20261008T215955Z-08bae6: PerceiveError: could not read the video: FileNotFoundError: [Errno 2] No such file or directory: '/work/frame_023.png' (skill.py line 23) ",
+  "creature-montaz/20261008T214612Z-92926a: Judge, not met: Shots change with hard cuts, with no transitions between them (seen: The clip stays on one flat orange field with a single CREATURE wordmark. Do",
+  "creature-negativ/20261008T214637Z-4852bb: rhythm: a shot lasts about 9 frames, in the reel about 4 (± 50%)"
+ ]
+}

@@ -72,10 +72,26 @@ the asset library mounted).
 
 ## The night in numbers
 
-All from the run ledgers. Evidence: `scripts/night.py` over every ledger, its output in `docs/night.json`.
+All from the run ledgers of every home of the night (30 homes, the early test homes included):
+174 runs, 152 of them finished; 116 skills installed by finished runs (113 distinct). Evidence:
+`scripts/outcomes.py` and `scripts/night.py` over every ledger, output in `docs/outcomes.json` and
+`docs/night.json`. The live board counts differently (it also reads the registries), so it shows more.
 
-- Runs: 152 · skills installed: 116 (distinct: 113) · BUILT: 34 · HAVE: 8 · DONE: 10 · FAILED: 90 ·
-  ASK: 6 · SKIP: 4
+| Result | Runs | Example |
+|---|---|---|
+| BUILT: learned, tested, installed | 34 | `11-illdari`: a new skill `elastic-bounce-overshoot`, $0.27 |
+| HAVE: done with a skill it already had | 8 | `13-grafos.anima`: a skill learned on another reel, $0.006 |
+| DONE: a design replay, `make`, practice, cards | 10 | `make` on a 7-line script, $0.016 |
+| ASK: needs something it may not take | 6 | a 3D low-poly highway explainer: asks for 3D |
+| SKIP: nothing to learn | 4 | `02-io_klik`: a tool's promo, $0.06 |
+| STOPPED: no end in its ledger, stopped by hand (10 at 03:25–03:31, 12 while building the evening before) | 22 | `12-motion_mirror` in the ok batch |
+| FAILED, infrastructure: timeout under load (9), container cut off (7), our bugs (11) | 27 | `09-yuk.aji`: a screen's render killed by the timeout while 13 runs shared the machine |
+| FAILED, a real failure: the judge, a fixed check, the budget, its own code | 63 | `03-artbyjay`: a colour covering 17 % of the clip is not one of the reel's |
+
+Our bugs among the 27: screens rendered past their learned length (9, fixed in `32b2d11`), a preview
+image over the model's 5 MB cap (1, fixed), the montage code (1). The ok batch of 12 reels: 1 BUILT,
+1 HAVE, 2 SKIP, 1 STOPPED, 3 real failures, 5 failures from the infrastructure.
+
 - Learning a simple effect: about $0.54 (median of 11)
 - Learning a reel of several screens: $0.32 to $3.82 (40 runs)
 - The same reel again, screens taken from the registry, no builder call: $0.08 to $0.12 (24 runs;
@@ -84,8 +100,8 @@ All from the run ledgers. Evidence: `scripts/night.py` over every ledger, its ou
 - A 7-line script with `make` on 14 learned screens: $0.016, passed on the second composition. It
   chose one screen for all seven lines: of the 14, five do not draw the user's text at all (their card
   says the text takes 0 % of the frame)
-- Practice, once, $4 cap: it went back to 3 of its failed reels, took 2 to 3 screens from the registry
-  each time, and all 3 failed again ($3.81)
+- Practice, once, $4 cap: it went back to 3 of its failures and none passed the second time ($3.81).
+  A return without new information does not help.
 - Costs count model calls only; the Apify download of a reel is not in them
 - Human check: the author looked at 23 outputs: 2 good, 6 close, 15 not met
 - The same reel against a free Claude Code session (LILIUM): the session made it at 9/10 for $9.78; the
@@ -105,6 +121,11 @@ All from the run ledgers. Evidence: `scripts/night.py` over every ledger, its ou
 - Sound is fixed code with library sounds, not a learned skill.
 - Asset library use by the creature: 26 of 116 installed skills declare library files: 23 use its
   fonts, 3 its glows, 2 its photos, 2 its textures.
+- Reacts to its input: rendered on two different texts, 94 of 112 installed skills change and 18
+  keep their text fixed (one more failed to render on the long text). `scripts/reacts.py`,
+  `docs/reacts.json`.
+- A montage copies the reel's rhythm; with fast cuts between light and dark screens it can flash more
+  than 3 times a second.
 - A screen is learned whole, text and layout together. Some screens keep text from the reel they were
   learned on, and a screen cannot lend just its title or its motion to another.
 - Video only. Outside motion design nothing can be verified today.

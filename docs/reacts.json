@@ -1,0 +1,807 @@
+{
+ "summary": {
+  "skills_installed": 113,
+  "distinct": 113,
+  "measured": 112,
+  "react": 94,
+  "fixed_text": 18,
+  "failed_to_render": 1,
+  "probe_texts": [
+   "Stay curious. Keep going.",
+   "A much longer second line of text. It shows where the words land."
+  ]
+ },
+ "skills": [
+  {
+   "skills": [
+    "creature-montaz/centered-minimal-layout@v1"
+   ],
+   "text_share": 0.008,
+   "error": null
+  },
+  {
+   "skills": [
+    "creature-montaz/construction-line-diagram@v1"
+   ],
+   "text_share": 0.005,
+   "error": null
+  },
+  {
+   "skills": [
+    "creature-montaz/dot-pattern-ring@v1"
+   ],
+   "text_share": 0.441,
+   "error": null
+  },
+  {
+   "skills": [
+    "creature-montaz/palette-strip-sheet@v1"
+   ],
+   "text_share": 0.053,
+   "error": null
+  },
+  {
+   "skills": [
+    "creature-test/anchored-center-cut-montage@v1"
+   ],
+   "text_share": 0.21,
+   "error": null
+  },
+  {
+   "skills": [
+    "creature-test/animated-line-graph-tracker@v1"
+   ],
+   "text_share": 0.163,
+   "error": null
+  },
+  {
+   "skills": [
+    "creature-test/block-cursor-typewriter@v1"
+   ],
+   "text_share": 0.046,
+   "error": null
+  },
+  {
+   "skills": [
+    "creature-test/explainer-card-build@v1"
+   ],
+   "text_share": 0.105,
+   "error": null
+  },
+  {
+   "skills": [
+    "creature-test/glowing-spark-ring-caption@v1"
+   ],
+   "text_share": 0.059,
+   "error": null
+  },
+  {
+   "skills": [
+    "creature-test/grid-overlay-invert@v1"
+   ],
+   "text_share": 0.298,
+   "error": null
+  },
+  {
+   "skills": [
+    "creature-test/headline-accent-reveal@v1"
+   ],
+   "text_share": 0.08,
+   "error": null
+  },
+  {
+   "skills": [
+    "creature-test/histogram-bars-grow@v1"
+   ],
+   "text_share": 0.235,
+   "error": null
+  },
+  {
+   "skills": [
+    "creature-test/kinetic-explainer-blob@v1"
+   ],
+   "text_share": 0.178,
+   "error": null
+  },
+  {
+   "skills": [
+    "creature-test/kinetic-word-pop-captions@v1"
+   ],
+   "text_share": 0.277,
+   "error": null
+  },
+  {
+   "skills": [
+    "creature-test/radial-ray-burst-cuts@v1"
+   ],
+   "text_share": 0.145,
+   "error": null
+  },
+  {
+   "skills": [
+    "creature-test/star-to-circle-morph@v1"
+   ],
+   "text_share": 0.052,
+   "error": null
+  },
+  {
+   "skills": [
+    "creature-test/trim-path-dashed-arrow@v1"
+   ],
+   "text_share": 0.091,
+   "error": null
+  },
+  {
+   "skills": [
+    "creature-test/typewriter-caret-type-on@v1"
+   ],
+   "text_share": 0.14,
+   "error": null
+  },
+  {
+   "skills": [
+    "creature-test/vox-yellow-fill-pop-in@v1"
+   ],
+   "text_share": 0.137,
+   "error": null
+  },
+  {
+   "skills": [
+    "creature-test/word-by-word-captions@v1"
+   ],
+   "text_share": 0.087,
+   "error": null
+  },
+  {
+   "skills": [
+    "creature-test/word-rise-fade-stagger@v1"
+   ],
+   "text_share": 0.301,
+   "error": null
+  },
+  {
+   "skills": [
+    "creature-ukazka/typewriter-caret@v1"
+   ],
+   "text_share": 0.034,
+   "error": null
+  },
+  {
+   "skills": [
+    "creature-ukazka/word-pop-color-flip@v1"
+   ],
+   "text_share": 1.0,
+   "error": null
+  },
+  {
+   "skills": [
+    "lilium-kucharka/grid-title-card@v1"
+   ],
+   "text_share": 0.006,
+   "error": null
+  },
+  {
+   "skills": [
+    "lilium-kucharka/pixel-block-texture@v1"
+   ],
+   "text_share": 0.0,
+   "error": null
+  },
+  {
+   "skills": [
+    "lilium-s-knihovnou/grid-title-card@v1"
+   ],
+   "text_share": 0.005,
+   "error": null
+  },
+  {
+   "skills": [
+    "lilium-s-knihovnou/kinetic-big-word@v1"
+   ],
+   "text_share": 0.0,
+   "error": null
+  },
+  {
+   "skills": [
+    "lilium-s-knihovnou/pixel-cross-dither@v1"
+   ],
+   "text_share": 0.0,
+   "error": null
+  },
+  {
+   "skills": [
+    "mikro-s-knihovnou/badge-and-icons@v1"
+   ],
+   "text_share": 0.0,
+   "error": null
+  },
+  {
+   "skills": [
+    "mikro-s-knihovnou/blueprint-construction@v1"
+   ],
+   "text_share": 0.0,
+   "error": null
+  },
+  {
+   "skills": [
+    "mikro-s-knihovnou/bold-title-card@v3"
+   ],
+   "text_share": 0.199,
+   "error": null
+  },
+  {
+   "skills": [
+    "mikro-s-knihovnou/final-lockup@v1"
+   ],
+   "text_share": 0.036,
+   "error": null
+  },
+  {
+   "skills": [
+    "mikro-s-knihovnou/glow-lockup@v1"
+   ],
+   "text_share": null,
+   "error": "render on 'A much longer second line of text. It shows where the words land.' failed: RuntimeError: 1 of 4 render workers failed (see the log) (skill.py line 86)"
+  },
+  {
+   "skills": [
+    "mikro-s-knihovnou/glow-orb-title@v1"
+   ],
+   "text_share": 0.032,
+   "error": null
+  },
+  {
+   "skills": [
+    "mikro-s-knihovnou/glow-orb-wordmark-reveal@v1"
+   ],
+   "text_share": 0.041,
+   "error": null
+  },
+  {
+   "skills": [
+    "mikro-s-knihovnou/micro-type-card@v1"
+   ],
+   "text_share": 0.009,
+   "error": null
+  },
+  {
+   "skills": [
+    "mikro-s-knihovnou/orb-glow-intro@v1"
+   ],
+   "text_share": 0.0,
+   "error": null
+  },
+  {
+   "skills": [
+    "mikro-s-knihovnou/scale-sheet@v1"
+   ],
+   "text_share": 0.0,
+   "error": null
+  },
+  {
+   "skills": [
+    "mikro-s-knihovnou/size-ladder@v1"
+   ],
+   "text_share": 0.0,
+   "error": null
+  },
+  {
+   "skills": [
+    "mikro-s-knihovnou/size-scale-sheet@v1"
+   ],
+   "text_share": 0.0,
+   "error": null
+  },
+  {
+   "skills": [
+    "mikro-s-knihovnou/spec-sheet@v1"
+   ],
+   "text_share": 0.004,
+   "error": null
+  },
+  {
+   "skills": [
+    "mikro-s-knihovnou/ticket-card@v1"
+   ],
+   "text_share": 0.006,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-C-aCKISgqrw/snake-stroke-dot-logo-reveal@v1"
+   ],
+   "text_share": 0.091,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-C-aCKISgqrw/stroke-trail-dot-logo-reveal@v1"
+   ],
+   "text_share": 0.075,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DDXbHHDIzyx/corner-pin-diagonal-type@v1"
+   ],
+   "text_share": 0.94,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DO8fv7xjw_u/accent-letter-sweep-reveal@v1"
+   ],
+   "text_share": 0.143,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DO8fv7xjw_u/stretch-letter-mask-reveal@v1"
+   ],
+   "text_share": 0.39,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DP0hpwRCJIv/grid-overlay-resize-invert@v1"
+   ],
+   "text_share": 0.07,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DQ0QXU6kw-D/typewriter-type-on-caret@v1"
+   ],
+   "text_share": 0.071,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DXhdiikkZQ0/concentric-nested-shapes@v1"
+   ],
+   "text_share": 0.0,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DXhdiikkZQ0/dot-and-stroke-arrangements@v1"
+   ],
+   "text_share": 0.0,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DXhdiikkZQ0/flat-shape-morph-title@v1"
+   ],
+   "text_share": 0.007,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DYa7ULfK3Cp/dot-letter-gooey-morph@v1"
+   ],
+   "text_share": 0.29,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-Db3DFh8Nr5y/info-card@v1"
+   ],
+   "text_share": 0.075,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-Db3DFh8Nr5y/logo-construction@v1"
+   ],
+   "text_share": 0.0,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-Db3DFh8Nr5y/ray-burst-pattern@v1"
+   ],
+   "text_share": 0.0,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-Db3DFh8Nr5y/type-specimen-card@v1"
+   ],
+   "text_share": 0.236,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DcEZYsvtgQX/construction-lines@v1"
+   ],
+   "text_share": 0.0,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DcEZYsvtgQX/construction-linework@v1"
+   ],
+   "text_share": 0.0,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DcEZYsvtgQX/dot-ring-pattern@v1"
+   ],
+   "text_share": 0.0,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DcEZYsvtgQX/label-poster@v1"
+   ],
+   "text_share": 0.003,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DcEZYsvtgQX/palette-stripes@v1"
+   ],
+   "text_share": 0.024,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DcLzGYovY9B/kinetic-text-card@v1"
+   ],
+   "text_share": 0.021,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DcLzGYovY9B/logo-mark-card@v1"
+   ],
+   "text_share": 0.0,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DcLzGYovY9B/section-tab-bar@v1"
+   ],
+   "text_share": 0.017,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-Dd05eFdkjCH/flow-diagram@v1"
+   ],
+   "text_share": 0.027,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-Dd05eFdkjCH/stacked-checklist@v1"
+   ],
+   "text_share": 0.017,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-Dd05eFdkjCH/title-only-intro@v1"
+   ],
+   "text_share": 0.019,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DdEXP3nTNNl/ascii-art-poster@v1"
+   ],
+   "text_share": 0.031,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DdEXP3nTNNl/brutalist-editorial-poster@v1"
+   ],
+   "text_share": 0.027,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DdEXP3nTNNl/construction-grid-poster@v1"
+   ],
+   "text_share": 0.016,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DdEXP3nTNNl/data-visual-poster@v1"
+   ],
+   "text_share": 0.077,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DdEXP3nTNNl/editorial-brutalist-poster@v1"
+   ],
+   "text_share": 0.061,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DdEXP3nTNNl/typed-style-label@v1"
+   ],
+   "text_share": 0.037,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DdffhFkR5C7/cream-construction-grid@v1"
+   ],
+   "text_share": 0.136,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DdffhFkR5C7/orange-title-card@v2"
+   ],
+   "text_share": 0.046,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DdffhFkR5C7/orange-wordmark-card@v1"
+   ],
+   "text_share": 0.051,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DdffhFkR5C7/scattered-letter-type@v1"
+   ],
+   "text_share": 0.08,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DeKOzQRouIf/concentric-arcs-rhythm@v1"
+   ],
+   "text_share": 0.029,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DeKOzQRouIf/cream-node-flow@v1"
+   ],
+   "text_share": 0.183,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DeKOzQRouIf/glow-blob-text@v1"
+   ],
+   "text_share": 0.023,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DeKOzQRouIf/glow-orbit-shape@v1"
+   ],
+   "text_share": 0.012,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DeKymN6SlKb/peak-pins@v1"
+   ],
+   "text_share": 0.022,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DeKymN6SlKb/spectrogram-heatmap@v1"
+   ],
+   "text_share": 0.031,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DeM2_JSso6h/filmstrip-sound-timeline@v1"
+   ],
+   "text_share": 0.031,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DeM2_JSso6h/quadrant-style-chart@v1"
+   ],
+   "text_share": 0.042,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DeM2_JSso6h/statement-strike-card@v1"
+   ],
+   "text_share": 0.081,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DeM2_JSso6h/step-code-card@v1"
+   ],
+   "text_share": 0.059,
+   "error": null
+  },
+  {
+   "skills": [
+    "opus-DeM2_JSso6h/step-zoom-dashboard@v1"
+   ],
+   "text_share": 0.046,
+   "error": null
+  },
+  {
+   "skills": [
+    "uceni-ok/blueprint-egg-diagram@v1"
+   ],
+   "text_share": 0.034,
+   "error": null
+  },
+  {
+   "skills": [
+    "uceni-ok/concentric-rings@v1"
+   ],
+   "text_share": 0.03,
+   "error": null
+  },
+  {
+   "skills": [
+    "uceni-ok/counter-dashboard@v1"
+   ],
+   "text_share": 0.003,
+   "error": null
+  },
+  {
+   "skills": [
+    "uceni-ok/dark-init-loader@v1"
+   ],
+   "text_share": 0.0,
+   "error": null
+  },
+  {
+   "skills": [
+    "uceni-ok/elastic-bounce-overshoot@v1"
+   ],
+   "text_share": 0.071,
+   "error": null
+  },
+  {
+   "skills": [
+    "uceni-ok/geometric-shape-loop@v1"
+   ],
+   "text_share": 0.037,
+   "error": null
+  },
+  {
+   "skills": [
+    "uceni-ok/glow-grid-stage@v1"
+   ],
+   "text_share": 0.045,
+   "error": null
+  },
+  {
+   "skills": [
+    "uceni-ok/gradient-shards@v1"
+   ],
+   "text_share": 0.015,
+   "error": null
+  },
+  {
+   "skills": [
+    "uceni-ok/grid-card-ui@v1"
+   ],
+   "text_share": 0.021,
+   "error": null
+  },
+  {
+   "skills": [
+    "uceni-ok/hex-mosaic-disc@v1"
+   ],
+   "text_share": 0.036,
+   "error": null
+  },
+  {
+   "skills": [
+    "uceni-ok/logo-end-card@v1"
+   ],
+   "text_share": 0.028,
+   "error": null
+  },
+  {
+   "skills": [
+    "uceni-ok/marquee-rhythm@v1"
+   ],
+   "text_share": 0.613,
+   "error": null
+  },
+  {
+   "skills": [
+    "uceni-ok/node-network@v1"
+   ],
+   "text_share": 0.021,
+   "error": null
+  },
+  {
+   "skills": [
+    "uceni-ok/parabola-focus-rays@v1"
+   ],
+   "text_share": 0.025,
+   "error": null
+  },
+  {
+   "skills": [
+    "uceni-ok/polygon-center-rays@v1"
+   ],
+   "text_share": 0.011,
+   "error": null
+  },
+  {
+   "skills": [
+    "uceni-ok/primitives-poster@v1"
+   ],
+   "text_share": 0.027,
+   "error": null
+  },
+  {
+   "skills": [
+    "uceni-ok/prompt-bar-typing@v1"
+   ],
+   "text_share": 0.014,
+   "error": null
+  },
+  {
+   "skills": [
+    "uceni-ok/prompt-card-glow@v1"
+   ],
+   "text_share": 0.004,
+   "error": null
+  },
+  {
+   "skills": [
+    "uceni-ok/ring-speed-lines@v1"
+   ],
+   "text_share": 0.011,
+   "error": null
+  },
+  {
+   "skills": [
+    "uceni-ok/scrolling-word-rows@v1"
+   ],
+   "text_share": 0.624,
+   "error": null
+  },
+  {
+   "skills": [
+    "uceni-ok/status-pill-timeline@v1"
+   ],
+   "text_share": 0.014,
+   "error": null
+  },
+  {
+   "skills": [
+    "uceni-ok/tiled-floor-topdown@v1"
+   ],
+   "text_share": 0.03,
+   "error": null
+  },
+  {
+   "skills": [
+    "uceni-ok/title-end-card@v1"
+   ],
+   "text_share": 0.059,
+   "error": null
+  },
+  {
+   "skills": [
+    "uceni-ok/type-verb-swap@v1"
+   ],
+   "text_share": 0.09,
+   "error": null
+  }
+ ]
+}

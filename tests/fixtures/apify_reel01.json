@@ -1,12 +1,12 @@
 [
  {
   "type": "Video",
-  "caption": "How To Make a TYPEWRITER Effect in Premiere Pro #premierepro #premiere #adobe #editing #videoediting #tutorials #editingtutorial",
-  "transcript": "I will show you how to make this typewriter type on text effect in Premiere Pro. Apply the typewriter impact transition to the text layer. Now increase the duration to around 2 seconds. Select the transition and open effects controls. Go to character controls and enable visible. You can now change the color of the cursor, adjust the width and the height of it. If you want a blinking cursor, then increase the blinks value and set the initial and final delay to 30%. You can also make the text appear from the center by setting the horizontal value to centered.",
-  "ownerUsername": "adobebasics",
+  "caption": "How to make a TYPEWRITER text effect #motiondesign #tutorial",
+  "transcript": "Here is how to make a typewriter effect for your titles. Put the text on its own layer and reveal it one letter at a time over about two seconds. Add a cursor after the last letter, pick its colour and size, and let it blink a few times before the text holds.",
+  "ownerUsername": "example_creator",
   "videoDuration": 31.633333,
-  "url": "https://www.instagram.com/p/DQ0QXU6kw-D/",
-  "shortCode": "DQ0QXU6kw-D",
+  "url": "https://www.instagram.com/p/EXAMPLE0001/",
+  "shortCode": "EXAMPLE0001",
   "videoUrl": "https://scontent.cdninstagram.com/v/reel01.mp4"
  }
 ]

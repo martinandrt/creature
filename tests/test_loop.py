@@ -985,3 +985,16 @@ def test_a_second_montage_with_the_same_name_does_not_replace_the_first(montage_
     assert report.status == "BUILT", report.gap
     assert registry.design(root, "grid-promo") == first
     assert len(registry.designs(root)) == 2, registry.designs(root)
+
+
+def test_the_overview_shows_a_run_without_an_end_as_stopped_once_it_goes_quiet(world, fake_model):
+    _build(world, fake_model)
+    quiet = world / "runs" / "20261009T000000Z-aaaaaa.jsonl"
+    quiet.write_text(json.dumps({"type": "run_start", "ts": "2026-10-09T00:00:00+00:00", "run": "x"}) + "\n")
+    from datetime import datetime
+
+    start = datetime.fromisoformat("2026-10-09T00:00:00+00:00").timestamp()
+    body = page.overview(world, now=start + 60).read_text(encoding="utf-8")
+    assert ">RUNNING<" in body
+    body = page.overview(world, now=start + 3600).read_text(encoding="utf-8")
+    assert ">STOPPED<" in body and ">RUNNING<" not in body

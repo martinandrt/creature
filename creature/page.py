@@ -12,6 +12,8 @@ import dataclasses
 import html
 import json
 import shlex
+import time
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -333,8 +335,21 @@ def _costs(events: list[dict[str, Any]]) -> str:
 OVERVIEW = "overview.html"
 
 
-def overview(home: Path) -> Path:
+STALE_S = 900  # as on the board: a run with no end and nothing new for this long was stopped
+
+
+def _open_status(events: list[dict[str, Any]], now: float) -> str:
+    """A run without its end: RUNNING while its ledger still moves, else STOPPED (killed, never ended)."""
+    try:
+        last = datetime.fromisoformat(events[-1]["ts"]).timestamp()
+    except (KeyError, TypeError, ValueError):
+        return "STOPPED"
+    return "RUNNING" if now - last < STALE_S else "STOPPED"
+
+
+def overview(home: Path, now: float | None = None) -> Path:
     """One page for the whole night: every run, newest first, refreshing itself while runs happen."""
+    now = time.time() if now is None else now
     rows = []
     total = 0.0
     for ledger_file in sorted((home / "runs").glob("*.jsonl"), reverse=True):
@@ -347,7 +362,7 @@ def overview(home: Path) -> Path:
         end = next((e for e in events if e["type"] == "run_end"), None)
         spent = sum(e.get("cost_usd", 0) for e in events)
         total += spent
-        status = end["status"] if end else "RUNNING"
+        status = end["status"] if end else _open_status(events, now)
         page = Path("runs") / ledger_file.stem / PAGE
         link = f"<a href='{_e(page)}'>open</a>" if (home / page).exists() else ""
         source = str(task.get("source") or f"design {task.get('design', '')}").split("/")[-1][:48]

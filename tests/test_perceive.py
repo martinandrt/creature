@@ -198,7 +198,7 @@ def test_video_cap_fits_the_work_dir():
 
 
 def test_recorded_apify_reel_replays_offline(monkeypatch, secrets_file):
-    # recorded from the real actor (reel 1, transcript add-on); the CDN URL is replaced
+    # the real actor's item shape (reel 1, transcript add-on); its text and URLs are made up
     items = json.loads((REPO / "tests" / "fixtures" / "apify_reel01.json").read_text())
     _apify(monkeypatch, items)
     item = perceive.fetch_reel(items[0]["url"])

@@ -35,7 +35,7 @@
     "work_mb": 1024,
     "tmp_mb": 64,
     "output_mb": 300,
-    "assets": "/Users/martinandrt/Desktop/creature-assets"
+    "assets": "~/Desktop/creature-assets"
   },
   "install": "automatic after all file checks and the judge pass",
   "refuse": [
