@@ -32,7 +32,7 @@ were verified on a temporary copy of `creature-ukazka`'s registry.
 ```bash
 export CREATURE_HOME=~/Desktop/creature-homes/zaznam        # a new folder, never used before
 mkdir -p $CREATURE_HOME/workshop
-cp examples/authority-deep-knihovna.json $CREATURE_HOME/authority.json   # Martin's caps + the library
+cp examples/authority-deep-assets.json $CREATURE_HOME/authority.json   # Martin's caps + the library
 cp workshop/Dockerfile $CREATURE_HOME/workshop/
 uv run python -m creature list      # prints nothing: no skills, no designs
 uv run python -m creature queue     # prints nothing: nothing waits for a human
@@ -134,8 +134,11 @@ uv run python -m creature practice
 
 Reads this home's ledgers (no model): every reel whose latest `try` ended `FAILED` and whose file is still
 there, oldest first, at most 3 returns per reel ever. The whole practice spends at most
-`caps.practice_budget_usd` from `authority.json` (Martin set 4.0 in bf56aa1; a home without the key does
-not practise, pinned). Each return is an ordinary run with its own ledger and page; the practice's own
+`caps.practice_budget_usd` from the **home's** `authority.json` (Martin set 4.0 in the repo's root
+`authority.json`, bf56aa1; the examples and the homes copied from them do not carry the key, so a home
+without it prints `no practice budget in authority.json` and does nothing, pinned). Before the camera:
+`grep practice_budget_usd $CREATURE_HOME/authority.json`; if absent, Martin adds `"practice_budget_usd": 4.0`
+under `caps` himself (his number, his edit). Each return is an ordinary run with its own ledger and page; the practice's own
 ledger has one line per return (reel, return number, what it took from the registry, result, cost) and
 shows on the board. The story line: capabilities grow on their own, the budget for growing is a human's
 number. Best on a home with a few `FAILED` runs (`lilium-kucharka` has two skipped screens). Not verified
