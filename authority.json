@@ -22,7 +22,8 @@
       "planner": 0.03,
       "forge": 0.05,
       "judge": 0.03
-    }
+    },
+    "practice_budget_usd": 4.0
   },
   "workshop": {
     "image": "creature-workshop:v1",
