@@ -459,4 +459,6 @@ def test_a_done_claim_the_judge_fails_does_not_restart_the_plateau_count(home, t
     result = r.build(rounds=14)
     assert not result.ok
     assert result.rounds <= 9 and len(r.fake.calls) <= 9, (result.rounds, result.gap)  # not all 14 paid
-    assert r.events("plateau") and len(r.finished) <= 2  # a failed verdict buys time once, not forever
+    # a repeated verdict does not restart the count: every done claim is still checked (3, 5, 7), then the
+    # plateau checks the best version (9) and stops; a new verdict would have bought 6 more rounds
+    assert r.events("plateau") and [n for n, _ in r.finished] == [3, 5, 7, 9]

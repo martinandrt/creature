@@ -730,15 +730,15 @@ def build(
             if outcome.ok:
                 return Result(True, space.files, number, "", tuple(used_assets(space.files, said)))
             failed.add(judged)
-            # a failed check buys rounds only when it says something new; the same verdict twice ends the run
-            same = "\n" + outcome.feedback == last_verdict
-            if not same:
+            # a failed check buys rounds only when it says something new; the same verdict again does not
+            # reset the count (LILIUM part 2 passed at round 20 after new verdicts at 9, 11, 14, 16)
+            if "\n" + outcome.feedback != last_verdict:
                 moved = number
             last_verdict = "\n" + outcome.feedback
-            if same:
-                ledger.record("plateau", round=number, best=lowest, best_round=base[0], why="same verdict")
-            if stalled or same:
-                why = "plateau: no better score, or the same verdict again; the best version did not pass:"
+            if stalled:
+                why = (
+                    "plateau: no better score and no new verdict for a while; the best version did not pass:"
+                )
                 return Result(False, space.files, number, why + last_verdict)
             feedback += "\nYour whole clip was checked and did not pass:\n" + outcome.feedback
     return Result(False, space.files, rounds, feedback.strip() or "no round passed")
