@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import contextlib
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -28,6 +29,13 @@ PORT = 8765
 MAX_LINES = 12
 MAX_LINE = 160
 STYLE = Path(__file__).resolve().parents[1] / "examples" / "style-martin.json"
+ASSETS = Path(os.environ.get("CREATURE_ASSETS", "~/Desktop/creature-assets")).expanduser()
+FONTS = {  # the page's two fonts, from the asset library when it is there (else the system's)
+    "barlow-regular.ttf": "pisma/barlow/Barlow-Regular.ttf",
+    "barlow-semibold.ttf": "pisma/barlow/Barlow-SemiBold.ttf",
+    "barlow-extrabold.ttf": "pisma/barlow/Barlow-ExtraBold.ttf",
+    "jetbrainsmono.ttf": "pisma/jetbrainsmono/JetBrainsMono-Variable.ttf",
+}
 SHOWN = {".mp4": "video/mp4", ".html": "text/html; charset=utf-8", ".md": "text/plain; charset=utf-8",
          ".png": "image/png"}  # fmt: skip
 
@@ -196,6 +204,11 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(self.desk.describe(query.get("name", "")))
             elif url.path == "/api/job":
                 self._json(self.desk.jobs.get(query.get("id", ""), {"state": "unknown"}))
+            elif url.path.startswith("/font/") and url.path[6:] in FONTS:
+                path = ASSETS / FONTS[url.path[6:]]
+                if not path.is_file():
+                    raise PermissionError("font not in the asset library")
+                self._send(200, path.read_bytes(), "font/ttf")
             elif url.path == "/file":
                 body, kind = self.desk.file(query.get("home", ""), query.get("path", ""))
                 self._send(200, body, kind)

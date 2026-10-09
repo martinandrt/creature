@@ -1,41 +1,79 @@
 <!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Creature</title>
 <style>
-:root{--bg:#f6f5f2;--fg:#1b1d22;--mute:#6b6f78;--line:#dddad3;--card:#fff;--ok:#1f7a45;--bad:#b3261e;--acc:#1b2135}
-@media (prefers-color-scheme:dark){:root{--bg:#14161b;--fg:#e8e6e1;--mute:#9a9ea6;--line:#2b2e35;--card:#1c1f25;--acc:#d4a574}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,sans-serif}
-header{padding:18px 24px;border-bottom:1px solid var(--line);display:flex;gap:16px;align-items:center}
-h1{font-size:18px;margin:0}select,textarea,button{font:inherit;color:inherit}
-select{padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
-main{display:grid;grid-template-columns:minmax(220px,1fr) minmax(280px,1.2fr) minmax(280px,1.2fr);gap:20px;padding:20px 24px}
-@media (max-width:900px){main{grid-template-columns:1fr}}
-section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
-h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);margin:0 0 10px}
-.skill{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-top:1px solid var(--line)}
-.sw{display:flex;gap:2px;flex:none;margin-top:4px}.sw i{width:12px;height:12px;border-radius:3px;border:1px solid var(--line)}
-.skill b{font-size:13px}.skill small{display:block;color:var(--mute);font-size:12px}
-textarea{width:100%;min-height:180px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);resize:vertical}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
-button{padding:8px 14px;border-radius:8px;border:1px solid var(--acc);background:var(--acc);color:var(--bg);cursor:pointer}
-button.ghost{background:transparent;color:var(--fg);border-color:var(--line)}button:disabled{opacity:.5;cursor:wait}
-video{width:100%;border-radius:8px;background:#000;max-height:60vh}
-.st{font-weight:700}.DONE,.BUILT,.HAVE{color:var(--ok)}.FAILED{color:var(--bad)}
-.runs div{padding:6px 0;border-top:1px solid var(--line);font-size:13px}.mute{color:var(--mute)}
-pre{white-space:pre-wrap;font-size:12px;color:var(--mute);margin:8px 0 0}a{color:inherit}
+@font-face{font-family:"Barlow UI";src:local("Barlow"),url(/font/barlow-regular.ttf);font-weight:400}
+@font-face{font-family:"Barlow UI";src:local("Barlow SemiBold"),url(/font/barlow-semibold.ttf);font-weight:600}
+@font-face{font-family:"Barlow UI";src:local("Barlow ExtraBold"),url(/font/barlow-extrabold.ttf);font-weight:800}
+@font-face{font-family:"Mono UI";src:local("JetBrains Mono"),url(/font/jetbrainsmono.ttf);font-weight:100 800}
+:root{--night:#1B2135;--paper:#EBEDF2;--amber:#D4A574;--deep:#151a2b;--line:rgba(235,237,242,.16);
+  --mute:rgba(235,237,242,.6);--ok:#7fd49a;--bad:#ff7a6b;
+  --sans:"Barlow UI","Barlow",system-ui,sans-serif;--mono:"Mono UI","JetBrains Mono",ui-monospace,Menlo,monospace}
+*{box-sizing:border-box;border-radius:0}
+html,body{margin:0;background:var(--night);color:var(--paper)}
+body{font:400 18px/1.45 var(--sans);min-height:100vh;display:flex;flex-direction:column}
+header{display:flex;align-items:baseline;gap:24px;padding:20px 32px;border-bottom:1px solid var(--line)}
+h1{font:800 28px/1 var(--sans);letter-spacing:.02em;margin:0;text-transform:uppercase}
+h1 span{color:var(--amber)}
+.label,h2{font:500 13px/1.3 var(--mono);text-transform:uppercase;letter-spacing:.12em;color:var(--mute);margin:0 0 12px}
+select,textarea,button{font:inherit;color:inherit}
+select{background:var(--night);color:var(--paper);border:1px solid var(--line);padding:6px 10px;font:500 15px var(--mono)}
+#sum{font:400 15px var(--mono);color:var(--mute);white-space:nowrap}
+main{flex:1;display:grid;grid-template-columns:240px minmax(340px,1fr) minmax(380px,1.15fr);min-height:0}
+@media (max-width:1100px){main{grid-template-columns:1fr}}
+section{padding:24px 28px;border-right:1px solid var(--line);min-width:0}
+section:last-child{border-right:0}
+#skills details{border-top:1px solid var(--line)}
+#skills summary{list-style:none;cursor:pointer;display:flex;gap:10px;align-items:center;padding:8px 0;font:600 16px var(--sans)}
+#skills summary::-webkit-details-marker{display:none}
+#skills summary:hover{color:var(--amber)}
+.sw{display:flex;gap:2px;flex:none}.sw i{width:11px;height:11px;outline:1px solid var(--line)}
+#skills p{margin:0 0 10px;font-size:15px;color:var(--mute)}
+#skills .meta{font:400 13px var(--mono);color:var(--mute);display:block;margin-top:4px}
+textarea{width:100%;height:46vh;min-height:260px;padding:18px 20px;background:var(--deep);border:1px solid var(--line);
+  color:var(--paper);font:600 26px/1.5 var(--sans);resize:vertical;outline:none}
+textarea:focus{border-color:var(--amber)}
+.act{display:flex;align-items:stretch;gap:0;margin-top:20px;border:1px solid var(--line)}
+.act button{flex:none;border:0;padding:16px 28px;cursor:pointer;font:800 20px var(--sans);text-transform:uppercase;letter-spacing:.06em}
+#make{background:var(--amber);color:var(--night)}#make:hover{background:var(--paper)}
+.price{flex:1;display:flex;flex-direction:column;justify-content:center;padding:8px 16px;font:500 15px/1.4 var(--mono)}
+.price b{font:700 22px var(--mono);color:var(--amber)}
+.opt{display:flex;align-items:center;gap:8px;padding:0 16px;border-left:1px solid var(--line);font:500 14px var(--mono);color:var(--mute)}
+.opt input{accent-color:var(--amber);width:18px;height:18px}
+.act.second{margin-top:12px}
+#replay{background:transparent;color:var(--paper);border-right:1px solid var(--line)}#replay:hover{color:var(--amber)}
+.act select{border:0;border-left:1px solid var(--line);background:transparent;padding:0 12px;max-width:260px}
+button:disabled{opacity:.4;cursor:wait}
+#note{margin-top:18px;font-size:15px;color:var(--mute)}
+#result video{display:block;width:100%;max-height:68vh;background:#000;border:1px solid var(--line)}
+.st{font:700 15px var(--mono);letter-spacing:.06em}
+#result .st{font-size:34px;margin:0 0 6px}
+.DONE,.BUILT,.HAVE{color:var(--ok)}.FAILED{color:var(--bad)}.ASK,.SKIP{color:var(--amber)}
+.spent{font:500 16px var(--mono);color:var(--mute);margin-bottom:12px}
+.links{display:flex;gap:20px;margin-top:12px;font:500 14px var(--mono)}
+a{color:var(--amber);text-decoration:none}a:hover{color:var(--paper)}
+pre{white-space:pre-wrap;font:400 14px/1.5 var(--mono);color:var(--mute);margin:10px 0 0}
+.runs{margin-top:28px}.runs div{padding:8px 0;border-top:1px solid var(--line);font-size:15px}
+.runs .cost{font:500 14px var(--mono);color:var(--mute);margin:0 8px}.runs .what{color:var(--mute)}
+.runs a{font:500 13px var(--mono);margin-left:8px}
+.wait{font:500 18px var(--mono);color:var(--amber)}
 </style>
-<header><h1>Creature</h1><select id="home"></select><span class="mute" id="sum"></span></header>
+<header><h1>Crea<span>t</span>ure</h1><select id="home"></select><span id="sum"></span></header>
 <main>
-<section><h2>What this home can do</h2><div id="skills"></div></section>
-<section><h2>Script: one line per shot</h2>
-<textarea id="lines">Night shift.
+<section><h2>Skills</h2><div id="skills"></div></section>
+<section><h2>Script · one line per shot</h2>
+<textarea id="lines" spellcheck="false">Night shift.
 Seventeen reels.
 One creature.
 Zero new authority.</textarea>
-<div class="row"><button id="make">Make (~$0.02)</button><label><input type="checkbox" id="style"> my style</label></div>
-<div class="row"><select id="design"></select><button class="ghost" id="replay">Replay ($0)</button></div>
-<p class="mute" id="note">Make: one cheap call picks a learned screen per line, a judge checks it. Replay: a saved design on your lines, no model.</p>
+<div class="act"><button id="make">Make</button>
+ <div class="price"><b>~$0.02</b><span>1 model call + 1 judge</span></div>
+ <label class="opt"><input type="checkbox" id="style"> my style</label></div>
+<div class="act second"><button id="replay">Replay</button><select id="design"></select>
+ <div class="price"><b>$0</b><span>0 model calls</span></div></div>
+<p id="note">Make: one cheap call picks a learned screen for each line, a judge checks it (at most 3 tries). Replay: a saved design on your lines, no model.</p>
 </section>
-<section><h2>Result</h2><div id="result" class="mute">Nothing yet.</div><h2 style="margin-top:16px">Last runs</h2><div class="runs" id="runs"></div></section>
+<section><h2>Result</h2><div id="result"><span class="spent">Nothing yet.</span></div>
+<div class="runs"><h2>Last runs</h2><div id="runs"></div></div></section>
 </main>
 <script>
 const $=id=>document.getElementById(id);let home="";
@@ -46,14 +84,14 @@ async function homes(){const hs=await j("/api/homes");$("home").innerHTML=hs.map
  home=hs.includes("mikro-s-knihovnou")?"mikro-s-knihovnou":hs[0];$("home").value=home;load()}
 async function load(){const d=await j("/api/home?name="+encodeURIComponent(home));
  $("sum").textContent=`${d.skills.length} skills · ${d.designs.length} designs`;
- $("skills").innerHTML=d.skills.map(s=>`<div class="skill"><span class="sw">${(s.colors||[]).map(c=>`<i style="background:${esc(c)}"></i>`).join("")}</span><div><b>${esc(s.slug)}</b><small>${esc(s.effect)}</small><small>${s.tone?esc(s.tone)+" · ":""}${s.seconds??"?"} s${s.text_share!=null?" · text "+Math.round(s.text_share*100)+" %":""}</small></div></div>`).join("")||'<span class="mute">Nothing learned yet.</span>';
- $("design").innerHTML=d.designs.slice().reverse().map(x=>`<option value="${esc(x.name)}">${esc(x.name)} (${x.steps} ${x.steps==1?"step":"steps"})</option>`).join("");
- $("runs").innerHTML=d.runs.map(r=>`<div><span class="st ${esc(r.status)}">${esc(r.status)}</span> ${r.spent!=null?"$"+Number(r.spent).toFixed(3):""} <span class="mute">${esc(r.what)}</span>${r.clip?` · <a href="${file(r.clip)}" target="_blank">clip</a>`:""} · <a href="${file(r.run+"/page.html")}" target="_blank">page</a></div>`).join("")}
+ $("skills").innerHTML=d.skills.map(s=>`<details><summary><span class="sw">${(s.colors||[]).map(c=>`<i style="background:${esc(c)}"></i>`).join("")}</span>${esc(s.slug)}</summary><p>${esc(s.effect)}<span class="meta">${s.tone?esc(s.tone)+" · ":""}${s.seconds??"?"} s${s.text_share!=null?" · text "+Math.round(s.text_share*100)+" %":""}</span></p></details>`).join("")||'<span class="spent">Nothing learned yet.</span>';
+ $("design").innerHTML=d.designs.slice().sort((a,b)=>(b.name.startsWith("make")-a.name.startsWith("make"))||b.name.localeCompare(a.name)).map(x=>`<option value="${esc(x.name)}">${esc(x.name)} · ${x.steps} ${x.steps==1?"step":"steps"}</option>`).join("");
+ $("runs").innerHTML=d.runs.map(r=>`<div><span class="st ${esc(r.status)}">${esc(r.status)}</span><span class="cost">${r.spent!=null?"$"+Number(r.spent).toFixed(3):""}</span><span class="what">${esc(r.what)}</span>${r.clip?`<a href="${file(r.clip)}" target="_blank">clip</a>`:""}<a href="${file(r.run+"/page.html")}" target="_blank">page</a></div>`).join("")}
 function show(job){const ok=["DONE","BUILT","HAVE"].includes(job.status);
- $("result").innerHTML=`<div class="st ${esc(job.status)}">${esc(job.status||"?")}</div>${job.spent?`<div class="mute">${esc(job.spent)}</div>`:""}${job.clip?`<video src="${file(job.clip)}" controls autoplay loop></video>`:""}${job.run?`<div class="row"><a href="${file(job.run+"/page.html")}" target="_blank">run page</a><a href="${file(job.run+"/POSTUP.md")}" target="_blank">POSTUP.md</a></div>`:""}${!ok&&job.gap?`<pre>${esc(job.gap)}</pre>`:""}`}
+ $("result").innerHTML=`<div class="st ${esc(job.status)}">${esc(job.status||"?")}</div>${job.spent?`<div class="spent">${esc(job.spent)}</div>`:""}${job.clip?`<video src="${file(job.clip)}" controls autoplay loop></video>`:""}${job.run?`<div class="links"><a href="${file(job.run+"/page.html")}" target="_blank">run page</a><a href="${file(job.run+"/POSTUP.md")}" target="_blank">POSTUP.md</a></div>`:""}${!ok&&job.gap?`<pre>${esc(job.gap)}</pre>`:""}`}
 async function go(kind){const lines=$("lines").value.split("\n").map(s=>s.trim()).filter(Boolean);
  const body={home,lines,style:$("style").checked,design:$("design").value};
- ["make","replay"].forEach(b=>$(b).disabled=true);$("result").innerHTML='<span class="mute">Working… (make takes a minute or two)</span>';
+ ["make","replay"].forEach(b=>$(b).disabled=true);$("result").innerHTML='<span class="wait">Working… a make takes a minute or two</span>';
  try{const {job}=await j("/api/"+kind,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
   for(;;){await new Promise(r=>setTimeout(r,2000));const s=await j("/api/job?id="+job);if(s.state==="done"){show(s);break}}
  }catch(e){$("result").innerHTML=`<pre>${esc(e.message)}</pre>`}
