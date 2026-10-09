@@ -304,6 +304,8 @@ def _surfaces(
                 + tuple(look_checks(reel, output["file"], rhythm=False) if look else ()),
                 param_sources={"palette": "measured from the reel's frames"} if palette else {},
                 frames=tuple(nearest),
+                # one screen of a montage: reused for a whole reel only if it covers that reel
+                look_matters=True,
             )
         )
     return tuple(found)

@@ -89,7 +89,8 @@ def test_a_long_mark_is_drawn_smaller_inside_the_safe_zone(env, tmp_path):
     ran, checked = _render(env, t, clips, tmp_path, text="Configurations.")
     [(_x0, _y0, w, h)] = ran.value["layers"]
     zone = 1080 - 2 * round(montage.SAFE["left"] * 1080)
-    assert w <= zone and h < round(0.12 * 1920), (w, h)  # smaller than asked, to fit
+    # with no logo the mark is a monogram (one letter), never the word: at most a quarter of the width
+    assert w <= min(zone, round(1080 * montage.MARK_MAX_WIDTH)) and h <= round(0.12 * 1920), (w, h)
     assert checked.problems == (), checked.problems
 
 

@@ -17,6 +17,7 @@ from creature import criteria, workshop
 
 MONTAGE = "montage.mp4"
 MIN_EVERY, MAX_SOURCES, MAX_LAYERS = 2, 6, 2
+MARK_MAX_WIDTH = 0.25  # share of the frame's width a fixed mark may take
 MAX_S = 30.0  # a montage covers its reel, up to this long; one effect clip stays within criteria.MAX_S
 SAFE = {"left": 0.06, "right": 0.06, "top": 0.10, "bottom": 0.20}  # share of the frame kept clear
 MAX_STEP_RATIO = 1.5  # inside a scene, one frame's change at most 1.5x the one before or after
@@ -241,10 +242,13 @@ def render(
         "scenes": t["scenes"],
         "sources": sorted(clips),
         "layers": t["layers"],
-        "mark_text": (text.split() or ["?"])[0].strip(".,;:!?").upper()[:12],
+        # no logo given: a monogram (the first letter), as a mark is small; never the text's first word, which
+        # sat across every shot of a reel (9. 10., "CAPABILITIES" over the whole DcEZ montage)
+        "mark_text": ((text.strip(" .,;:!?\"'") or "?")[0]).upper(),
         "mark_font": FONT_FILES["Barlow Black"],
         "inks": inks(style),
         "safe": SAFE,
+        "mark_max_width": MARK_MAX_WIDTH,
         "out": MONTAGE,
     }
     return workshop.run(MONTAGE_CODE, job, files, limits=limits, image=image)
@@ -328,10 +332,11 @@ def run(input, work):
         left, right = math.ceil(safe["left"] * W), math.floor((1 - safe["right"]) * W)
         top, bottom = math.ceil(safe["top"] * H), math.floor((1 - safe["bottom"]) * H)
         alpha = mark_alpha(input, work, max(8, round(layer["height"] * H)))
-        if alpha.shape[1] > right - left:  # a long word: smaller, never wider than the safe zone
-            ratio = (right - left) / alpha.shape[1]
+        widest = min(right - left, round(W * input.get("mark_max_width", 1.0)))
+        if alpha.shape[1] > widest:  # a mark is a mark: smaller, never wider than a quarter of the frame
+            ratio = widest / alpha.shape[1]
             alpha = mark_alpha(input, work, max(8, int(alpha.shape[0] * ratio)))
-            alpha = alpha[:, : right - left]
+            alpha = alpha[:, :widest]
         h, w = alpha.shape
         x0 = int(round(layer.get("x", 0.5) * W - w / 2))
         y0 = int(round(layer.get("y", 0.5) * H - h / 2))
