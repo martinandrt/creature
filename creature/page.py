@@ -170,6 +170,16 @@ def _describe(e: dict[str, Any]) -> str:
             return f"attempt {e['attempt']}: judge {d.get('passed')}/{d.get('of')} criteria"
         why = "; ".join(d.get("problems", []))[:160] or d.get("error", "")
         return f"attempt {e['attempt']}: stopped at {d.get('stage')}: {why}"
+    if kind == "scored":
+        if not e.get("ok"):
+            why = (e.get("problems") or ["no reason given"])[0][:160]
+            return f"sound skipped, the clip stays silent: {why}"
+        cues, share = e.get("cue_count", len(e.get("cues", []))), e.get("aligned_share")
+        on = f"{share:.0%} of {cues} cues on an audio onset" if share is not None else "no cue to line up"
+        return (
+            f"sound added: {len(e.get('sounds', []))} sounds, {on}, "
+            f"rms {e.get('rms_db')} dBFS, peak {e.get('peak_db')} dBFS"
+        )
     keys = {
         "run_start": ("image",),
         "task": ("text",),

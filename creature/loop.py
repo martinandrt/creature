@@ -25,6 +25,7 @@ from creature import (
     perceive,
     planner,
     registry,
+    sound,
     tools,
     verdict,
     workshop,
@@ -47,7 +48,11 @@ class Report:
     spent_usd: float = 0.0
     fingerprint_same: bool = False
     clip: Path | None = None
+    cues: list[dict[str, Any]] | None = None  # a montage's cuts, so its sound is placed on them
     notes: list[str] = field(default_factory=list)
+
+
+SOUNDED = ("BUILT", "HAVE", "DONE")  # the statuses that end with a clip worth putting sound under
 
 
 class Creature:
@@ -79,7 +84,31 @@ class Creature:
     def model_for(self, step: str) -> str:
         return self.authority.models.get(step, self.authority.models["default"])
 
+    def add_sound(self, report: Report) -> None:
+        """Put sound under the clip of a run that finished with one: no model, the workshop only. A sound
+        that passes its measurement becomes the run's clip; otherwise the silent clip stays and a note says
+        why. Sound is a bonus: nothing here can turn a passed run into a failed one."""
+        if report.status not in SOUNDED or report.clip is None or not Path(report.clip).is_file():
+            return
+        if not self.authority.workshop.assets:
+            report.notes.append("no sound: this home mounts no asset library, the clip stays silent")
+            return
+        try:
+            scored = sound.score(
+                Path(report.clip), seed=self.ledger.run_id, cues=report.cues,
+                limits=self.authority.workshop, image=self.image,
+            )  # fmt: skip
+        except Exception as error:  # whatever breaks, the run keeps its silent clip
+            scored = sound.Scored.failed(f"{type(error).__name__}: {error}"[:300])
+        self.ledger.record("scored", **scored.event())
+        if scored.ok and scored.out is not None:
+            report.clip = scored.out
+        else:
+            why = scored.problems[0] if scored.problems else "the sound did not pass"
+            report.notes.append(f"no sound: {why}; the silent clip stays")
+
     def finish(self, report: Report) -> Report:
+        self.add_sound(report)
         end = authority.fingerprint(self.home, image_id=workshop.image_id(self.authority.image) or "missing")
         report.fingerprint_same = end.digest == self.start.digest
         report.spent_usd = self.ledger.spent_usd
@@ -496,7 +525,8 @@ class Creature:
                 tuple(criteria.look_checks(self.reel, montage.MONTAGE, rhythm=rhythm)) if wants_look else ()
             )
             clip, problems, checked = self.render_timeline(t, text, folder, mark=mark, style=None, extra=look)
-            report.clip = clip or report.clip
+            if clip:
+                report.clip, report.cues = clip, sound.timeline_cues(t)
             if problems or checked is None or not checked.strip:
                 feedback = "\n".join(f"Check failed: {p}" for p in problems)
                 continue
@@ -754,6 +784,7 @@ class Creature:
                 t, words, self.folder / "montage", mark=mark, style=style
             )
             report.clip = clip
+            report.cues = sound.timeline_cues(t) if clip else None
             if problems:
                 report.gap = "; ".join(problems)
                 return self.finish(report)
