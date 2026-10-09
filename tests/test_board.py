@@ -305,6 +305,28 @@ def test_a_design_replay_sits_with_the_reel_it_was_learned_from(tmp_path):
     assert "přehrání designu shorter" in groups["src:shorter"] and "<video" not in groups["src:shorter"]
 
 
+def test_an_archived_reel_goes_last_on_one_line_and_still_counts(tmp_path):
+    # archiv.txt next to the page (one source file name a line): those reels leave the main list and are
+    # shown last, one line each with their run count and cost; the totals on top still include their runs
+    base = tmp_path / "creature-homes"
+    home = _home(base, "one")
+    _run(home, "old", ("model_call", {"step": "s", "cost_usd": 0.5, "model": "m"}), source="Shelved.mp4")
+    _later()
+    _run(home, "again", ("run_end", {"status": "FAILED", "gap": "no"}), source="Shelved.mp4")
+    _later()
+    _run(home, "live", ("run_end", {"status": "BUILT"}), source="Live.mp4")
+    (base / board.ARCHIVE).write_text("Shelved.mp4\n\nMissing.mp4\n", encoding="utf-8")
+    out = base / "board.html"
+    board.render([home], out)
+    data = _data(out)
+    assert [g["id"] for g in data["runs"]] == ["src:Live.mp4", "archiv", "src:Shelved.mp4"]
+    shelved = data["runs"][-1]["html"]
+    assert "class='grp arch'" in shelved and "2 běhů" in shelved and "$0.500" in shelved
+    assert "<section class='run'>" not in shelved and "FAILED" in shelved  # one line, the newest run's status
+    assert "Archiv: odložené reely (1)" in data["runs"][1]["html"]  # Missing.mp4 has no run: not counted
+    assert "<b>3</b>běhů" in data["summary"] and "<b>$0.50</b>utraceno" in data["summary"]
+
+
 def test_a_render_that_fails_leaves_the_shell_and_says_why_in_the_data(tmp_path, monkeypatch):
     base = tmp_path / "creature-homes"
     home = _home(base, "one")
