@@ -34,8 +34,8 @@ textarea{flex:1;min-height:0;width:100%;background:transparent;border:0;color:va
   font:600 40px/1.5 var(--sans)}
 #picks{display:none;flex:1;min-height:0;overflow:auto}
 #picks.on{display:block}
-#picks div{display:flex;align-items:baseline;gap:18px;font:600 40px/1.5 var(--sans)}
-#picks .chip{flex:none;font:500 16px var(--mono);color:var(--acc);border-left:3px solid var(--acc);padding-left:10px;cursor:help;text-transform:lowercase}
+#picks div{font:600 40px/1.2 var(--sans);margin:0 0 14px}#picks div span:first-child{display:block}
+#picks .chip{display:inline-block;margin-top:4px;font:500 16px/1.4 var(--mono);color:var(--acc);border-left:3px solid var(--acc);padding-left:10px;cursor:help;text-transform:lowercase}
 #picks .chip.none{color:var(--mute);border-color:var(--line)}
 .how{margin:0 0 26px;padding:0 0 22px;list-style:none;counter-reset:h;border-bottom:1px solid var(--line);font-size:18px;color:var(--mute)}
 .how li{counter-increment:h;position:relative;padding-left:28px;margin:6px 0}.how li::before{content:counter(h);position:absolute;left:0;top:2px;font:700 16px var(--mono);color:var(--acc)}
