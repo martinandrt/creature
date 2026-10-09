@@ -173,3 +173,31 @@ def test_a_skill_remembers_whether_it_was_learned_from_a_finished_piece(root, re
         technique, capability={k: v for k, v in technique.capability.items() if k != "look_matters"}
     )
     assert registry.spec_of(old, "x").look_matters
+
+
+def test_installs_from_parallel_processes_all_land_in_the_index(root, ref, tmp_path):
+    # 31 reels in one home: four runs at once must not drop each other's skills from the index
+    import os
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    script = tmp_path / "one.py"
+    script.write_text(
+        "import sys\n"
+        "from pathlib import Path\n"
+        "from creature import registry\n"
+        "from tests.test_registry import _spec, ORIGIN, COST\n"
+        "root, ref, slug = Path(sys.argv[1]), Path(sys.argv[2]), sys.argv[3]\n"
+        "for n in range(5):\n"
+        "    registry.install(root, _spec(f'{slug}-{n}'), '# v1', origin=ORIGIN, cost=COST, reference=ref)\n"
+    )
+    procs = [
+        subprocess.Popen(
+            [sys.executable, str(script), str(root), str(ref), f"lane{i}"],
+            env={**os.environ, "PYTHONPATH": str(Path(__file__).parent.parent)},
+        )
+        for i in range(4)
+    ]
+    assert all(p.wait(timeout=60) == 0 for p in procs)
+    assert len(registry.skills(root)) == 20

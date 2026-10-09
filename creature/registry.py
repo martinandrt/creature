@@ -15,11 +15,15 @@ learned again becomes a new version; older versions stay, so a skill can evolve 
 
 from __future__ import annotations
 
+import contextlib
+import fcntl
+import functools
 import hashlib
 import json
 import os
 import re
 import tempfile
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -52,6 +56,38 @@ class Skill:
     path: Path
 
 
+_held: set[Path] = set()  # registries this process holds the lock of (a locked call may call another)
+
+
+@contextlib.contextmanager
+def _locked(root: Path) -> Iterator[None]:
+    """One writer at a time per registry, across processes: runs in parallel in one home would otherwise
+    read the index, both add an entry and the later write would drop the earlier one."""
+    root = root.resolve()
+    if root in _held:
+        yield
+        return
+    # next to the registry, not in it: a refused write leaves the registry folder as it was
+    root.parent.mkdir(parents=True, exist_ok=True)
+    with open(root.parent / f".{root.name}.lock", "a+") as handle:
+        fcntl.flock(handle, fcntl.LOCK_EX)
+        _held.add(root)
+        try:
+            yield
+        finally:
+            _held.discard(root)
+            fcntl.flock(handle, fcntl.LOCK_UN)
+
+
+def _writes[T](function: Callable[..., T]) -> Callable[..., T]:
+    @functools.wraps(function)
+    def locked(root: Path, *args: Any, **kwargs: Any) -> T:
+        with _locked(root):
+            return function(root, *args, **kwargs)
+
+    return locked
+
+
 def _index(root: Path) -> dict[str, Any]:
     path = root / INDEX
     if not path.is_file():
@@ -73,6 +109,7 @@ def _write_json(path: Path, data: Any) -> None:
     os.replace(tmp.name, path)
 
 
+@_writes
 def install(
     root: Path,
     spec: Spec,
@@ -232,6 +269,7 @@ def broken(root: Path) -> list[str]:
     return bad
 
 
+@_writes
 def activate(root: Path, slug: str, version: int) -> None:
     """Roll a skill forward or back to a version that exists."""
     index = _index(root)
@@ -242,6 +280,7 @@ def activate(root: Path, slug: str, version: int) -> None:
     _write_json(root / INDEX, index)
 
 
+@_writes
 def save_design(
     root: Path, name: str, steps: list[dict[str, Any]], *, origin: dict[str, Any]
 ) -> dict[str, Any]:
@@ -261,6 +300,7 @@ def save_design(
     return design
 
 
+@_writes
 def save_timeline(
     root: Path, name: str, t: dict[str, Any], *, origin: dict[str, Any], tests: dict[str, Any] | None = None
 ) -> dict[str, Any]:
@@ -319,6 +359,7 @@ def free_name(root: Path, base: str) -> str:
     return name
 
 
+@_writes
 def compose(root: Path, name: str, parts: list[str], *, origin: dict[str, Any]) -> dict[str, Any]:
     """A new design from known parts, in order: a design adds its steps, a skill adds its active
     version with the values it was learned with. Data only, no model."""
