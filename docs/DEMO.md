@@ -12,7 +12,8 @@ were verified on a temporary copy of `creature-ukazka`'s registry.
 ## 0. Before the camera
 
 - Docker running, workshop image built (`docker image inspect creature-workshop:v1`).
-- The board loop up (one terminal, keep it running):
+- The board loop up (one terminal, keep it running): `scripts/board-loop.sh` (finds every home again each
+  10 s, so a new home appears by itself), or by hand
   `uv run python -m creature.board --every=10 ~/Desktop/creature-homes/board.html ~/Desktop/creature-homes/*/`
   then open `~/Desktop/creature-homes/board.html` in a browser. The page never reloads: every 10 s it
   pulls `board-data.js` (written next to it) and patches itself in place, so a playing clip keeps playing
