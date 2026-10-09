@@ -593,6 +593,9 @@ def test_a_montage_reel_learns_its_surface_composes_and_saves_a_timeline(montage
     fake_model.assert_drained()
     root = home / "registry"
     assert registry.get(root, "grid-cards").version == 1
+    # a screen of a montage: reused for a whole reel only when it covers that reel (9. 10.: a 14 s reel was
+    # passed as HAVE by one typed label learned as one of its screens)
+    assert registry.spec_of(registry.get(root, "grid-cards"), "x").look_matters
     design = registry.design(root, "grid-promo")
     t = design["timeline"]
     # as long as the reel (12 s), not as the model said; a reel without cuts gives each source one share
@@ -617,7 +620,9 @@ def test_a_montage_reel_learns_its_surface_composes_and_saves_a_timeline(montage
         assert kind in kinds, kind
     assert kinds[-1] == "run_end" and any(n.startswith("gap: a product photo") for n in report.notes)
     [(job, files)] = calls["montages"]
-    assert job["frames"] == 360 and job["sources"] == ["a"] and job["mark_text"] == "STAY"
+    assert (
+        job["frames"] == 360 and job["sources"] == ["a"] and job["mark_text"] == "S"
+    )  # a monogram, never the word
     assert set(files) == {"a.mp4"} and job["inks"] == {"dark": "#111111", "light": "#f4f4f4"}
     # the source was rendered at the montage's length, not the 3 s it was learned on
     assert calls["renders"][-1]["output"]["duration_s"] == 12.0  # sources render as long as the montage
@@ -645,6 +650,25 @@ def test_a_saved_timeline_replays_with_the_users_style_at_no_cost(montage_world,
     [task] = [e for e in ledger.read(creature.ledger.path) if e["type"] == "design_task"]
     assert task["kind"] == "timeline" and task["style"] is True and task["mark"] is True
     assert report.clip == creature.folder / "montage" / "montage.mp4"
+
+
+def test_a_source_that_fails_in_a_replay_leaves_its_log_in_the_run(montage_world, fake_model, monkeypatch):
+    # opus-Db3DFh8Nr5y 01:57: a $0 replay FAILED with "4 of 4 render workers failed (see the log)" and the
+    # log was nowhere (the workers' tracebacks are in ran.log, which the spine dropped), so the cause was
+    # guessed wrong for an hour: it was a one-word text, not the length. The run folder keeps the log.
+    home, _ = montage_world
+    _learn_montage(home, fake_model)
+    log = "Traceback (most recent call last):\n  File frame.py, line 49\nValueError: max() arg is empty\n"
+    error = "RuntimeError: 4 of 4 render workers failed (see the log) (skill.py line 86)"
+    broken = workshop.WorkshopResult(False, None, {}, error, False, 0.8, log)
+    monkeypatch.setattr(loop.workshop, "run", lambda *a, **k: broken)
+    creature = _creature(home, FakeModel())
+    report = creature.run_design("grid-promo", "Frankenstein.")
+    assert report.status == "FAILED" and "4 of 4 render workers failed" in report.gap
+    saved = creature.folder / "montage" / "source-a" / "log.txt"
+    assert saved.exists() and "max() arg is empty" in saved.read_text(encoding="utf-8")
+    [event] = [e for e in ledger.read(creature.ledger.path) if e["type"] == "montage_source"]
+    assert event["ok"] is False and "4 of 4 render workers failed" in event.get("error", "")
 
 
 def test_a_choice_naming_no_known_skill_is_fed_back_not_rendered(montage_world, fake_model, monkeypatch):

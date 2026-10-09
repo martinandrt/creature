@@ -542,8 +542,10 @@ class Creature:
             if judged.ok:
                 origin = {"reel": source, "run": self.ledger.run_id, "author": self.reel.author}
                 tests = {"criteria": list(spec.criteria), "held_out": list(spec.held_out)}
-                name = registry.free_name(self.registry, spec.slug)
-                registry.save_timeline(self.registry, name, t, origin=origin, tests=tests)
+                saved = registry.save_timeline(
+                    self.registry, spec.slug, t, origin=origin, tests=tests, free=True
+                )
+                name = saved["name"]
                 report.status, report.skill = "BUILT", f"design:{name}"
                 return self.finish(report)
             feedback = verdict.feedback(checked, judged)
@@ -728,9 +730,12 @@ class Creature:
                 if ran.ok else None
             )  # fmt: skip
             problems = [f"the script failed: {ran.error}"] if not ran.ok else list(checked.problems)
+            if not ran.ok:  # the workers' tracebacks: the only place that says why a source failed
+                (place / "log.txt").write_text(ran.log[-4000:], encoding="utf-8")
             self.ledger.record(
                 "montage_source", source=sid, skill=skill.slug, version=skill.version, ok=not problems,
                 checks=problems or "all passed", seconds=ran.duration_s,
+                **({"error": str(ran.error)[:300]} if not ran.ok else {}),
             )  # fmt: skip
             if problems:
                 return None, [f"source {sid} ({skill.slug}): " + "; ".join(problems)], None

@@ -302,11 +302,23 @@ def save_design(
 
 @_writes
 def save_timeline(
-    root: Path, name: str, t: dict[str, Any], *, origin: dict[str, Any], tests: dict[str, Any] | None = None
+    root: Path,
+    name: str,
+    t: dict[str, Any],
+    *,
+    origin: dict[str, Any],
+    tests: dict[str, Any] | None = None,
+    free: bool = False,
 ) -> dict[str, Any]:
-    """A montage design: the timeline is the only source of time; its tests are what it passed."""
+    """A montage design: the timeline is the only source of time; its tests are what it passed. A taken name
+    is refused; with free=True the first free one (name, name-2, …) is chosen under the same lock, so two
+    runs in one home never get the same name. The design returned carries the name it was saved under."""
     from creature import montage
 
+    if free:
+        name = free_name(root, name)
+    elif name in _index(root)["designs"]:
+        raise FileExistsError(f"{name!r} is already a design; a design is never replaced")
     if not DESIGN_NAME.fullmatch(name):
         raise ValueError(f"bad design name {name!r}")
     index = _index(root)

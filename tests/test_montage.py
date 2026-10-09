@@ -196,6 +196,19 @@ def test_save_timeline_keeps_only_a_valid_timeline_over_known_skills(root):
     registry.taken(root, "fresh-name")
 
 
+def test_save_timeline_never_replaces_an_existing_design(root):
+    # free_name() and save_timeline() are two locked calls, not one: two runs of the same slug in one home
+    # (three reels run in parallel in mikro-s-knihovnou) can both be handed "promo-2", and the later save
+    # would silently replace the earlier design. The save itself must refuse a taken name.
+    sources = {"a": {"skill": "grid-cards", "version": 1, "params": {}}}
+    t = montage.timeline("promo", sources, ["a"], every=4, frames=180, layers=[])
+    registry.save_timeline(root, "promo", t, origin={"by": "first"})
+    with pytest.raises(FileExistsError):
+        registry.save_timeline(root, "promo", t, origin={"by": "second"})
+    assert registry.design(root, "promo")["origin"] == {"by": "first"}
+    assert registry.free_name(root, "promo") == "promo-2"
+
+
 def test_a_choice_with_no_known_source_is_a_timeline_problems_rejects_not_a_crash():
     # the composer may name skills that are not in the catalog; every one dropped must leave a timeline
     # that problems() rejects (no sources), so the spine feeds it back instead of dying on it
