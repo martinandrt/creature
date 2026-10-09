@@ -104,6 +104,8 @@ and look (up to 2 crops for the next round: time in seconds and box [x0, y0, x1,
 frame).
 When an asset library is mounted at /assets (described in the task), textures, photos, icons and fonts
 come from it, and geometry is drawn by the code itself.
+Motion is smooth: every move eases in and out (no linear moves, nothing jumps between two frames except
+at a cut), and an element that enters or leaves takes at least 6 frames to do it.
 Available in the sandbox, nothing else: Python 3.12, Pillow 11.3, numpy 2.5, scipy 1.18, ffmpeg.
 Fonts: {forge.FONTS}."""
 

@@ -438,3 +438,8 @@ def test_a_score_that_keeps_improving_is_not_a_plateau(home, tmp_path, monkeypat
                                      done=n == 8))  # fmt: skip
     result = r.build(rounds=30)
     assert result.ok and result.rounds == 8 and r.events("plateau") == []
+
+
+def test_the_forge_is_told_that_motion_eases():
+    # 9. 10.: "ok, but it could be smoother" on a montage the judge passed: easing is a rule, not a recipe
+    assert "eases in and out" in deep.SYSTEM and "at least 6 frames" in deep.SYSTEM
