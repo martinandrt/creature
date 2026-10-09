@@ -65,6 +65,7 @@ uv run python -m creature try reel.mp4 --text "Capabilities may grow. Authority 
 uv run python -m creature list
 uv run python -m creature design <name> --text "..." --style style.json   # no model, $0
 uv run python -m creature make --script lines.txt --style style.json      # one cheap call + one judge
+uv run python -m creature.ui ~/creature-homes      # a local page: a home's skills, make, replay
 ```
 
 The results below used `examples/authority-deep-assets.json` (Opus builder, up to 30 rounds, $4 per run,
