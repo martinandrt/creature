@@ -32,6 +32,7 @@ def test_without_a_practice_budget_the_creature_does_not_return(home, tmp_path):
     reel = tmp_path / "reel.mp4"
     reel.write_bytes(b"reel")
     _fail(home, FakeModel(), reel)
+    _authority(home, lambda raw: raw["caps"].pop("practice_budget_usd", None))  # a home without the key
     done = practice.practice(home, transport=FakeModel())
     assert done.returns == [] and "no practice budget" in done.stopped and _returns(home) == []
 
