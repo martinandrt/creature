@@ -12,6 +12,7 @@ from __future__ import annotations
 import contextlib
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -19,6 +20,7 @@ import threading
 import time
 import uuid
 from collections.abc import Mapping
+from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
@@ -81,7 +83,7 @@ class Desk:
                 designs.append({"name": design, "steps": len(data["steps"])})
         return {"name": name, "skills": skills, "designs": designs, "runs": self.runs(root)}
 
-    def runs(self, root: Path, last: int = 8) -> list[dict[str, Any]]:
+    def runs(self, root: Path, last: int = 12) -> list[dict[str, Any]]:
         found = []
         for path in sorted((root / "runs").glob("*.jsonl"), reverse=True)[:last]:
             events = ledger.read(path)
@@ -176,6 +178,55 @@ class Desk:
         progress = progress_of(ledger.read(path), found["lines"]) if path and path.is_file() else {}
         return {k: v for k, v in found.items() if k != "known"} | {"progress": progress}
 
+    def run(self, home: str, run: str) -> dict[str, Any]:
+        """One finished run as the page shows it: state, clip, progress (cost, calls, picks), and for each
+        skill it used the reel that skill was learned from, with that skill's learning cost."""
+        root = self.home(home)
+        path = root / "runs" / f"{run}.jsonl"
+        if not RUN_ID.fullmatch(run) or not path.is_file():
+            raise KeyError(f"no run {run!r}")
+        events = ledger.read(path)
+        task = next((e for e in events if e["type"] in ("make_task", "design_task")), {})
+        lines = task.get("lines") or task.get("texts") or [task.get("text", "")]
+        end = next((e for e in events if e["type"] == "run_end"), {})
+        progress = progress_of(events, len(lines))
+        used = [p["skill"] for p in progress["picks"] if p.get("skill")]
+        used += [e["skill"] for e in events if e["type"] == "design_step" and e.get("skill")]
+        learned = []
+        for slug in dict.fromkeys(used):
+            reel = self.reel(home, slug)
+            if reel:
+                learned.append(reel)
+        return {
+            "kind": "make" if task.get("type") == "make_task" else "design", "run": run, "lines": lines,
+            "status": end.get("status", "STOPPED"),
+            "clip": f"{run}/{end['clip']}" if end.get("clip") else None,
+            "gap": (end.get("gap") or "")[:300], "progress": progress, "learned": learned,
+            "seconds": _seconds(events[0].get("ts"), end.get("ts")) if events and end else None,
+        }  # fmt: skip
+
+    def reel(self, home: str, slug: str) -> dict[str, Any] | None:
+        """Where a skill came from: its reel (served by /reel when the file is still on this machine), the
+        run that learned it, and what learning it cost."""
+        try:
+            skill = registry.get(self.home(home) / "registry", slug)
+        except (KeyError, ValueError):
+            return None
+        origin, cost = skill.capability.get("origin", {}), skill.capability.get("cost", {})
+        source = Path(str(origin.get("reel", "")))
+        return {
+            "skill": slug, "reel": source.stem, "has_video": source.suffix == ".mp4" and source.is_file(),
+            "learn_usd": cost.get("learn_usd"), "attempts": cost.get("forge_attempts"),
+        }  # fmt: skip
+
+    def reel_file(self, home: str, slug: str) -> bytes:
+        """The reel a skill of this home was learned from: the path comes from its sealed record only."""
+        skill = registry.get(self.home(home) / "registry", slug)
+        source = Path(str(skill.capability.get("origin", {}).get("reel", "")))
+        if source.suffix != ".mp4" or not source.is_file():
+            raise PermissionError("the reel is not on this machine")
+        return source.read_bytes()
+
     def file(self, home: str, path: str) -> tuple[bytes, str]:
         """A file from the home's runs/ only: an mp4, a run page, a POSTUP.md or a picture."""
         runs = (self.home(home) / "runs").resolve()
@@ -183,6 +234,16 @@ class Desk:
         if runs not in wanted.parents or wanted.suffix not in SHOWN or not wanted.is_file():
             raise PermissionError("not a file of this home's runs")
         return wanted.read_bytes(), SHOWN[wanted.suffix]
+
+
+RUN_ID = re.compile(r"\d{8}T\d{6}Z-[0-9a-f]{6}")
+
+
+def _seconds(start: str | None, end: str | None) -> float | None:
+    try:
+        return round((datetime.fromisoformat(end) - datetime.fromisoformat(start)).total_seconds())
+    except (TypeError, ValueError):
+        return None
 
 
 def progress_of(events: list[dict[str, Any]], lines: int) -> dict[str, Any]:
@@ -272,6 +333,12 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(200, PAGE.encode(), "text/html; charset=utf-8")
             elif url.path == "/api/homes":
                 self._json(self.desk.home_names())
+            elif url.path == "/api/run":
+                self._json(self.desk.run(query.get("home", ""), query.get("run", "")))
+            elif url.path == "/reel":
+                self._send(
+                    200, self.desk.reel_file(query.get("home", ""), query.get("skill", "")), "video/mp4"
+                )
             elif url.path == "/api/home":
                 self._json(self.desk.describe(query.get("name", "")))
             elif url.path == "/api/job":

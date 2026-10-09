@@ -144,3 +144,19 @@ def test_progress_is_read_from_the_runs_ledger():
     assert p["picks"][0] == {"line": 1, "skill": "s1", "why": "dark"}
     events += [{"type": "make_judged", "ok": True}, {"type": "run_end", "status": "DONE"}]
     assert ui.progress_of(events, 2)["word"] == "DONE"
+
+
+def test_a_run_shows_the_reel_its_skills_were_learned_from(desk, world):
+    run = desk.describe(world.name)["runs"][0]["run"]
+    with pytest.raises(KeyError):
+        desk.run(world.name, "../x")
+    seen = desk.run(world.name, run)
+    assert seen["run"] == run and seen["status"] == "BUILT"
+    learned = desk.reel(world.name, "typewriter-reveal")
+    assert (
+        learned["skill"] == "typewriter-reveal"
+        and learned["reel"] == "reel"
+        and learned["has_video"] is False
+    )
+    with pytest.raises(PermissionError):
+        desk.reel_file(world.name, "typewriter-reveal")  # the reel is not on this machine

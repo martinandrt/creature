@@ -11,8 +11,8 @@
 body.video{--bg:#05070D;--panel:#0B1022;--text:#F5F6F8;--acc:#FFC926;--ink:#05070D;--mute:rgba(245,246,248,.45);--r:14px}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--text)}
-body{font:400 22px/1.4 var(--sans);display:grid;grid-template-rows:auto 1fr auto;height:100vh;overflow:hidden}
-::-webkit-scrollbar{display:none}
+body{font:400 22px/1.4 var(--sans);min-height:100vh}
+
 .mono{font-family:var(--mono)}
 .cap{font:500 16px/1.2 var(--mono);text-transform:uppercase;letter-spacing:.14em;color:var(--mute)}
 header{display:flex;align-items:center;gap:28px;padding:20px 40px;border-bottom:1px solid var(--line);position:relative}
@@ -28,8 +28,8 @@ select option{background:var(--bg)}
 #skills summary::-webkit-details-marker{display:none}
 #skills p{margin:4px 0 6px 46px;font-size:16px;color:var(--mute)}
 .sw{display:flex;gap:2px;flex:none}.sw i{width:10px;height:10px;outline:1px solid var(--line)}
-main{display:grid;grid-template-columns:minmax(0,1fr) auto;min-height:0}
-.left{padding:32px 40px;display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--line)}
+main{display:grid;grid-template-columns:minmax(380px,1fr) auto;border-bottom:1px solid var(--line)}
+.left{padding:32px 40px;display:flex;flex-direction:column;min-height:min(78vh,900px);border-right:1px solid var(--line)}
 textarea{flex:1;min-height:0;width:100%;background:transparent;border:0;color:var(--text);resize:none;outline:none;padding:0;
   font:600 40px/1.5 var(--sans)}
 #picks{display:none;flex:1;min-height:0;overflow:auto}
@@ -47,8 +47,8 @@ textarea{flex:1;min-height:0;width:100%;background:transparent;border:0;color:va
 .opts{display:flex;flex-direction:column;gap:6px;font:500 16px var(--mono);color:var(--mute)}
 .opts input{accent-color:var(--acc);width:18px;height:18px;vertical-align:-3px}
 button:disabled{opacity:.4;cursor:wait}
-.right{padding:28px 40px;display:flex;flex-direction:column;align-items:center;min-height:0}
-.frame{height:100%;min-height:0;aspect-ratio:9/16;background:var(--panel);position:relative;overflow:hidden;border-radius:var(--r)}
+.right{padding:28px 40px;display:flex;flex-direction:column}.pair{display:flex;gap:28px}.pair figure{margin:0}.pair figcaption{margin-bottom:10px;min-height:52px}.pair figcaption b{display:block;font:700 22px var(--sans);text-transform:none;letter-spacing:0;color:var(--text);margin-top:4px}
+.frame{height:min(68vh,780px);aspect-ratio:9/16;background:var(--panel);position:relative;overflow:hidden;border-radius:var(--r)}#learned .dot{opacity:.35}
 .frame video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;animation:sharp .4s ease-out}
 @keyframes sharp{from{filter:blur(18px);opacity:.6}to{filter:none;opacity:1}}
 .dot{position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px;border-radius:50%;background:var(--acc);box-shadow:0 0 24px var(--acc)}
@@ -58,11 +58,11 @@ button:disabled{opacity:.4;cursor:wait}
 .line{height:3px;background:var(--line);margin-top:22px;position:relative}
 .line i{position:absolute;left:0;top:0;bottom:0;background:var(--acc);transition:width .6s}
 .line i::after{content:"";position:absolute;right:-4px;top:-4px;width:11px;height:11px;border-radius:50%;background:var(--acc);box-shadow:0 0 16px var(--acc)}
-.under{height:30px;margin-top:14px;font:500 17px var(--mono);color:var(--mute);display:flex;gap:18px;white-space:nowrap}
+.under{min-height:30px;margin-top:16px;font:500 17px var(--mono);color:var(--mute);display:flex;gap:10px 18px;flex-wrap:wrap}#playboth{all:unset;cursor:pointer;color:var(--acc);font:700 15px var(--mono);text-transform:uppercase;letter-spacing:.1em}
 .under a{color:var(--acc);text-decoration:none}
 .st{font-weight:700}.DONE,.BUILT,.HAVE{color:var(--ok)}.FAILED{color:var(--bad)}.RUNNING{color:var(--acc)}
 footer{border-top:1px solid var(--line);padding:12px 40px 16px}
-#runs div{display:flex;gap:18px;font:500 16px var(--mono);color:var(--mute);padding:3px 0;white-space:nowrap;overflow:hidden}
+#runs div{display:flex;gap:18px;font:500 16px var(--mono);color:var(--mute);padding:5px 0;white-space:nowrap;overflow:hidden;cursor:pointer}#runs div:hover .what{color:var(--acc)}#runs div.on .what{color:var(--acc)}
 #runs .what{font-family:var(--sans);font-size:17px;color:var(--text);overflow:hidden;text-overflow:ellipsis;min-width:0}
 #runs a{color:var(--acc);text-decoration:none}
 @media (max-width:1200px){
@@ -71,7 +71,7 @@ footer{border-top:1px solid var(--line);padding:12px 40px 16px}
  main{grid-template-columns:1fr}
  .left{border-right:0;border-bottom:1px solid var(--line);padding:22px 20px}
  textarea,#picks div{font-size:30px}textarea{min-height:240px;flex:none}
- .right{padding:22px 20px}.frame{height:auto;width:min(100%,420px)}
+ .right{padding:22px 20px}.pair{flex-wrap:wrap}.pair figure{width:min(100%,420px)}.frame{height:auto;width:100%}
  .under{flex-wrap:wrap;height:auto}
  #skills{columns:1;padding:12px 20px}
  footer{padding:12px 20px}#runs div{flex-wrap:wrap;white-space:normal}
@@ -97,9 +97,12 @@ Zero new authority.</textarea>
   <button id="edit" hidden>edit script</button>
  </div>
 </section>
-<section class="right"><div class="frame" id="frame"><div class="dot"></div></div><div class="under" id="under"></div></section>
+<section class="right"><div class="pair">
+ <figure><figcaption class="cap">Learned from<b id="lname">—</b></figcaption><div class="frame" id="learned"><div class="dot"></div></div></figure>
+ <figure><figcaption class="cap">Made <button id="playboth">▶ play both</button><b id="mname">—</b></figcaption><div class="frame" id="frame"><div class="dot"></div></div></figure>
+</div><div class="under" id="under"></div><div class="under" id="under2"></div></section>
 </main>
-<footer><div class="cap" style="margin-bottom:6px">Last runs</div><div id="runs"></div></footer>
+<footer><div class="cap" style="margin-bottom:6px">Last runs · click one to show it</div><div id="runs"></div></footer>
 <script>
 const $=id=>document.getElementById(id);let home="";
 if(new URLSearchParams(location.search).has("video"))document.body.classList.add("video");
@@ -112,7 +115,21 @@ async function load(){const d=await j("/api/home?name="+encodeURIComponent(home)
  $("nskills").textContent=d.skills.length;$("ndesigns").textContent=`${d.designs.length} designs`;
  $("skills").innerHTML=d.skills.map(s=>`<details><summary><span class="sw">${(s.colors||[]).map(c=>`<i style="background:${esc(c)}"></i>`).join("")}</span>${esc(s.slug)}</summary><p>${esc(s.effect)}<br><span class="mono">${s.tone?esc(s.tone)+" · ":""}${s.seconds??"?"} s${s.text_share!=null?" · text "+Math.round(s.text_share*100)+" %":""}</span></p></details>`).join("")||"Nothing learned yet.";
  $("design").innerHTML=d.designs.slice().sort((a,b)=>(b.name.startsWith("make")-a.name.startsWith("make"))||b.name.localeCompare(a.name)).map(x=>`<option value="${esc(x.name)}">${esc(x.name)} · ${x.steps} ${x.steps==1?"step":"steps"}</option>`).join("");
- $("runs").innerHTML=d.runs.slice(0,5).map(r=>`<div><span class="st ${esc(r.status)}">${esc(r.status.split(" ")[0])}</span><span>${r.spent!=null?"$"+Number(r.spent).toFixed(3):""}</span><span class="what">${esc(r.what)}</span>${r.clip?`<a href="${file(r.clip)}" target="_blank">clip</a>`:""}<a href="${file(r.run+"/page.html")}" target="_blank">page</a></div>`).join("")}
+ $("runs").innerHTML=d.runs.slice(0,8).map(r=>`<div data-run="${esc(r.run)}" class="${r.run===shown?"on":""}"><span class="st ${esc(r.status)}">${esc(r.status.split(" ")[0])}</span><span>${r.spent!=null?"$"+Number(r.spent).toFixed(3):""}</span><span class="what">${esc(r.what)}</span><a href="${file(r.run+"/page.html")}" target="_blank" onclick="event.stopPropagation()">page</a></div>`).join("");
+ document.querySelectorAll("#runs div").forEach(el=>el.onclick=()=>show(el.dataset.run));
+ if(!shown){const best=d.runs.find(r=>r.status==="DONE"&&r.clip&&r.spent>0)||d.runs.find(r=>r.clip);if(best)show(best.run)}}
+let shown="";
+async function show(run){shown=run;const r=await j(`/api/run?home=${encodeURIComponent(home)}&run=${encodeURIComponent(run)}`);
+ const p=r.progress||{};const st=r.status;
+ $("frame").innerHTML=r.clip?`<video id="vb" src="${file(r.clip)}" autoplay loop playsinline ${$("sound").checked?"":"muted"}></video>`:`<div class="state"><div class="word ${esc(st)}">${esc(st)}</div><div class="sub">${esc(r.gap.slice(0,160))}</div></div>`;
+ $("mname").textContent=`${r.lines.length} ${r.lines.length==1?"line":"lines"} · ${r.kind}`;
+ const src=(r.learned||[]).find(x=>x.has_video)||(r.learned||[])[0];
+ $("learned").innerHTML=src&&src.has_video?`<video id="va" src="/reel?home=${encodeURIComponent(home)}&skill=${encodeURIComponent(src.skill)}" autoplay loop muted playsinline></video>`:'<div class="dot"></div>';
+ $("lname").textContent=src?src.reel:"—";
+ $("under").innerHTML=`<span class="st ${esc(st)}">${esc(st)}</span><span>$${Number(p.spent||0).toFixed(3)}</span><span>${p.calls||0} model calls</span>${r.seconds!=null?`<span>${r.seconds} s</span>`:""}<a href="${file(run+"/page.html")}" target="_blank">run page</a><a href="${file(run+"/POSTUP.md")}" target="_blank">POSTUP</a>`;
+ $("under2").innerHTML=(r.learned||[]).map(x=>`<span>${esc(x.skill)} learned from ${esc(x.reel)}${x.learn_usd!=null?` · $${Number(x.learn_usd).toFixed(2)}`:""}${x.attempts?` · ${x.attempts} attempts`:""}</span>`).join("");
+ editing();if(r.kind==="make"){$("lines").value=r.lines.join("\n");picks(r.lines,p.picks)}
+ document.querySelectorAll("#runs div").forEach(el=>el.classList.toggle("on",el.dataset.run===run))}
 function picks(lines,list){if(!list||!list.length)return;const by={};list.forEach(p=>by[p.line]=p);
  $("picks").innerHTML=lines.map((l,i)=>{const p=by[i+1];return `<div><span>${esc(l)}</span>${p&&p.skill?`<span class="chip" title="${esc(p.why)}">${esc(p.skill)}</span>`:`<span class="chip none">—</span>`}</div>`}).join("");
  $("picks").classList.add("on");$("lines").style.display="none";$("edit").hidden=false}
@@ -120,7 +137,7 @@ function editing(){$("picks").classList.remove("on");$("lines").style.display=""
 function working(p){const w=(p&&p.word)||"STARTING";const of=p&&p.of?p.of:0;const step=p?p.step:0;
  const share=w==="JUDGED"?100:of?Math.round(85*step/of)+(w==="RENDERING"?5:0):5;
  $("frame").innerHTML=`<div class="state"><div class="word RUNNING">${esc(w)}</div><div class="sub">${w==="RENDERING"&&of?`shot ${Math.min(step+1,of)} / ${of}`:""}${p&&p.attempt>1?` · composition ${p.attempt}`:""}${p&&p.calls?` · ${p.calls} model calls`:""}</div><div class="line"><i style="width:${share}%"></i></div></div>`}
-function done(job,lines){const p=job.progress||{};const st=job.status||p.word||"?";
+function done(job,lines){if(job.run){show(job.run);return}const p=job.progress||{};const st=job.status||p.word||"?";
  $("frame").innerHTML=job.clip?`<video src="${file(job.clip)}" autoplay loop playsinline ${$("sound").checked?"":"muted"} controls></video>`:`<div class="state"><div class="word ${esc(st)}">${esc(st)}</div><div class="sub">${esc((job.gap||"").slice(0,160))}</div></div>`;
  $("under").innerHTML=`<span class="st ${esc(st)}">${esc(st)}</span><span>$${Number(p.spent||0).toFixed(3)}</span><span>${p.calls||0} model calls</span>${job.run?`<a href="${file(job.run+"/page.html")}" target="_blank">run page</a><a href="${file(job.run+"/POSTUP.md")}" target="_blank">POSTUP</a>`:""}`;
  if(job.kind==="make")picks(lines,p.picks)}
@@ -132,6 +149,6 @@ async function go(kind){const lines=$("lines").value.split("\n").map(s=>s.trim()
    if(s.state==="done"){done(s,lines);break}working(s.progress);if(kind==="make")picks(lines,s.progress&&s.progress.picks)}
  }catch(e){$("frame").innerHTML=`<div class="state"><div class="word FAILED">ERROR</div><div class="sub">${esc(e.message)}</div></div>`}
  ["make","replay"].forEach(b=>$(b).disabled=false);load()}
-$("home").onchange=e=>{home=e.target.value;load()};$("make").onclick=()=>go("make");$("replay").onclick=()=>go("design");
-$("edit").onclick=editing;$("skillsbtn").onclick=()=>$("skills").classList.toggle("open");homes();
+$("home").onchange=e=>{home=e.target.value;shown="";load()};$("make").onclick=()=>go("make");$("replay").onclick=()=>go("design");
+$("edit").onclick=editing;$("playboth").onclick=()=>{["va","vb"].forEach(id=>{const v=$(id);if(v){v.currentTime=0;v.play()}})};$("skillsbtn").onclick=()=>$("skills").classList.toggle("open");homes();
 </script></html>
