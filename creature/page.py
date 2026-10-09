@@ -190,6 +190,7 @@ def _describe(e: dict[str, Any]) -> str:
     keys = {
         "run_start": ("image",),
         "make_task": ("lines", "style"),
+        "make_catalog": ("skills", "left_out"),
         "make_shot": ("line", "skill", "checks"),
         "card": ("skill", "tone", "background", "text_share", "moving_share", "error"),
         "cards_task": ("skills",),

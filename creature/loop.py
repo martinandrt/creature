@@ -24,6 +24,7 @@ from creature import (
     page,
     perceive,
     planner,
+    postup,
     registry,
     sound,
     tools,
@@ -123,6 +124,11 @@ class Creature:
         events = ledger.read(self.ledger.path)
         page.render(self.folder, report, events)
         page.overview(self.home)
+        try:  # the written record is a bonus: it never changes how the run ended
+            record = postup.write(self.folder, events)
+            postup.for_skills(self.registry, events, record.read_text(encoding="utf-8"))
+        except Exception as error:
+            report.notes.append(f"no POSTUP.md: {type(error).__name__}: {error}"[:300])
         return report
 
     def needs_library(self, skill: registry.Skill) -> str:
@@ -926,6 +932,12 @@ class Creature:
         ]  # fmt: skip
         cards = self.cards(effects)
         catalog = [(s, cards[s.slug]) for s in effects if s.slug in cards]
+        for skill in effects:
+            if skill.slug not in cards:  # visible on the page: a skill without a card is not offered
+                report.notes.append(f"{skill.slug}: no style card, left out of the catalog")
+        self.ledger.record("make_catalog", skills=[s.slug for s, _ in catalog], left_out=[
+            s.slug for s in effects if s.slug not in cards
+        ])  # fmt: skip
         if not catalog:
             report.gap = "no skill with a style card to compose from"
             return self.finish(report)
@@ -983,7 +995,6 @@ class Creature:
             judged = maker.judge(self.model, lines, spans, strips, cap_usd=self.cap("judge"))
             self.ledger.record("make_judged", attempt=attempt, **judged)
             if judged["ok"]:
-                name = registry.free_name(self.registry, "make")
                 steps = [
                     {
                         "skill": s.slug,
@@ -993,7 +1004,7 @@ class Creature:
                     for s, _ in chosen
                 ]
                 origin = {"composed_by": "make", "run": self.ledger.run_id, "lines": lines}
-                registry.save_design(self.registry, name, steps, origin=origin)
+                name = registry.save_design(self.registry, "make", steps, origin=origin, free=True)["name"]
                 report.notes.append(f"design: {name} (replay: creature design {name} --text <each line>)")
                 report.status, report.clip, report.cues = "DONE", joined, cues
                 return self.finish(report)

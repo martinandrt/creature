@@ -15,8 +15,9 @@ from typing import Any
 
 from creature import forge, registry, workshop
 
-VERSION = 1
-TEXTS = ("Hello", "A much longer second line of text")  # two renders differ only where the text is
+VERSION = 2  # 2: probe texts are sentences (a one-word text killed skills that split their text)
+# two renders differ only where the text is; both are sentences, like the texts skills were learned on
+TEXTS = ("Stay curious. Keep going.", "A much longer second line of text. It shows where the words land.")
 SIZE = (54, 96)  # frames are read this small: enough for colours and areas, cheap to decode
 SAMPLES = 12
 

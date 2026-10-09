@@ -33,6 +33,7 @@ from creature.criteria import SLUG, Spec
 INDEX = "index.json"
 SEALED = ("skill.py", "tests.json", "reference.png")  # hashed at install, checked on every read
 REFERENCE = "reference.png"
+POSTUP = "POSTUP.md"  # how it was made, written from the run's ledger (not sealed)
 CARD = "card.json"  # the style card, measured from the skill's own renders (not sealed)
 DESIGNS = "designs"
 DESIGN_NAME = re.compile(r"[a-z][a-z0-9-]{2,40}")
@@ -283,9 +284,14 @@ def activate(root: Path, slug: str, version: int) -> None:
 
 @_writes
 def save_design(
-    root: Path, name: str, steps: list[dict[str, Any]], *, origin: dict[str, Any]
+    root: Path, name: str, steps: list[dict[str, Any]], *, origin: dict[str, Any], free: bool = False
 ) -> dict[str, Any]:
-    """A design is data: skills in order, each with its version and values. It runs without a planner."""
+    """A design is data: skills in order, each with its version and values. It runs without a planner.
+    With free=True the first free name (name, name-2, …) is taken under the same lock and returned in
+    the design, so two runs never replace each other's; without it a learned skill's own design is
+    rewritten in place."""
+    if free:
+        name = free_name(root, name)
     if not DESIGN_NAME.fullmatch(name):
         raise ValueError(f"bad design name {name!r}")
     index = _index(root)
@@ -346,6 +352,15 @@ def save_card(root: Path, slug: str, version: int, card: dict[str, Any]) -> None
     if entry is None or version not in entry["versions"]:
         raise KeyError(f"no skill {slug!r} v{version}")
     _write_json(root / slug / str(version) / CARD, card)
+
+
+@_writes
+def save_postup(root: Path, slug: str, version: int, text: str) -> None:
+    """How the skill was made (postup.py), beside its sealed files: origin, limits, the run. Not sealed."""
+    entry = _index(root)["skills"].get(slug)
+    if entry is None or version not in entry["versions"]:
+        raise KeyError(f"no skill {slug!r} v{version}")
+    (root / slug / str(version) / POSTUP).write_text(text, encoding="utf-8")
 
 
 def card(skill: Skill) -> dict[str, Any] | None:

@@ -203,3 +203,25 @@ def test_save_card_refuses_an_unknown_skill(world, made):
     path = registry.get(world / "registry", "typewriter-reveal").path / registry.CARD
     registry.save_card(world / "registry", "typewriter-reveal", 1, {"card": 1, "tone": "dark"})
     assert json.loads(path.read_text())["tone"] == "dark"
+
+
+def test_the_card_probe_texts_are_sentences_not_a_single_word():
+    # QA: a one-word probe killed type-specimen-card, which then left make's catalog without a word
+    assert all(len(t.split()) >= 3 for t in card.TEXTS)
+
+
+def test_a_skill_whose_card_fails_is_named_as_left_out(world, made, monkeypatch):
+    monkeypatch.setattr(card, "measure", lambda *a, **k: {"error": "render on 'x' failed"})
+    report = _creature(world, FakeModel()).make(LINES)
+    assert (
+        report.status == "FAILED"
+        and "typewriter-reveal: no style card, left out of the catalog" in report.notes
+    )
+
+
+def test_two_makes_never_replace_each_other(world, made):
+    for _ in range(2):
+        fake = FakeModel().queue("compose", _choice("typewriter-reveal", "typewriter-reveal"))
+        fake.queue("judge", _judged())
+        _creature(world, fake).make(LINES)
+    assert registry.designs(world / "registry") == ["make", "make-2", "typewriter-reveal"]

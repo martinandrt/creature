@@ -41,6 +41,7 @@ def main(argv: list[str] | None = None) -> int:
     made.add_argument("--script", required=True, help="a text file: one line of the script per shot")
     made.add_argument("--style", help="a JSON file with my colours and fonts, used over the learned ones")
     sub.add_parser("cards", help="measure each skill's style card (renders and fixed code, no model)")
+    sub.add_parser("postup", help="write POSTUP.md again for every finished run, from its ledger (no model)")
     sub.add_parser("list", help="learned skills and designs")
     shown = sub.add_parser("show", help="one skill: manifest and tests")
     shown.add_argument("slug")
@@ -147,6 +148,12 @@ def main(argv: list[str] | None = None) -> int:
         for number, step in enumerate(made["steps"], start=1):
             print(f"{number}. {step['skill']} v{step['version']}")
         print(f"design: {args.name}  (run it: creature design {args.name} --text ...)")
+        return 0
+    if args.command == "postup":
+        from creature import postup
+
+        written = postup.rebuild(root)
+        print(f"{len(written)} runs have a POSTUP.md")
         return 0
     if args.command == "list":
         for skill in registry.skills(root / "registry"):
