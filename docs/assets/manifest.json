@@ -1,0 +1,6141 @@
+{
+  "knihovna": "creature-assets",
+  "verze": 3,
+  "vytvoreno": "2026-10-08",
+  "cesta": "~/Desktop/creature-assets",
+  "popis_pro_agenta": "README.md",
+  "licence": "LICENSES.md",
+  "pravidla": {
+    "barva": "Vlastní SVG a ikony Lucide barví currentColor, nastav color na rodiči nebo nahraď currentColor. Postavy Open Peeps mají pevnou černou a bílou.",
+    "svg": "Vlastní SVG: jen jednoduché tvary a cesty, žádné rastry, skripty, text ani filtry.",
+    "textury": "Vlastní PNG 1080x1920 v odstínech šedi, obarvit prolnutím nebo maskou. Textury Poly Haven jsou barevné JPG 1080x1920. Textury mozaika-* slouží i jako maska pro odhalení po pixelech prahem.",
+    "zare": "Bílé PNG s průhledností, obarvit tónováním, prolnutí screen nebo add. Okraj je plně průhledný.",
+    "fotky": "JPG, delší strana 2000 px. NASA je volné dílo, ne CC0: bez loga NASA a bez naznačení podpory NASA.",
+    "palety": "palety.json",
+    "pisma": "TTF z Google Fonts pod OFL 1.1, beze změny. OFL.txt drž u písma. Role je v podkategorie: text, grotesk-tech, grotesk-sirka, grotesk-zaobleny, nadpis-uzky, nadpis-tezky, serif-akcent, neproporcionalni.",
+    "pohyb": "pohyb.json: křivky cubic-bezier, pružiny, délky a rozestupy při 30 fps. Jen data, žádné animace.",
+    "zvuky": "Vlastní: WAV 48 kHz, 24 bit, špička -3 dBFS, bez ticha na začátku, smyčky bez švu. Kenney: WAV 48 kHz 16 bit, původní hlasitost (špička kolem 0 dBFS, viz spicka_dbfs).",
+    "zdroj_a_licence": "Každý prvek má pole zdroj a licence. Vlastní prvky mají obojí „vlastní“."
+  },
+  "pohyb": {
+    "soubor": "pohyb.json",
+    "zdroj": "vlastní",
+    "licence": "vlastní",
+    "fps": 30,
+    "krivky": 20,
+    "pruziny": 4,
+    "krivky_podle_stitku": {
+      "jemná": [
+        "jemny-dojezd",
+        "jemny-nabeh",
+        "jemny-prechod",
+        "mekky-dojezd",
+        "mekky-prechod",
+        "plynuly-prechod"
+      ],
+      "ostrá": [
+        "ostry-dojezd",
+        "ostry-nabeh",
+        "ostry-prechod",
+        "prudky-dojezd",
+        "prudky-nabeh",
+        "prudky-prechod"
+      ],
+      "s přestřelením": [
+        "prestrel-maly",
+        "prestrel",
+        "prestrel-velky",
+        "naprah-nabeh",
+        "naprah-prechod"
+      ],
+      "odraz": [
+        "odraz-mekky",
+        "odraz",
+        "odraz-silny"
+      ]
+    },
+    "pruziny_jmena": [
+      "klidna",
+      "svizna",
+      "pruzna",
+      "skakava"
+    ],
+    "delky": {
+      "kratka": [
+        6,
+        10
+      ],
+      "stredni": [
+        12,
+        20
+      ],
+      "dlouha": [
+        24,
+        45
+      ]
+    },
+    "rozestupy": {
+      "tesny": [
+        1,
+        2
+      ],
+      "obvykly": [
+        3,
+        4
+      ],
+      "volny": [
+        6,
+        8
+      ]
+    },
+    "nahled": "archy/pohyb.png"
+  },
+  "pocty": {
+    "tvary": 40,
+    "ramecky-a-rozhrani": 34,
+    "ikony": 100,
+    "sipky-a-spojnice": 15,
+    "cisla-a-znacky": 15,
+    "znacka": 3,
+    "konstrukce": 4,
+    "textury": 29,
+    "zare": 4,
+    "zvuk": 49,
+    "postavy": 10,
+    "fotky": 20,
+    "pisma": 16
+  },
+  "pocty_zdroje": {
+    "vlastní": 203,
+    "Lucide": 60,
+    "Open Peeps": 10,
+    "Poly Haven": 10,
+    "Smithsonian Open Access": 4,
+    "The Met Open Access": 12,
+    "NASA Image and Video Library": 4,
+    "Kenney UI Audio": 20,
+    "Google Fonts": 16
+  },
+  "celkem": 339,
+  "prvky": [
+    {
+      "jmeno": "kruh",
+      "kategorie": "tvary",
+      "stitky": [
+        "kruh",
+        "circle",
+        "plny"
+      ],
+      "soubor": "tvary/kruh.svg",
+      "viewBox": "0 0 100 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "kruh-obrys",
+      "kategorie": "tvary",
+      "stitky": [
+        "kruh",
+        "circle",
+        "obrys",
+        "outline"
+      ],
+      "soubor": "tvary/kruh-obrys.svg",
+      "viewBox": "0 0 100 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "kruh-carkovany",
+      "kategorie": "tvary",
+      "stitky": [
+        "kruh",
+        "circle",
+        "orbita",
+        "carkovany",
+        "dashed"
+      ],
+      "soubor": "tvary/kruh-carkovany.svg",
+      "viewBox": "0 0 100 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "prstenec",
+      "kategorie": "tvary",
+      "stitky": [
+        "kruh",
+        "ring",
+        "donut",
+        "prstenec"
+      ],
+      "soubor": "tvary/prstenec.svg",
+      "viewBox": "0 0 100 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "pulkruh",
+      "kategorie": "tvary",
+      "stitky": [
+        "pulkruh",
+        "semicircle",
+        "plny"
+      ],
+      "soubor": "tvary/pulkruh.svg",
+      "viewBox": "0 0 100 50",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "ctvrtkruh",
+      "kategorie": "tvary",
+      "stitky": [
+        "ctvrtkruh",
+        "quarter circle",
+        "roh"
+      ],
+      "soubor": "tvary/ctvrtkruh.svg",
+      "viewBox": "0 0 100 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "oblouk-tenky",
+      "kategorie": "tvary",
+      "stitky": [
+        "oblouk",
+        "arc",
+        "tenky"
+      ],
+      "soubor": "tvary/oblouk-tenky.svg",
+      "viewBox": "0 0 100 54",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "oblouk-silny",
+      "kategorie": "tvary",
+      "stitky": [
+        "oblouk",
+        "arc",
+        "silny",
+        "bold"
+      ],
+      "soubor": "tvary/oblouk-silny.svg",
+      "viewBox": "0 0 120 52",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "oblouk-ctvrt",
+      "kategorie": "tvary",
+      "stitky": [
+        "oblouk",
+        "arc",
+        "ctvrt",
+        "90"
+      ],
+      "soubor": "tvary/oblouk-ctvrt.svg",
+      "viewBox": "0 0 100 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "pilulka",
+      "kategorie": "tvary",
+      "stitky": [
+        "pilulka",
+        "pill",
+        "kapsle",
+        "plny"
+      ],
+      "soubor": "tvary/pilulka.svg",
+      "viewBox": "0 0 200 80",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "pilulka-obrys",
+      "kategorie": "tvary",
+      "stitky": [
+        "pilulka",
+        "pill",
+        "obrys"
+      ],
+      "soubor": "tvary/pilulka-obrys.svg",
+      "viewBox": "0 0 200 80",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "pilulka-svisla",
+      "kategorie": "tvary",
+      "stitky": [
+        "pilulka",
+        "pill",
+        "svisla",
+        "vertical"
+      ],
+      "soubor": "tvary/pilulka-svisla.svg",
+      "viewBox": "0 0 80 200",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "ctverec-zaobleny",
+      "kategorie": "tvary",
+      "stitky": [
+        "ctverec",
+        "square",
+        "zaobleny",
+        "rounded"
+      ],
+      "soubor": "tvary/ctverec-zaobleny.svg",
+      "viewBox": "0 0 100 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "ctverec-obrys",
+      "kategorie": "tvary",
+      "stitky": [
+        "ctverec",
+        "square",
+        "obrys",
+        "ostre rohy"
+      ],
+      "soubor": "tvary/ctverec-obrys.svg",
+      "viewBox": "0 0 100 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "kosoctverec",
+      "kategorie": "tvary",
+      "stitky": [
+        "kosoctverec",
+        "diamond",
+        "rhombus"
+      ],
+      "soubor": "tvary/kosoctverec.svg",
+      "viewBox": "0 0 100 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "trojuhelnik",
+      "kategorie": "tvary",
+      "stitky": [
+        "trojuhelnik",
+        "triangle",
+        "plny"
+      ],
+      "soubor": "tvary/trojuhelnik.svg",
+      "viewBox": "0 0 100 88",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "trojuhelnik-obrys",
+      "kategorie": "tvary",
+      "stitky": [
+        "trojuhelnik",
+        "triangle",
+        "obrys"
+      ],
+      "soubor": "tvary/trojuhelnik-obrys.svg",
+      "viewBox": "0 0 100 88",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "trojuhelnik-pravouhly",
+      "kategorie": "tvary",
+      "stitky": [
+        "trojuhelnik",
+        "right triangle",
+        "roh"
+      ],
+      "soubor": "tvary/trojuhelnik-pravouhly.svg",
+      "viewBox": "0 0 100 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "trojuhelnik-zaobleny",
+      "kategorie": "tvary",
+      "stitky": [
+        "trojuhelnik",
+        "triangle",
+        "zaobleny",
+        "soft"
+      ],
+      "soubor": "tvary/trojuhelnik-zaobleny.svg",
+      "viewBox": "0 0 100 88",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "hvezda-4",
+      "kategorie": "tvary",
+      "stitky": [
+        "hvezda",
+        "star",
+        "ctyrcipa"
+      ],
+      "soubor": "tvary/hvezda-4.svg",
+      "viewBox": "0 0 100 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "hvezda-5",
+      "kategorie": "tvary",
+      "stitky": [
+        "hvezda",
+        "star",
+        "peticipa"
+      ],
+      "soubor": "tvary/hvezda-5.svg",
+      "viewBox": "0 0 100 96",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "hvezda-6",
+      "kategorie": "tvary",
+      "stitky": [
+        "hvezda",
+        "star",
+        "sesticipa"
+      ],
+      "soubor": "tvary/hvezda-6.svg",
+      "viewBox": "0 0 100 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "paprsky-16",
+      "kategorie": "tvary",
+      "stitky": [
+        "paprsky",
+        "burst",
+        "badge",
+        "hvezda"
+      ],
+      "soubor": "tvary/paprsky-16.svg",
+      "viewBox": "0 0 100 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "hvezda-5-obrys",
+      "kategorie": "tvary",
+      "stitky": [
+        "hvezda",
+        "star",
+        "obrys"
+      ],
+      "soubor": "tvary/hvezda-5-obrys.svg",
+      "viewBox": "0 0 100 96",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "jiskra",
+      "kategorie": "tvary",
+      "stitky": [
+        "jiskra",
+        "sparkle",
+        "zablesk",
+        "hvezda"
+      ],
+      "soubor": "tvary/jiskra.svg",
+      "viewBox": "0 0 100 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "kriz-plus",
+      "kategorie": "tvary",
+      "stitky": [
+        "kriz",
+        "plus",
+        "silny"
+      ],
+      "soubor": "tvary/kriz-plus.svg",
+      "viewBox": "0 0 100 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "kriz-x",
+      "kategorie": "tvary",
+      "stitky": [
+        "kriz",
+        "x",
+        "krat",
+        "silny"
+      ],
+      "soubor": "tvary/kriz-x.svg",
+      "viewBox": "0 0 100 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "kriz-tenky",
+      "kategorie": "tvary",
+      "stitky": [
+        "kriz",
+        "plus",
+        "tenky",
+        "zamerovaci"
+      ],
+      "soubor": "tvary/kriz-tenky.svg",
+      "viewBox": "0 0 100 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "vlnovka",
+      "kategorie": "tvary",
+      "stitky": [
+        "vlnovka",
+        "wave",
+        "sinus"
+      ],
+      "soubor": "tvary/vlnovka.svg",
+      "viewBox": "0 0 200 40",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "vlnovka-jemna",
+      "kategorie": "tvary",
+      "stitky": [
+        "vlnovka",
+        "wave",
+        "jemna",
+        "tenka"
+      ],
+      "soubor": "tvary/vlnovka-jemna.svg",
+      "viewBox": "0 0 200 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "cikcak",
+      "kategorie": "tvary",
+      "stitky": [
+        "cikcak",
+        "zigzag",
+        "lomena"
+      ],
+      "soubor": "tvary/cikcak.svg",
+      "viewBox": "0 0 200 40",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "klikata-cara",
+      "kategorie": "tvary",
+      "stitky": [
+        "klikata",
+        "squiggle",
+        "smycky",
+        "loops"
+      ],
+      "soubor": "tvary/klikata-cara.svg",
+      "viewBox": "0 0 196 44",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "sestiuhelnik",
+      "kategorie": "tvary",
+      "stitky": [
+        "sestiuhelnik",
+        "hexagon",
+        "plny"
+      ],
+      "soubor": "tvary/sestiuhelnik.svg",
+      "viewBox": "0 0 100 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "osmiuhelnik-obrys",
+      "kategorie": "tvary",
+      "stitky": [
+        "osmiuhelnik",
+        "octagon",
+        "obrys"
+      ],
+      "soubor": "tvary/osmiuhelnik-obrys.svg",
+      "viewBox": "0 0 100 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "pulmesic",
+      "kategorie": "tvary",
+      "stitky": [
+        "pulmesic",
+        "crescent",
+        "mesic"
+      ],
+      "soubor": "tvary/pulmesic.svg",
+      "viewBox": "0 0 100 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "kapka",
+      "kategorie": "tvary",
+      "stitky": [
+        "kapka",
+        "drop",
+        "teardrop"
+      ],
+      "soubor": "tvary/kapka.svg",
+      "viewBox": "0 0 80 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "cocka",
+      "kategorie": "tvary",
+      "stitky": [
+        "cocka",
+        "lens",
+        "vesica",
+        "list"
+      ],
+      "soubor": "tvary/cocka.svg",
+      "viewBox": "0 0 48 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "vysec-prstence",
+      "kategorie": "tvary",
+      "stitky": [
+        "vysec",
+        "ring segment",
+        "graf",
+        "oblouk"
+      ],
+      "soubor": "tvary/vysec-prstence.svg",
+      "viewBox": "0 0 100 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "hvezdicka-6",
+      "kategorie": "tvary",
+      "stitky": [
+        "hvezdicka",
+        "asterisk",
+        "paprsky"
+      ],
+      "soubor": "tvary/hvezdicka-6.svg",
+      "viewBox": "0 0 100 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "organicky-tvar",
+      "kategorie": "tvary",
+      "stitky": [
+        "blob",
+        "organicky",
+        "mekky",
+        "tvar"
+      ],
+      "soubor": "tvary/organicky-tvar.svg",
+      "viewBox": "0 0 100 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "vyber-uchyty",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "vyber",
+        "selection",
+        "uchyty",
+        "handles",
+        "bounding box"
+      ],
+      "soubor": "ramecky/vyber-uchyty.svg",
+      "viewBox": "0 0 200 120",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "vyber-rohy",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "vyber",
+        "rohy",
+        "corners",
+        "brackets",
+        "ohraniceni"
+      ],
+      "soubor": "ramecky/vyber-rohy.svg",
+      "viewBox": "0 0 200 120",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "vyber-rotace",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "vyber",
+        "rotace",
+        "rotate",
+        "uchyty"
+      ],
+      "soubor": "ramecky/vyber-rotace.svg",
+      "viewBox": "0 0 200 150",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "kota-vodorovna",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "kota",
+        "dimension",
+        "rozmer",
+        "mereni"
+      ],
+      "soubor": "ramecky/kota-vodorovna.svg",
+      "viewBox": "0 0 240 40",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "kota-svisla",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "kota",
+        "dimension",
+        "rozmer",
+        "svisla"
+      ],
+      "soubor": "ramecky/kota-svisla.svg",
+      "viewBox": "0 0 40 240",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "vodici-cara-vodorovna",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "vodici cara",
+        "guide",
+        "carkovana",
+        "vodorovna"
+      ],
+      "soubor": "ramecky/vodici-cara-vodorovna.svg",
+      "viewBox": "0 0 400 8",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "vodici-cara-svisla",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "vodici cara",
+        "guide",
+        "carkovana",
+        "svisla"
+      ],
+      "soubor": "ramecky/vodici-cara-svisla.svg",
+      "viewBox": "0 0 8 400",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "soutiskova-znacka",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "zamerovac",
+        "registration",
+        "soutisk",
+        "crosshair"
+      ],
+      "soubor": "ramecky/soutiskova-znacka.svg",
+      "viewBox": "0 0 64 64",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "orezove-znacky",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "orez",
+        "crop marks",
+        "tisk",
+        "rohy"
+      ],
+      "soubor": "ramecky/orezove-znacky.svg",
+      "viewBox": "0 0 200 140",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "kurzor-sipka",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "kurzor",
+        "cursor",
+        "sipka",
+        "pointer"
+      ],
+      "soubor": "ramecky/kurzor-sipka.svg",
+      "viewBox": "0 0 28 32",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "kurzor-text",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "kurzor",
+        "cursor",
+        "text",
+        "i-beam",
+        "caret"
+      ],
+      "soubor": "ramecky/kurzor-text.svg",
+      "viewBox": "0 0 24 32",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "kurzor-zamerovac",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "kurzor",
+        "crosshair",
+        "zamerovac",
+        "presnost"
+      ],
+      "soubor": "ramecky/kurzor-zamerovac.svg",
+      "viewBox": "0 0 32 32",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "okno",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "okno",
+        "window",
+        "aplikace",
+        "rozhrani"
+      ],
+      "soubor": "ramecky/okno.svg",
+      "viewBox": "0 0 240 160",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "okno-prohlizec",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "okno",
+        "browser",
+        "prohlizec",
+        "web"
+      ],
+      "soubor": "ramecky/okno-prohlizec.svg",
+      "viewBox": "0 0 240 160",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "karta-dialog",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "karta",
+        "dialog",
+        "modal",
+        "card"
+      ],
+      "soubor": "ramecky/karta-dialog.svg",
+      "viewBox": "0 0 200 140",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "tlacitko-obrys",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "tlacitko",
+        "button",
+        "pilulka",
+        "obrys"
+      ],
+      "soubor": "ramecky/tlacitko-obrys.svg",
+      "viewBox": "0 0 160 56",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "tlacitko-plne",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "tlacitko",
+        "button",
+        "pilulka",
+        "plne"
+      ],
+      "soubor": "ramecky/tlacitko-plne.svg",
+      "viewBox": "0 0 160 56",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "tlacitko-kulate-plus",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "tlacitko",
+        "button",
+        "kulate",
+        "plus",
+        "pridat"
+      ],
+      "soubor": "ramecky/tlacitko-kulate-plus.svg",
+      "viewBox": "0 0 60 60",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "prepinac-zapnuto",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "prepinac",
+        "toggle",
+        "switch",
+        "zapnuto",
+        "on"
+      ],
+      "soubor": "ramecky/prepinac-zapnuto.svg",
+      "viewBox": "0 0 88 48",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "prepinac-vypnuto",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "prepinac",
+        "toggle",
+        "switch",
+        "vypnuto",
+        "off"
+      ],
+      "soubor": "ramecky/prepinac-vypnuto.svg",
+      "viewBox": "0 0 88 48",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "posuvnik",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "posuvnik",
+        "slider",
+        "range",
+        "hodnota"
+      ],
+      "soubor": "ramecky/posuvnik.svg",
+      "viewBox": "0 0 240 40",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "ukazatel-prubehu",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "prubeh",
+        "progress",
+        "nacitani",
+        "loading"
+      ],
+      "soubor": "ramecky/ukazatel-prubehu.svg",
+      "viewBox": "0 0 240 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "zaskrtavaci-pole",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "checkbox",
+        "zaskrtnuti",
+        "potvrzeno",
+        "pole"
+      ],
+      "soubor": "ramecky/zaskrtavaci-pole.svg",
+      "viewBox": "0 0 40 40",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "prepinaci-kolecko",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "radio",
+        "volba",
+        "kolecko",
+        "vyber"
+      ],
+      "soubor": "ramecky/prepinaci-kolecko.svg",
+      "viewBox": "0 0 40 40",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "bublina-obrys",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "bublina",
+        "speech bubble",
+        "zprava",
+        "chat",
+        "obrys"
+      ],
+      "soubor": "ramecky/bublina-obrys.svg",
+      "viewBox": "0 0 200 140",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "bublina-plna",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "bublina",
+        "speech bubble",
+        "zprava",
+        "chat",
+        "plna"
+      ],
+      "soubor": "ramecky/bublina-plna.svg",
+      "viewBox": "0 0 200 140",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "bublina-myslenka",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "bublina",
+        "myslenka",
+        "thought",
+        "napad"
+      ],
+      "soubor": "ramecky/bublina-myslenka.svg",
+      "viewBox": "0 0 200 150",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "popisek-tooltip",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "tooltip",
+        "popisek",
+        "label",
+        "napoveda"
+      ],
+      "soubor": "ramecky/popisek-tooltip.svg",
+      "viewBox": "0 0 160 76",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "vstupni-pole",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "input",
+        "pole",
+        "formular",
+        "text"
+      ],
+      "soubor": "ramecky/vstupni-pole.svg",
+      "viewBox": "0 0 240 56",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "rozbalovaci-nabidka",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "dropdown",
+        "select",
+        "nabidka",
+        "vyber"
+      ],
+      "soubor": "ramecky/rozbalovaci-nabidka.svg",
+      "viewBox": "0 0 240 56",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "stitek-stav-obrys",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "stitek",
+        "chip",
+        "pill",
+        "stav",
+        "status",
+        "popisek",
+        "obrys",
+        "tecka"
+      ],
+      "soubor": "ramecky/stitek-stav-obrys.svg",
+      "viewBox": "0 0 200 56",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "stitek-stav-plny",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "stitek",
+        "chip",
+        "pill",
+        "stav",
+        "status",
+        "popisek",
+        "plny",
+        "tecka",
+        "vyrez"
+      ],
+      "soubor": "ramecky/stitek-stav-plny.svg",
+      "viewBox": "0 0 200 56",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "stitek-stav-zivy",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "stitek",
+        "chip",
+        "pill",
+        "stav",
+        "status",
+        "popisek",
+        "zivy",
+        "live",
+        "vysilani",
+        "halo"
+      ],
+      "soubor": "ramecky/stitek-stav-zivy.svg",
+      "viewBox": "0 0 200 56",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "stitek-krok",
+      "kategorie": "ramecky-a-rozhrani",
+      "stitky": [
+        "stitek",
+        "chip",
+        "pill",
+        "stav",
+        "status",
+        "popisek",
+        "krok",
+        "step",
+        "cislo",
+        "postup"
+      ],
+      "soubor": "ramecky/stitek-krok.svg",
+      "viewBox": "0 0 200 56",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "domov",
+      "kategorie": "ikony",
+      "stitky": [
+        "domov",
+        "home",
+        "dum"
+      ],
+      "soubor": "ikony/domov.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "hledat",
+      "kategorie": "ikony",
+      "stitky": [
+        "hledat",
+        "search",
+        "lupa"
+      ],
+      "soubor": "ikony/hledat.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "prehrat",
+      "kategorie": "ikony",
+      "stitky": [
+        "prehrat",
+        "play",
+        "spustit"
+      ],
+      "soubor": "ikony/prehrat.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "pauza",
+      "kategorie": "ikony",
+      "stitky": [
+        "pauza",
+        "pause"
+      ],
+      "soubor": "ikony/pauza.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "plus",
+      "kategorie": "ikony",
+      "stitky": [
+        "plus",
+        "pridat",
+        "add"
+      ],
+      "soubor": "ikony/plus.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "minus",
+      "kategorie": "ikony",
+      "stitky": [
+        "minus",
+        "odebrat",
+        "remove"
+      ],
+      "soubor": "ikony/minus.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "zavrit",
+      "kategorie": "ikony",
+      "stitky": [
+        "zavrit",
+        "close",
+        "krizek"
+      ],
+      "soubor": "ikony/zavrit.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "potvrdit",
+      "kategorie": "ikony",
+      "stitky": [
+        "potvrdit",
+        "check",
+        "hotovo",
+        "fajfka"
+      ],
+      "soubor": "ikony/potvrdit.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "srdce",
+      "kategorie": "ikony",
+      "stitky": [
+        "srdce",
+        "heart",
+        "libi se"
+      ],
+      "soubor": "ikony/srdce.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "hvezda",
+      "kategorie": "ikony",
+      "stitky": [
+        "hvezda",
+        "star",
+        "oblibene"
+      ],
+      "soubor": "ikony/hvezda.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "zvonek",
+      "kategorie": "ikony",
+      "stitky": [
+        "zvonek",
+        "bell",
+        "notifikace"
+      ],
+      "soubor": "ikony/zvonek.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "obalka",
+      "kategorie": "ikony",
+      "stitky": [
+        "obalka",
+        "mail",
+        "email",
+        "zprava"
+      ],
+      "soubor": "ikony/obalka.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "chat",
+      "kategorie": "ikony",
+      "stitky": [
+        "chat",
+        "zprava",
+        "bublina",
+        "message"
+      ],
+      "soubor": "ikony/chat.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "uzivatel",
+      "kategorie": "ikony",
+      "stitky": [
+        "uzivatel",
+        "user",
+        "osoba",
+        "profil"
+      ],
+      "soubor": "ikony/uzivatel.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "nastaveni",
+      "kategorie": "ikony",
+      "stitky": [
+        "nastaveni",
+        "settings",
+        "ozubene kolo",
+        "gear"
+      ],
+      "soubor": "ikony/nastaveni.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "hodiny",
+      "kategorie": "ikony",
+      "stitky": [
+        "hodiny",
+        "cas",
+        "clock",
+        "time"
+      ],
+      "soubor": "ikony/hodiny.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "kalendar",
+      "kategorie": "ikony",
+      "stitky": [
+        "kalendar",
+        "calendar",
+        "datum"
+      ],
+      "soubor": "ikony/kalendar.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "fotoaparat",
+      "kategorie": "ikony",
+      "stitky": [
+        "fotoaparat",
+        "camera",
+        "foto"
+      ],
+      "soubor": "ikony/fotoaparat.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "mikrofon",
+      "kategorie": "ikony",
+      "stitky": [
+        "mikrofon",
+        "mic",
+        "hlas",
+        "nahravani"
+      ],
+      "soubor": "ikony/mikrofon.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "reproduktor",
+      "kategorie": "ikony",
+      "stitky": [
+        "reproduktor",
+        "zvuk",
+        "speaker",
+        "hlasitost"
+      ],
+      "soubor": "ikony/reproduktor.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "nota",
+      "kategorie": "ikony",
+      "stitky": [
+        "nota",
+        "hudba",
+        "music"
+      ],
+      "soubor": "ikony/nota.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "blesk",
+      "kategorie": "ikony",
+      "stitky": [
+        "blesk",
+        "energie",
+        "lightning",
+        "rychle"
+      ],
+      "soubor": "ikony/blesk.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "zemekoule",
+      "kategorie": "ikony",
+      "stitky": [
+        "zemekoule",
+        "globe",
+        "web",
+        "svet"
+      ],
+      "soubor": "ikony/zemekoule.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "spendlik",
+      "kategorie": "ikony",
+      "stitky": [
+        "spendlik",
+        "pin",
+        "misto",
+        "mapa"
+      ],
+      "soubor": "ikony/spendlik.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "zamek",
+      "kategorie": "ikony",
+      "stitky": [
+        "zamek",
+        "lock",
+        "bezpecnost"
+      ],
+      "soubor": "ikony/zamek.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "oko",
+      "kategorie": "ikony",
+      "stitky": [
+        "oko",
+        "eye",
+        "nahled",
+        "viditelne"
+      ],
+      "soubor": "ikony/oko.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "odkaz",
+      "kategorie": "ikony",
+      "stitky": [
+        "odkaz",
+        "link",
+        "retez"
+      ],
+      "soubor": "ikony/odkaz.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "stahnout",
+      "kategorie": "ikony",
+      "stitky": [
+        "stahnout",
+        "download",
+        "ulozit"
+      ],
+      "soubor": "ikony/stahnout.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "nahrat",
+      "kategorie": "ikony",
+      "stitky": [
+        "nahrat",
+        "upload",
+        "odeslat"
+      ],
+      "soubor": "ikony/nahrat.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "sdilet",
+      "kategorie": "ikony",
+      "stitky": [
+        "sdilet",
+        "share",
+        "sit",
+        "uzly"
+      ],
+      "soubor": "ikony/sdilet.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "slozka",
+      "kategorie": "ikony",
+      "stitky": [
+        "slozka",
+        "folder",
+        "adresar"
+      ],
+      "soubor": "ikony/slozka.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "soubor",
+      "kategorie": "ikony",
+      "stitky": [
+        "soubor",
+        "file",
+        "dokument"
+      ],
+      "soubor": "ikony/soubor.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "obrazek",
+      "kategorie": "ikony",
+      "stitky": [
+        "obrazek",
+        "image",
+        "fotka",
+        "galerie"
+      ],
+      "soubor": "ikony/obrazek.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "graf-sloupce",
+      "kategorie": "ikony",
+      "stitky": [
+        "graf",
+        "sloupce",
+        "bar chart",
+        "statistika"
+      ],
+      "soubor": "ikony/graf-sloupce.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "graf-cara",
+      "kategorie": "ikony",
+      "stitky": [
+        "graf",
+        "cara",
+        "line chart",
+        "trend",
+        "rust"
+      ],
+      "soubor": "ikony/graf-cara.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "mrak",
+      "kategorie": "ikony",
+      "stitky": [
+        "mrak",
+        "cloud",
+        "uloziste"
+      ],
+      "soubor": "ikony/mrak.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "slunce",
+      "kategorie": "ikony",
+      "stitky": [
+        "slunce",
+        "sun",
+        "den",
+        "svetly rezim"
+      ],
+      "soubor": "ikony/slunce.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "mesic",
+      "kategorie": "ikony",
+      "stitky": [
+        "mesic",
+        "moon",
+        "noc",
+        "tmavy rezim"
+      ],
+      "soubor": "ikony/mesic.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "kod",
+      "kategorie": "ikony",
+      "stitky": [
+        "kod",
+        "code",
+        "programovani",
+        "zavorky"
+      ],
+      "soubor": "ikony/kod.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "terminal",
+      "kategorie": "ikony",
+      "stitky": [
+        "terminal",
+        "konzole",
+        "prikazova radka",
+        "cli"
+      ],
+      "soubor": "ikony/terminal.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "sipka-rovna",
+      "kategorie": "sipky-a-spojnice",
+      "stitky": [
+        "sipka",
+        "arrow",
+        "rovna",
+        "vpravo"
+      ],
+      "soubor": "sipky/sipka-rovna.svg",
+      "viewBox": "0 0 120 40",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "sipka-plna-hlava",
+      "kategorie": "sipky-a-spojnice",
+      "stitky": [
+        "sipka",
+        "arrow",
+        "plna hlava",
+        "trojuhelnik"
+      ],
+      "soubor": "sipky/sipka-plna-hlava.svg",
+      "viewBox": "0 0 120 40",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "sipka-obousmerna",
+      "kategorie": "sipky-a-spojnice",
+      "stitky": [
+        "sipka",
+        "arrow",
+        "obousmerna",
+        "double"
+      ],
+      "soubor": "sipky/sipka-obousmerna.svg",
+      "viewBox": "0 0 120 40",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "sipka-oblouk",
+      "kategorie": "sipky-a-spojnice",
+      "stitky": [
+        "sipka",
+        "arrow",
+        "oblouk",
+        "curved"
+      ],
+      "soubor": "sipky/sipka-oblouk.svg",
+      "viewBox": "0 0 120 60",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "sipka-otocka",
+      "kategorie": "sipky-a-spojnice",
+      "stitky": [
+        "sipka",
+        "u-turn",
+        "otocka",
+        "zpet"
+      ],
+      "soubor": "sipky/sipka-otocka.svg",
+      "viewBox": "0 0 70 64",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "sipka-kruhova",
+      "kategorie": "sipky-a-spojnice",
+      "stitky": [
+        "sipka",
+        "kruhova",
+        "refresh",
+        "cyklus",
+        "opakovat"
+      ],
+      "soubor": "sipky/sipka-kruhova.svg",
+      "viewBox": "0 0 64 64",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "sipka-sikma",
+      "kategorie": "sipky-a-spojnice",
+      "stitky": [
+        "sipka",
+        "arrow",
+        "sikma",
+        "nahoru",
+        "rust"
+      ],
+      "soubor": "sipky/sipka-sikma.svg",
+      "viewBox": "0 0 60 60",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "sipka-dlouha-tenka",
+      "kategorie": "sipky-a-spojnice",
+      "stitky": [
+        "sipka",
+        "arrow",
+        "dlouha",
+        "tenka"
+      ],
+      "soubor": "sipky/sipka-dlouha-tenka.svg",
+      "viewBox": "0 0 300 20",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "sipka-carkovana",
+      "kategorie": "sipky-a-spojnice",
+      "stitky": [
+        "sipka",
+        "arrow",
+        "carkovana",
+        "dashed"
+      ],
+      "soubor": "sipky/sipka-carkovana.svg",
+      "viewBox": "0 0 140 40",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "spojnice-tecky",
+      "kategorie": "sipky-a-spojnice",
+      "stitky": [
+        "spojnice",
+        "connector",
+        "tecky",
+        "linka"
+      ],
+      "soubor": "sipky/spojnice-tecky.svg",
+      "viewBox": "0 0 140 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "spojnice-krouzky",
+      "kategorie": "sipky-a-spojnice",
+      "stitky": [
+        "spojnice",
+        "connector",
+        "krouzky",
+        "uzly"
+      ],
+      "soubor": "sipky/spojnice-krouzky.svg",
+      "viewBox": "0 0 140 24",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "spojnice-lomena",
+      "kategorie": "sipky-a-spojnice",
+      "stitky": [
+        "spojnice",
+        "elbow",
+        "lomena",
+        "schod"
+      ],
+      "soubor": "sipky/spojnice-lomena.svg",
+      "viewBox": "0 0 120 70",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "spojnice-s",
+      "kategorie": "sipky-a-spojnice",
+      "stitky": [
+        "spojnice",
+        "krivka",
+        "s",
+        "bezier",
+        "flow"
+      ],
+      "soubor": "sipky/spojnice-s.svg",
+      "viewBox": "0 0 120 70",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "spojnice-vetveni",
+      "kategorie": "sipky-a-spojnice",
+      "stitky": [
+        "spojnice",
+        "vetveni",
+        "branch",
+        "rozdeleni"
+      ],
+      "soubor": "sipky/spojnice-vetveni.svg",
+      "viewBox": "0 0 120 80",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "sipka-zalomena",
+      "kategorie": "sipky-a-spojnice",
+      "stitky": [
+        "sipka",
+        "zalomena",
+        "odbocka",
+        "pod"
+      ],
+      "soubor": "sipky/sipka-zalomena.svg",
+      "viewBox": "0 0 112 60",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "carovy-kod",
+      "kategorie": "cisla-a-znacky",
+      "stitky": [
+        "carovy kod",
+        "barcode",
+        "eticketa",
+        "tech"
+      ],
+      "soubor": "cisla-znacky/carovy-kod.svg",
+      "viewBox": "0 0 200 80",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "carovy-kod-zarazky",
+      "kategorie": "cisla-a-znacky",
+      "stitky": [
+        "carovy kod",
+        "barcode",
+        "ean",
+        "zarazky"
+      ],
+      "soubor": "cisla-znacky/carovy-kod-zarazky.svg",
+      "viewBox": "0 0 158 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "razitko-kulate",
+      "kategorie": "cisla-a-znacky",
+      "stitky": [
+        "razitko",
+        "stamp",
+        "pecet",
+        "kulate"
+      ],
+      "soubor": "cisla-znacky/razitko-kulate.svg",
+      "viewBox": "0 0 100 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "razitko-hranate",
+      "kategorie": "cisla-a-znacky",
+      "stitky": [
+        "razitko",
+        "stamp",
+        "hranate",
+        "schvaleno"
+      ],
+      "soubor": "cisla-znacky/razitko-hranate.svg",
+      "viewBox": "0 0 200 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "stitek",
+      "kategorie": "cisla-a-znacky",
+      "stitky": [
+        "stitek",
+        "tag",
+        "cenovka",
+        "label"
+      ],
+      "soubor": "cisla-znacky/stitek.svg",
+      "viewBox": "0 0 170 80",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "vstupenka",
+      "kategorie": "cisla-a-znacky",
+      "stitky": [
+        "vstupenka",
+        "ticket",
+        "listek",
+        "kupon"
+      ],
+      "soubor": "cisla-znacky/vstupenka.svg",
+      "viewBox": "0 0 200 90",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "cislice-0-9",
+      "kategorie": "cisla-a-znacky",
+      "stitky": [
+        "cislice",
+        "digits",
+        "sedmisegment",
+        "cisla",
+        "pocitadlo"
+      ],
+      "soubor": "cisla-znacky/cislice-0-9.svg",
+      "viewBox": "0 0 410 64",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "casovy-kod",
+      "kategorie": "cisla-a-znacky",
+      "stitky": [
+        "casovy kod",
+        "timecode",
+        "cas",
+        "video",
+        "cisla"
+      ],
+      "soubor": "cisla-znacky/casovy-kod.svg",
+      "viewBox": "0 0 374 64",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "pocitadlo",
+      "kategorie": "cisla-a-znacky",
+      "stitky": [
+        "pocitadlo",
+        "counter",
+        "cisla",
+        "skore",
+        "odometr"
+      ],
+      "soubor": "cisla-znacky/pocitadlo.svg",
+      "viewBox": "0 0 212 80",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "pravitko",
+      "kategorie": "cisla-a-znacky",
+      "stitky": [
+        "pravitko",
+        "ruler",
+        "stupnice",
+        "mereni"
+      ],
+      "soubor": "cisla-znacky/pravitko.svg",
+      "viewBox": "0 0 404 40",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "carky-zaznam",
+      "kategorie": "cisla-a-znacky",
+      "stitky": [
+        "carky",
+        "tally",
+        "pocitani",
+        "rucne"
+      ],
+      "soubor": "cisla-znacky/carky-zaznam.svg",
+      "viewBox": "0 0 80 60",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "procento",
+      "kategorie": "cisla-a-znacky",
+      "stitky": [
+        "procento",
+        "percent",
+        "statistika",
+        "sleva"
+      ],
+      "soubor": "cisla-znacky/procento.svg",
+      "viewBox": "0 0 60 60",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "hodnoceni-tecky",
+      "kategorie": "cisla-a-znacky",
+      "stitky": [
+        "hodnoceni",
+        "rating",
+        "tecky",
+        "skala"
+      ],
+      "soubor": "cisla-znacky/hodnoceni-tecky.svg",
+      "viewBox": "0 0 150 30",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "ukazatel-indexu",
+      "kategorie": "cisla-a-znacky",
+      "stitky": [
+        "ukazatel",
+        "index",
+        "marker",
+        "znacka"
+      ],
+      "soubor": "cisla-znacky/ukazatel-indexu.svg",
+      "viewBox": "0 0 40 60",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "krizek-hash",
+      "kategorie": "cisla-a-znacky",
+      "stitky": [
+        "hash",
+        "krizek",
+        "cislo",
+        "tag"
+      ],
+      "soubor": "cisla-znacky/krizek-hash.svg",
+      "viewBox": "0 0 60 60",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "monogram-ma",
+      "kategorie": "znacka",
+      "stitky": [
+        "znacka",
+        "monogram",
+        "MA",
+        "iniciala"
+      ],
+      "soubor": "znacka/monogram-ma.svg",
+      "viewBox": "0 0 100 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "monogram-ma-kruh",
+      "kategorie": "znacka",
+      "stitky": [
+        "znacka",
+        "monogram",
+        "MA",
+        "odznak",
+        "kruh"
+      ],
+      "soubor": "znacka/monogram-ma-kruh.svg",
+      "viewBox": "0 0 120 120",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "monogram-ma-jadro",
+      "kategorie": "znacka",
+      "stitky": [
+        "znacka",
+        "monogram",
+        "MA",
+        "jadro",
+        "tecka"
+      ],
+      "soubor": "znacka/monogram-ma-jadro.svg",
+      "viewBox": "0 0 124 100",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "konstrukce-kruznice-tecny",
+      "kategorie": "konstrukce",
+      "stitky": [
+        "konstrukce",
+        "construction",
+        "geometrie",
+        "logo",
+        "tenke cary",
+        "mrizka",
+        "kruznice",
+        "tecny",
+        "tangent"
+      ],
+      "soubor": "konstrukce/konstrukce-kruznice-tecny.svg",
+      "viewBox": "0 0 420 260",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "konstrukce-zlaty-rez",
+      "kategorie": "konstrukce",
+      "stitky": [
+        "konstrukce",
+        "construction",
+        "geometrie",
+        "logo",
+        "tenke cary",
+        "mrizka",
+        "zlaty rez",
+        "golden ratio",
+        "spirala",
+        "fibonacci"
+      ],
+      "soubor": "konstrukce/konstrukce-zlaty-rez.svg",
+      "viewBox": "0 0 352 222.13",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "konstrukce-mrizka-znacky",
+      "kategorie": "konstrukce",
+      "stitky": [
+        "konstrukce",
+        "construction",
+        "geometrie",
+        "logo",
+        "tenke cary",
+        "mrizka",
+        "keyline",
+        "ikona",
+        "znacka",
+        "uhlopricky"
+      ],
+      "soubor": "konstrukce/konstrukce-mrizka-znacky.svg",
+      "viewBox": "0 0 240 240",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "konstrukce-soustredne-kruhy",
+      "kategorie": "konstrukce",
+      "stitky": [
+        "konstrukce",
+        "construction",
+        "geometrie",
+        "logo",
+        "tenke cary",
+        "mrizka",
+        "soustredne",
+        "osy",
+        "paprsky",
+        "uhel",
+        "rysky"
+      ],
+      "soubor": "konstrukce/konstrukce-soustredne-kruhy.svg",
+      "viewBox": "0 0 240 240",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "zrno-jemne",
+      "kategorie": "textury",
+      "stitky": [
+        "zrno",
+        "grain",
+        "film",
+        "jemne"
+      ],
+      "soubor": "textury/zrno-jemne.png",
+      "rozmer": "1080x1920",
+      "rezim": "odstíny šedi",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "zrno-hrube",
+      "kategorie": "textury",
+      "stitky": [
+        "zrno",
+        "grain",
+        "hrube",
+        "analog"
+      ],
+      "soubor": "textury/zrno-hrube.png",
+      "rozmer": "1080x1920",
+      "rezim": "odstíny šedi",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "zrno-pruhledne",
+      "kategorie": "textury",
+      "stitky": [
+        "zrno",
+        "grain",
+        "pruhledne",
+        "overlay",
+        "alpha"
+      ],
+      "soubor": "textury/zrno-pruhledne.png",
+      "rozmer": "1080x1920",
+      "rezim": "odstíny šedi s průhledností",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "papir-vlakna",
+      "kategorie": "textury",
+      "stitky": [
+        "papir",
+        "paper",
+        "vlakna",
+        "fiber"
+      ],
+      "soubor": "textury/papir-vlakna.png",
+      "rozmer": "1080x1920",
+      "rezim": "odstíny šedi",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "papir-hladky",
+      "kategorie": "textury",
+      "stitky": [
+        "papir",
+        "paper",
+        "hladky",
+        "mramorovani"
+      ],
+      "soubor": "textury/papir-hladky.png",
+      "rozmer": "1080x1920",
+      "rezim": "odstíny šedi",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "sum-bily",
+      "kategorie": "textury",
+      "stitky": [
+        "sum",
+        "noise",
+        "white noise",
+        "staticky"
+      ],
+      "soubor": "textury/sum-bily.png",
+      "rozmer": "1080x1920",
+      "rezim": "odstíny šedi",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "sum-oblacny",
+      "kategorie": "textury",
+      "stitky": [
+        "sum",
+        "noise",
+        "oblacny",
+        "fractal",
+        "mlha"
+      ],
+      "soubor": "textury/sum-oblacny.png",
+      "rozmer": "1080x1920",
+      "rezim": "odstíny šedi",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "poloton-tecky",
+      "kategorie": "textury",
+      "stitky": [
+        "poloton",
+        "halftone",
+        "tecky",
+        "tisk"
+      ],
+      "soubor": "textury/poloton-tecky.png",
+      "rozmer": "1080x1920",
+      "rezim": "odstíny šedi",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "poloton-cary",
+      "kategorie": "textury",
+      "stitky": [
+        "poloton",
+        "halftone",
+        "cary",
+        "gravura"
+      ],
+      "soubor": "textury/poloton-cary.png",
+      "rozmer": "1080x1920",
+      "rezim": "odstíny šedi",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "dither-bayer",
+      "kategorie": "textury",
+      "stitky": [
+        "dither",
+        "bayer",
+        "pixel",
+        "retro"
+      ],
+      "soubor": "textury/dither-bayer.png",
+      "rozmer": "1080x1920",
+      "rezim": "odstíny šedi",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "prechod-svisly",
+      "kategorie": "textury",
+      "stitky": [
+        "prechod",
+        "gradient",
+        "svisly",
+        "jemny"
+      ],
+      "soubor": "textury/prechod-svisly.png",
+      "rozmer": "1080x1920",
+      "rezim": "odstíny šedi",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "prechod-radialni",
+      "kategorie": "textury",
+      "stitky": [
+        "prechod",
+        "gradient",
+        "radialni",
+        "vineta"
+      ],
+      "soubor": "textury/prechod-radialni.png",
+      "rozmer": "1080x1920",
+      "rezim": "odstíny šedi",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "prechod-diagonalni",
+      "kategorie": "textury",
+      "stitky": [
+        "prechod",
+        "gradient",
+        "diagonalni",
+        "jemny"
+      ],
+      "soubor": "textury/prechod-diagonalni.png",
+      "rozmer": "1080x1920",
+      "rezim": "odstíny šedi",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "rastr-radky",
+      "kategorie": "textury",
+      "stitky": [
+        "radky",
+        "scanlines",
+        "obrazovka",
+        "crt"
+      ],
+      "soubor": "textury/rastr-radky.png",
+      "rozmer": "1080x1920",
+      "rezim": "odstíny šedi",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "prach-skrabance",
+      "kategorie": "textury",
+      "stitky": [
+        "prach",
+        "dust",
+        "skrabance",
+        "scratches",
+        "alpha"
+      ],
+      "soubor": "textury/prach-skrabance.png",
+      "rozmer": "1080x1920",
+      "rezim": "odstíny šedi s průhledností",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "mozaika-hruba",
+      "kategorie": "textury",
+      "stitky": [
+        "mozaika",
+        "pixel",
+        "rozpad",
+        "dissolve",
+        "maska",
+        "odhaleni",
+        "hruba"
+      ],
+      "soubor": "textury/mozaika-hruba.png",
+      "rozmer": "1080x1920",
+      "rezim": "odstíny šedi",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "mozaika-jemna",
+      "kategorie": "textury",
+      "stitky": [
+        "mozaika",
+        "pixel",
+        "rozpad",
+        "dissolve",
+        "maska",
+        "odhaleni",
+        "jemna"
+      ],
+      "soubor": "textury/mozaika-jemna.png",
+      "rozmer": "1080x1920",
+      "rezim": "odstíny šedi",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "mozaika-shora",
+      "kategorie": "textury",
+      "stitky": [
+        "mozaika",
+        "pixel",
+        "rozpad",
+        "maska",
+        "odhaleni",
+        "shora",
+        "smer"
+      ],
+      "soubor": "textury/mozaika-shora.png",
+      "rozmer": "1080x1920",
+      "rezim": "odstíny šedi",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "mozaika-od-stredu",
+      "kategorie": "textury",
+      "stitky": [
+        "mozaika",
+        "pixel",
+        "rozpad",
+        "maska",
+        "odhaleni",
+        "stred",
+        "radialni"
+      ],
+      "soubor": "textury/mozaika-od-stredu.png",
+      "rozmer": "1080x1920",
+      "rezim": "odstíny šedi",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "zare-mekka",
+      "kategorie": "zare",
+      "stitky": [
+        "zare",
+        "glow",
+        "svetlo",
+        "koule",
+        "orb",
+        "mekka"
+      ],
+      "soubor": "zare/zare-mekka.png",
+      "rozmer": "1024x1024",
+      "rezim": "bílá s průhledností",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "zare-jadro",
+      "kategorie": "zare",
+      "stitky": [
+        "zare",
+        "glow",
+        "svetlo",
+        "jadro",
+        "bod",
+        "halo"
+      ],
+      "soubor": "zare/zare-jadro.png",
+      "rozmer": "1024x1024",
+      "rezim": "bílá s průhledností",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "zare-prstenec",
+      "kategorie": "zare",
+      "stitky": [
+        "zare",
+        "glow",
+        "svetlo",
+        "prstenec",
+        "kruh",
+        "halo"
+      ],
+      "soubor": "zare/zare-prstenec.png",
+      "rozmer": "1024x1024",
+      "rezim": "bílá s průhledností",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "zare-pruh",
+      "kategorie": "zare",
+      "stitky": [
+        "zare",
+        "glow",
+        "svetlo",
+        "pruh",
+        "odlesk",
+        "flare",
+        "vodorovny"
+      ],
+      "soubor": "zare/zare-pruh.png",
+      "rozmer": "1920x384",
+      "rezim": "bílá s průhledností",
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "svih-kratky",
+      "kategorie": "zvuk",
+      "podkategorie": "švih",
+      "stitky": [
+        "svih",
+        "whoosh",
+        "kratky",
+        "prechod"
+      ],
+      "soubor": "zvuky/svih-kratky.wav",
+      "delka_s": 0.346,
+      "kanaly": 1,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": false,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "svih-dlouhy",
+      "kategorie": "zvuk",
+      "podkategorie": "švih",
+      "stitky": [
+        "svih",
+        "whoosh",
+        "dlouhy",
+        "pomaly"
+      ],
+      "soubor": "zvuky/svih-dlouhy.wav",
+      "delka_s": 1.083,
+      "kanaly": 1,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": false,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "svih-nahoru",
+      "kategorie": "zvuk",
+      "podkategorie": "švih",
+      "stitky": [
+        "svih",
+        "whoosh",
+        "nahoru",
+        "stoupa"
+      ],
+      "soubor": "zvuky/svih-nahoru.wav",
+      "delka_s": 0.598,
+      "kanaly": 1,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": false,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "svih-dolu",
+      "kategorie": "zvuk",
+      "podkategorie": "švih",
+      "stitky": [
+        "svih",
+        "whoosh",
+        "dolu",
+        "klesa"
+      ],
+      "soubor": "zvuky/svih-dolu.wav",
+      "delka_s": 0.592,
+      "kanaly": 1,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": false,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "svih-prelet",
+      "kategorie": "zvuk",
+      "podkategorie": "švih",
+      "stitky": [
+        "svih",
+        "whoosh",
+        "prelet",
+        "stereo",
+        "zleva doprava"
+      ],
+      "soubor": "zvuky/svih-prelet.wav",
+      "delka_s": 0.884,
+      "kanaly": 2,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": false,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "klik-ui",
+      "kategorie": "zvuk",
+      "podkategorie": "klik",
+      "stitky": [
+        "klik",
+        "click",
+        "rozhrani",
+        "tlacitko"
+      ],
+      "soubor": "zvuky/klik-ui.wav",
+      "delka_s": 0.052,
+      "kanaly": 1,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": false,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "klik-mechanicky",
+      "kategorie": "zvuk",
+      "podkategorie": "klik",
+      "stitky": [
+        "klik",
+        "click",
+        "mechanicky",
+        "spinac"
+      ],
+      "soubor": "zvuky/klik-mechanicky.wav",
+      "delka_s": 0.022,
+      "kanaly": 1,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": false,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "klik-mekky",
+      "kategorie": "zvuk",
+      "podkategorie": "klik",
+      "stitky": [
+        "klik",
+        "click",
+        "mekky",
+        "jemny"
+      ],
+      "soubor": "zvuky/klik-mekky.wav",
+      "delka_s": 0.09,
+      "kanaly": 1,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": false,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "klik-dvojity",
+      "kategorie": "zvuk",
+      "podkategorie": "klik",
+      "stitky": [
+        "klik",
+        "double click",
+        "dvojity"
+      ],
+      "soubor": "zvuky/klik-dvojity.wav",
+      "delka_s": 0.12,
+      "kanaly": 1,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": false,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "pop-hluboky",
+      "kategorie": "zvuk",
+      "podkategorie": "pop",
+      "stitky": [
+        "pop",
+        "bublina",
+        "hluboky",
+        "objeveni"
+      ],
+      "soubor": "zvuky/pop-hluboky.wav",
+      "delka_s": 0.356,
+      "kanaly": 1,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": false,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "pop-vysoky",
+      "kategorie": "zvuk",
+      "podkategorie": "pop",
+      "stitky": [
+        "pop",
+        "bublina",
+        "vysoky",
+        "objeveni"
+      ],
+      "soubor": "zvuky/pop-vysoky.wav",
+      "delka_s": 0.345,
+      "kanaly": 1,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": false,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "pop-mekky",
+      "kategorie": "zvuk",
+      "podkategorie": "pop",
+      "stitky": [
+        "pop",
+        "mekky",
+        "jemny",
+        "objeveni"
+      ],
+      "soubor": "zvuky/pop-mekky.wav",
+      "delka_s": 0.402,
+      "kanaly": 1,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": false,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "pop-kapka",
+      "kategorie": "zvuk",
+      "podkategorie": "pop",
+      "stitky": [
+        "pop",
+        "kapka",
+        "voda",
+        "drop"
+      ],
+      "soubor": "zvuky/pop-kapka.wav",
+      "delka_s": 0.355,
+      "kanaly": 1,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": false,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "tik-hodiny",
+      "kategorie": "zvuk",
+      "podkategorie": "tik",
+      "stitky": [
+        "tik",
+        "tick",
+        "hodiny",
+        "pocitadlo"
+      ],
+      "soubor": "zvuky/tik-hodiny.wav",
+      "delka_s": 0.016,
+      "kanaly": 1,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": false,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "tik-drevo",
+      "kategorie": "zvuk",
+      "podkategorie": "tik",
+      "stitky": [
+        "tik",
+        "drevo",
+        "woodblock",
+        "rytmus"
+      ],
+      "soubor": "zvuky/tik-drevo.wav",
+      "delka_s": 0.12,
+      "kanaly": 1,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": false,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "tik-metronom",
+      "kategorie": "zvuk",
+      "podkategorie": "tik",
+      "stitky": [
+        "tik",
+        "metronom",
+        "takt",
+        "odpocet"
+      ],
+      "soubor": "zvuky/tik-metronom.wav",
+      "delka_s": 0.07,
+      "kanaly": 1,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": false,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "uder-hluboky",
+      "kategorie": "zvuk",
+      "podkategorie": "úder",
+      "stitky": [
+        "uder",
+        "impact",
+        "boom",
+        "hluboky",
+        "dopad"
+      ],
+      "soubor": "zvuky/uder-hluboky.wav",
+      "delka_s": 2.246,
+      "kanaly": 1,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": false,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "uder-razny",
+      "kategorie": "zvuk",
+      "podkategorie": "úder",
+      "stitky": [
+        "uder",
+        "hit",
+        "razny",
+        "akcent"
+      ],
+      "soubor": "zvuky/uder-razny.wav",
+      "delka_s": 0.714,
+      "kanaly": 1,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": false,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "uder-kovovy",
+      "kategorie": "zvuk",
+      "podkategorie": "úder",
+      "stitky": [
+        "uder",
+        "kovovy",
+        "zvon",
+        "metal"
+      ],
+      "soubor": "zvuky/uder-kovovy.wav",
+      "delka_s": 2.4,
+      "kanaly": 1,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": false,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "uder-tlumeny",
+      "kategorie": "zvuk",
+      "podkategorie": "úder",
+      "stitky": [
+        "uder",
+        "thump",
+        "tlumeny",
+        "papir",
+        "dopad"
+      ],
+      "soubor": "zvuky/uder-tlumeny.wav",
+      "delka_s": 0.408,
+      "kanaly": 1,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": false,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "nabeh-sum",
+      "kategorie": "zvuk",
+      "podkategorie": "náběh",
+      "stitky": [
+        "nabeh",
+        "riser",
+        "sum",
+        "napeti"
+      ],
+      "soubor": "zvuky/nabeh-sum.wav",
+      "delka_s": 2.5,
+      "kanaly": 1,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": false,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "nabeh-ton",
+      "kategorie": "zvuk",
+      "podkategorie": "náběh",
+      "stitky": [
+        "nabeh",
+        "riser",
+        "ton",
+        "stoupani"
+      ],
+      "soubor": "zvuky/nabeh-ton.wav",
+      "delka_s": 2.0,
+      "kanaly": 1,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": false,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "nabeh-obraceny",
+      "kategorie": "zvuk",
+      "podkategorie": "náběh",
+      "stitky": [
+        "nabeh",
+        "reverse",
+        "obraceny",
+        "cinel"
+      ],
+      "soubor": "zvuky/nabeh-obraceny.wav",
+      "delka_s": 1.8,
+      "kanaly": 1,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": false,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "klavesa-mechanicka",
+      "kategorie": "zvuk",
+      "podkategorie": "klávesa",
+      "stitky": [
+        "klavesa",
+        "klavesnice",
+        "mechanicka",
+        "psani"
+      ],
+      "soubor": "zvuky/klavesa-mechanicka.wav",
+      "delka_s": 0.127,
+      "kanaly": 1,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": false,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "klavesa-mekka",
+      "kategorie": "zvuk",
+      "podkategorie": "klávesa",
+      "stitky": [
+        "klavesa",
+        "klavesnice",
+        "notebook",
+        "mekka",
+        "psani"
+      ],
+      "soubor": "zvuky/klavesa-mekka.wav",
+      "delka_s": 0.076,
+      "kanaly": 1,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": false,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "klavesa-mezernik",
+      "kategorie": "zvuk",
+      "podkategorie": "klávesa",
+      "stitky": [
+        "klavesa",
+        "mezernik",
+        "spacebar",
+        "psani"
+      ],
+      "soubor": "zvuky/klavesa-mezernik.wav",
+      "delka_s": 0.2,
+      "kanaly": 1,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": false,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "smycka-plocha",
+      "kategorie": "zvuk",
+      "podkategorie": "smyčka",
+      "stitky": [
+        "smycka",
+        "loop",
+        "pad",
+        "podkres",
+        "klid"
+      ],
+      "soubor": "zvuky/smycka-plocha.wav",
+      "delka_s": 8.0,
+      "kanaly": 2,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": true,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "smycka-puls",
+      "kategorie": "zvuk",
+      "podkategorie": "smyčka",
+      "stitky": [
+        "smycka",
+        "loop",
+        "arpeggio",
+        "podkres",
+        "120 bpm"
+      ],
+      "soubor": "zvuky/smycka-puls.wav",
+      "delka_s": 8.0,
+      "kanaly": 2,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": true,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "smycka-rytmus",
+      "kategorie": "zvuk",
+      "podkategorie": "smyčka",
+      "stitky": [
+        "smycka",
+        "loop",
+        "beat",
+        "podkres",
+        "120 bpm"
+      ],
+      "soubor": "zvuky/smycka-rytmus.wav",
+      "delka_s": 4.0,
+      "kanaly": 2,
+      "vzorkovani_hz": 48000,
+      "bitu": 24,
+      "spicka_dbfs": -3.05,
+      "smycka": true,
+      "zdroj": "vlastní",
+      "licence": "vlastní"
+    },
+    {
+      "jmeno": "lucide-arrow-right",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "forward",
+        "next",
+        "direction",
+        "east",
+        "->"
+      ],
+      "soubor": "ikony/lucide/arrow-right.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/arrow-right"
+    },
+    {
+      "jmeno": "lucide-arrow-left",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "previous",
+        "back",
+        "direction",
+        "west",
+        "<-"
+      ],
+      "soubor": "ikony/lucide/arrow-left.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/arrow-left"
+    },
+    {
+      "jmeno": "lucide-arrow-up",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "forward",
+        "direction",
+        "north"
+      ],
+      "soubor": "ikony/lucide/arrow-up.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/arrow-up"
+    },
+    {
+      "jmeno": "lucide-arrow-down",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "backwards",
+        "reverse",
+        "direction",
+        "south"
+      ],
+      "soubor": "ikony/lucide/arrow-down.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/arrow-down"
+    },
+    {
+      "jmeno": "lucide-arrow-up-right",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "direction",
+        "north-east",
+        "diagonal"
+      ],
+      "soubor": "ikony/lucide/arrow-up-right.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/arrow-up-right"
+    },
+    {
+      "jmeno": "lucide-chevron-right",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "forward",
+        "next",
+        "more than",
+        "greater",
+        "menu",
+        "code"
+      ],
+      "soubor": "ikony/lucide/chevron-right.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/chevron-right"
+    },
+    {
+      "jmeno": "lucide-chevron-left",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "back",
+        "previous",
+        "less than",
+        "fewer",
+        "menu",
+        "<"
+      ],
+      "soubor": "ikony/lucide/chevron-left.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/chevron-left"
+    },
+    {
+      "jmeno": "lucide-chevron-down",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "backwards",
+        "reverse",
+        "slow",
+        "dropdown"
+      ],
+      "soubor": "ikony/lucide/chevron-down.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/chevron-down"
+    },
+    {
+      "jmeno": "lucide-chevron-up",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "caret",
+        "keyboard",
+        "mac",
+        "control",
+        "ctrl",
+        "superscript"
+      ],
+      "soubor": "ikony/lucide/chevron-up.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/chevron-up"
+    },
+    {
+      "jmeno": "lucide-menu",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "bars",
+        "navigation",
+        "hamburger",
+        "options"
+      ],
+      "soubor": "ikony/lucide/menu.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/menu"
+    },
+    {
+      "jmeno": "lucide-ellipsis",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "et cetera",
+        "etc",
+        "loader",
+        "loading",
+        "progress",
+        "pending"
+      ],
+      "soubor": "ikony/lucide/ellipsis.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/ellipsis"
+    },
+    {
+      "jmeno": "lucide-users",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "group",
+        "people"
+      ],
+      "soubor": "ikony/lucide/users.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/users"
+    },
+    {
+      "jmeno": "lucide-phone",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "call"
+      ],
+      "soubor": "ikony/lucide/phone.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/phone"
+    },
+    {
+      "jmeno": "lucide-bookmark",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "save",
+        "favorite",
+        "mark",
+        "label",
+        "attachment",
+        "file"
+      ],
+      "soubor": "ikony/lucide/bookmark.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/bookmark"
+    },
+    {
+      "jmeno": "lucide-trash-2",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide"
+      ],
+      "soubor": "ikony/lucide/trash-2.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/trash-2"
+    },
+    {
+      "jmeno": "lucide-pencil",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "rubber",
+        "edit",
+        "create",
+        "draw",
+        "sketch",
+        "draft"
+      ],
+      "soubor": "ikony/lucide/pencil.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/pencil"
+    },
+    {
+      "jmeno": "lucide-copy",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "clone",
+        "duplicate",
+        "multiple"
+      ],
+      "soubor": "ikony/lucide/copy.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/copy"
+    },
+    {
+      "jmeno": "lucide-eye-off",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "view",
+        "watch",
+        "see",
+        "hide",
+        "conceal",
+        "mask"
+      ],
+      "soubor": "ikony/lucide/eye-off.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/eye-off"
+    },
+    {
+      "jmeno": "lucide-key",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "password",
+        "login",
+        "authentication",
+        "secure",
+        "unlock",
+        "keychain"
+      ],
+      "soubor": "ikony/lucide/key.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/key"
+    },
+    {
+      "jmeno": "lucide-video",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "camera",
+        "movie",
+        "film",
+        "recording",
+        "motion picture",
+        "camcorder"
+      ],
+      "soubor": "ikony/lucide/video.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/video"
+    },
+    {
+      "jmeno": "lucide-file-text",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "data",
+        "txt",
+        "pdf",
+        "document"
+      ],
+      "soubor": "ikony/lucide/file-text.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/file-text"
+    },
+    {
+      "jmeno": "lucide-shopping-cart",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "trolley",
+        "cart",
+        "basket",
+        "e-commerce",
+        "store",
+        "purchase"
+      ],
+      "soubor": "ikony/lucide/shopping-cart.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/shopping-cart"
+    },
+    {
+      "jmeno": "lucide-gift",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "present",
+        "box",
+        "birthday",
+        "party"
+      ],
+      "soubor": "ikony/lucide/gift.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/gift"
+    },
+    {
+      "jmeno": "lucide-send",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "email",
+        "message",
+        "mail",
+        "paper airplane",
+        "paper aeroplane",
+        "submit"
+      ],
+      "soubor": "ikony/lucide/send.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/send"
+    },
+    {
+      "jmeno": "lucide-refresh-cw",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "rotate",
+        "reload",
+        "rerun",
+        "synchronise",
+        "synchronize",
+        "arrows"
+      ],
+      "soubor": "ikony/lucide/refresh-cw.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/refresh-cw"
+    },
+    {
+      "jmeno": "lucide-filter",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide"
+      ],
+      "soubor": "ikony/lucide/filter.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/filter"
+    },
+    {
+      "jmeno": "lucide-sliders-horizontal",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "settings",
+        "filters",
+        "controls"
+      ],
+      "soubor": "ikony/lucide/sliders-horizontal.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/sliders-horizontal"
+    },
+    {
+      "jmeno": "lucide-layout-grid",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "app",
+        "home",
+        "start"
+      ],
+      "soubor": "ikony/lucide/layout-grid.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/layout-grid"
+    },
+    {
+      "jmeno": "lucide-list",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "options"
+      ],
+      "soubor": "ikony/lucide/list.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/list"
+    },
+    {
+      "jmeno": "lucide-layers",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "stack",
+        "pile",
+        "pages",
+        "sheets",
+        "paperwork",
+        "copies"
+      ],
+      "soubor": "ikony/lucide/layers.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/layers"
+    },
+    {
+      "jmeno": "lucide-trending-up",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "statistics"
+      ],
+      "soubor": "ikony/lucide/trending-up.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/trending-up"
+    },
+    {
+      "jmeno": "lucide-info",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "about",
+        "advice",
+        "clue",
+        "details",
+        "help",
+        "hint"
+      ],
+      "soubor": "ikony/lucide/info.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/info"
+    },
+    {
+      "jmeno": "lucide-triangle-alert",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "warning",
+        "alert",
+        "danger",
+        "exclamation mark",
+        "linter"
+      ],
+      "soubor": "ikony/lucide/triangle-alert.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/triangle-alert"
+    },
+    {
+      "jmeno": "lucide-circle-help",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide"
+      ],
+      "soubor": "ikony/lucide/circle-help.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/circle-help"
+    },
+    {
+      "jmeno": "lucide-circle-check",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "done",
+        "todo",
+        "tick",
+        "complete",
+        "task"
+      ],
+      "soubor": "ikony/lucide/circle-check.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/circle-check"
+    },
+    {
+      "jmeno": "lucide-external-link",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "outbound",
+        "open",
+        "share"
+      ],
+      "soubor": "ikony/lucide/external-link.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/external-link"
+    },
+    {
+      "jmeno": "lucide-log-out",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "sign out",
+        "arrow",
+        "exit",
+        "auth"
+      ],
+      "soubor": "ikony/lucide/log-out.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/log-out"
+    },
+    {
+      "jmeno": "lucide-wifi",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "connection",
+        "signal",
+        "wireless"
+      ],
+      "soubor": "ikony/lucide/wifi.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/wifi"
+    },
+    {
+      "jmeno": "lucide-battery",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "power",
+        "electricity",
+        "energy",
+        "accumulator",
+        "charge"
+      ],
+      "soubor": "ikony/lucide/battery.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/battery"
+    },
+    {
+      "jmeno": "lucide-smartphone",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "phone",
+        "cellphone",
+        "device",
+        "mobile",
+        "screen",
+        "display"
+      ],
+      "soubor": "ikony/lucide/smartphone.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/smartphone"
+    },
+    {
+      "jmeno": "lucide-monitor",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "tv",
+        "computer",
+        "desktop",
+        "screen",
+        "display",
+        "external display"
+      ],
+      "soubor": "ikony/lucide/monitor.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/monitor"
+    },
+    {
+      "jmeno": "lucide-sparkles",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "stars",
+        "effect",
+        "filter",
+        "night",
+        "magic"
+      ],
+      "soubor": "ikony/lucide/sparkles.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/sparkles"
+    },
+    {
+      "jmeno": "lucide-rocket",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "release",
+        "boost",
+        "launch",
+        "space",
+        "version"
+      ],
+      "soubor": "ikony/lucide/rocket.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/rocket"
+    },
+    {
+      "jmeno": "lucide-target",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "logo",
+        "bullseye",
+        "deadline",
+        "projects",
+        "overview",
+        "work"
+      ],
+      "soubor": "ikony/lucide/target.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/target"
+    },
+    {
+      "jmeno": "lucide-award",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "achievement",
+        "badge",
+        "rosette",
+        "prize",
+        "winner"
+      ],
+      "soubor": "ikony/lucide/award.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/award"
+    },
+    {
+      "jmeno": "lucide-flag",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "report",
+        "marker",
+        "notification",
+        "warning",
+        "milestone",
+        "goal"
+      ],
+      "soubor": "ikony/lucide/flag.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/flag"
+    },
+    {
+      "jmeno": "lucide-tag",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "label",
+        "badge",
+        "ticket",
+        "mark"
+      ],
+      "soubor": "ikony/lucide/tag.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/tag"
+    },
+    {
+      "jmeno": "lucide-package",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "box",
+        "container",
+        "storage",
+        "sealed",
+        "delivery",
+        "undelivered"
+      ],
+      "soubor": "ikony/lucide/package.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/package"
+    },
+    {
+      "jmeno": "lucide-briefcase",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "work",
+        "bag",
+        "baggage",
+        "folder"
+      ],
+      "soubor": "ikony/lucide/briefcase.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/briefcase"
+    },
+    {
+      "jmeno": "lucide-lightbulb",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "idea",
+        "bright",
+        "lights"
+      ],
+      "soubor": "ikony/lucide/lightbulb.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/lightbulb"
+    },
+    {
+      "jmeno": "lucide-thumbs-up",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "like",
+        "good",
+        "emotion"
+      ],
+      "soubor": "ikony/lucide/thumbs-up.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/thumbs-up"
+    },
+    {
+      "jmeno": "lucide-maximize-2",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "fullscreen",
+        "arrows",
+        "expand"
+      ],
+      "soubor": "ikony/lucide/maximize-2.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/maximize-2"
+    },
+    {
+      "jmeno": "lucide-rotate-cw",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "arrow",
+        "right",
+        "clockwise",
+        "refresh",
+        "reload",
+        "rerun"
+      ],
+      "soubor": "ikony/lucide/rotate-cw.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/rotate-cw"
+    },
+    {
+      "jmeno": "lucide-palette",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "colors",
+        "colours",
+        "theme",
+        "scheme",
+        "paint",
+        "watercolor"
+      ],
+      "soubor": "ikony/lucide/palette.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/palette"
+    },
+    {
+      "jmeno": "lucide-compass",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "direction",
+        "north",
+        "east",
+        "south",
+        "west",
+        "browser"
+      ],
+      "soubor": "ikony/lucide/compass.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/compass"
+    },
+    {
+      "jmeno": "lucide-map",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "location",
+        "navigation",
+        "travel"
+      ],
+      "soubor": "ikony/lucide/map.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/map"
+    },
+    {
+      "jmeno": "lucide-timer",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "time",
+        "timer",
+        "stopwatch"
+      ],
+      "soubor": "ikony/lucide/timer.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/timer"
+    },
+    {
+      "jmeno": "lucide-leaf",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "sustainability",
+        "nature",
+        "energy",
+        "plant",
+        "autumn"
+      ],
+      "soubor": "ikony/lucide/leaf.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/leaf"
+    },
+    {
+      "jmeno": "lucide-flame",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "heat",
+        "burn",
+        "light",
+        "glow",
+        "ignite",
+        "passion"
+      ],
+      "soubor": "ikony/lucide/flame.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/flame"
+    },
+    {
+      "jmeno": "lucide-droplet",
+      "kategorie": "ikony",
+      "podkategorie": "lucide",
+      "stitky": [
+        "lucide",
+        "water",
+        "weather",
+        "liquid",
+        "fluid",
+        "wet",
+        "moisture"
+      ],
+      "soubor": "ikony/lucide/droplet.svg",
+      "viewBox": "0 0 24 24",
+      "zdroj": "Lucide",
+      "licence": "ISC",
+      "autor": "Lucide Icons and Contributors",
+      "odkaz": "https://lucide.dev/icons/droplet"
+    },
+    {
+      "jmeno": "peep-stoji-ukazuje-nahoru",
+      "kategorie": "postavy",
+      "stitky": [
+        "open peeps",
+        "postava",
+        "kresba",
+        "stoji",
+        "ukazuje",
+        "prezentuje"
+      ],
+      "soubor": "postavy/stoji-ukazuje-nahoru.svg",
+      "viewBox": "0 0 309 652",
+      "puvodni": "peep-standing-16",
+      "zdroj": "Open Peeps",
+      "licence": "CC0",
+      "autor": "Pablo Stanley",
+      "odkaz": "https://www.openpeeps.com/",
+      "url_souboru": "https://cdn.prod.website-files.com/5e51c674258ffe10d286d30a/5e53622ec67e7957fc9b32e0_peep-standing-16.svg"
+    },
+    {
+      "jmeno": "peep-stoji-vysvetluje",
+      "kategorie": "postavy",
+      "stitky": [
+        "open peeps",
+        "postava",
+        "kresba",
+        "stoji",
+        "gesto",
+        "vysvetluje"
+      ],
+      "soubor": "postavy/stoji-vysvetluje.svg",
+      "viewBox": "0 0 321 691",
+      "puvodni": "peep-standing-22",
+      "zdroj": "Open Peeps",
+      "licence": "CC0",
+      "autor": "Pablo Stanley",
+      "odkaz": "https://www.openpeeps.com/",
+      "url_souboru": "https://cdn.prod.website-files.com/5e51c674258ffe10d286d30a/5e5362e2f5fa1aefa7ffe47c_peep-standing-22.svg"
+    },
+    {
+      "jmeno": "peep-jde",
+      "kategorie": "postavy",
+      "stitky": [
+        "open peeps",
+        "postava",
+        "kresba",
+        "chuze",
+        "pohyb",
+        "jde"
+      ],
+      "soubor": "postavy/jde.svg",
+      "viewBox": "0 0 246 677",
+      "puvodni": "peep-standing-26",
+      "zdroj": "Open Peeps",
+      "licence": "CC0",
+      "autor": "Pablo Stanley",
+      "odkaz": "https://www.openpeeps.com/",
+      "url_souboru": "https://cdn.prod.website-files.com/5e51c674258ffe10d286d30a/5e5365e367293a5eb7630824_peep-standing-26.svg"
+    },
+    {
+      "jmeno": "peep-stoji-ruce-v-bok-proteza",
+      "kategorie": "postavy",
+      "stitky": [
+        "open peeps",
+        "postava",
+        "kresba",
+        "stoji",
+        "sebevedomi",
+        "proteza",
+        "diverzita"
+      ],
+      "soubor": "postavy/stoji-ruce-v-bok-proteza.svg",
+      "viewBox": "0 0 213 694",
+      "puvodni": "peep-standing-28",
+      "zdroj": "Open Peeps",
+      "licence": "CC0",
+      "autor": "Pablo Stanley",
+      "odkaz": "https://www.openpeeps.com/",
+      "url_souboru": "https://cdn.prod.website-files.com/5e51c674258ffe10d286d30a/5e536624f5fa1ac60201cc6b_peep-standing-28.svg"
+    },
+    {
+      "jmeno": "peep-sedi-na-voziku",
+      "kategorie": "postavy",
+      "stitky": [
+        "open peeps",
+        "postava",
+        "kresba",
+        "sedi",
+        "vozik",
+        "gesto",
+        "diverzita"
+      ],
+      "soubor": "postavy/sedi-na-voziku.svg",
+      "viewBox": "0 0 462 603",
+      "puvodni": "peep-sitting-14",
+      "zdroj": "Open Peeps",
+      "licence": "CC0",
+      "autor": "Pablo Stanley",
+      "odkaz": "https://www.openpeeps.com/",
+      "url_souboru": "https://cdn.prod.website-files.com/5e51c674258ffe10d286d30a/5e535f7d9b55b097be57089f_peep-sitting-14.svg"
+    },
+    {
+      "jmeno": "peep-sedi-na-zemi",
+      "kategorie": "postavy",
+      "stitky": [
+        "open peeps",
+        "postava",
+        "kresba",
+        "sedi",
+        "zem",
+        "pohoda"
+      ],
+      "soubor": "postavy/sedi-na-zemi.svg",
+      "viewBox": "0 0 335 495",
+      "puvodni": "peep-sitting-11",
+      "zdroj": "Open Peeps",
+      "licence": "CC0",
+      "autor": "Pablo Stanley",
+      "odkaz": "https://www.openpeeps.com/",
+      "url_souboru": "https://cdn.prod.website-files.com/5e51c674258ffe10d286d30a/5e535f2ad39923f7d558435b_peep-sitting-11.svg"
+    },
+    {
+      "jmeno": "peep-sedi-noha-pres-nohu",
+      "kategorie": "postavy",
+      "stitky": [
+        "open peeps",
+        "postava",
+        "kresba",
+        "sedi",
+        "pohoda",
+        "ceka"
+      ],
+      "soubor": "postavy/sedi-noha-pres-nohu.svg",
+      "viewBox": "0 0 365 577",
+      "puvodni": "peep-sitting-6",
+      "zdroj": "Open Peeps",
+      "licence": "CC0",
+      "autor": "Pablo Stanley",
+      "odkaz": "https://www.openpeeps.com/",
+      "url_souboru": "https://cdn.prod.website-files.com/5e51c674258ffe10d286d30a/5e535e9fc992502f35cd7902_peep-sitting-6.svg"
+    },
+    {
+      "jmeno": "peep-bysta-krci-rameny",
+      "kategorie": "postavy",
+      "stitky": [
+        "open peeps",
+        "postava",
+        "kresba",
+        "bysta",
+        "nevim",
+        "krci rameny"
+      ],
+      "soubor": "postavy/bysta-krci-rameny.svg",
+      "viewBox": "0 0 240 324",
+      "puvodni": "peep-2",
+      "zdroj": "Open Peeps",
+      "licence": "CC0",
+      "autor": "Pablo Stanley",
+      "odkaz": "https://www.openpeeps.com/",
+      "url_souboru": "https://cdn.prod.website-files.com/5e51c674258ffe10d286d30a/5e532a4c258ffe237b8ef2c1_peep-2.svg"
+    },
+    {
+      "jmeno": "peep-bysta-ukazuje-stranou",
+      "kategorie": "postavy",
+      "stitky": [
+        "open peeps",
+        "postava",
+        "kresba",
+        "bysta",
+        "ukazuje",
+        "tady"
+      ],
+      "soubor": "postavy/bysta-ukazuje-stranou.svg",
+      "viewBox": "0 0 240 324",
+      "puvodni": "peep-52",
+      "zdroj": "Open Peeps",
+      "licence": "CC0",
+      "autor": "Pablo Stanley",
+      "odkaz": "https://www.openpeeps.com/",
+      "url_souboru": "https://cdn.prod.website-files.com/5e51c674258ffe10d286d30a/5e5357a8c992500f5fc84f40_peep-52.svg"
+    },
+    {
+      "jmeno": "peep-bysta-napad",
+      "kategorie": "postavy",
+      "stitky": [
+        "open peeps",
+        "postava",
+        "kresba",
+        "bysta",
+        "napad",
+        "prst nahoru"
+      ],
+      "soubor": "postavy/bysta-napad.svg",
+      "viewBox": "0 0 240 324",
+      "puvodni": "peep-60",
+      "zdroj": "Open Peeps",
+      "licence": "CC0",
+      "autor": "Pablo Stanley",
+      "odkaz": "https://www.openpeeps.com/",
+      "url_souboru": "https://cdn.prod.website-files.com/5e51c674258ffe10d286d30a/5e5358a764109d50aa01705d_peep-60.svg"
+    },
+    {
+      "jmeno": "polyhaven-concrete_floor_worn_001",
+      "kategorie": "textury",
+      "podkategorie": "polyhaven",
+      "stitky": [
+        "poly haven",
+        "fotografie",
+        "floor",
+        "man made",
+        "indoor",
+        "dirty",
+        "worn",
+        "old",
+        "plain"
+      ],
+      "soubor": "textury/polyhaven/concrete_floor_worn_001.jpg",
+      "rozmer": "1080x1920",
+      "zdroj": "Poly Haven",
+      "licence": "CC0",
+      "autor": "Dimitrios Savva, Rico Cilliers",
+      "odkaz": "https://polyhaven.com/a/concrete_floor_worn_001",
+      "url_souboru": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/concrete_floor_worn_001/concrete_floor_worn_001_diff_2k.jpg"
+    },
+    {
+      "jmeno": "polyhaven-beige_wall_001",
+      "kategorie": "textury",
+      "podkategorie": "polyhaven",
+      "stitky": [
+        "poly haven",
+        "fotografie",
+        "man made",
+        "wall",
+        "plaster",
+        "outdoor",
+        "beige",
+        "painted",
+        "smooth"
+      ],
+      "soubor": "textury/polyhaven/beige_wall_001.jpg",
+      "rozmer": "1080x1920",
+      "zdroj": "Poly Haven",
+      "licence": "CC0",
+      "autor": "Dimitrios Savva, Rico Cilliers",
+      "odkaz": "https://polyhaven.com/a/beige_wall_001",
+      "url_souboru": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/beige_wall_001/beige_wall_001_diff_2k.jpg"
+    },
+    {
+      "jmeno": "polyhaven-denmin_fabric_02",
+      "kategorie": "textury",
+      "podkategorie": "polyhaven",
+      "stitky": [
+        "poly haven",
+        "fotografie",
+        "fabric",
+        "denim",
+        "jeans",
+        "pants",
+        "cloth"
+      ],
+      "soubor": "textury/polyhaven/denmin_fabric_02.jpg",
+      "rozmer": "1080x1920",
+      "zdroj": "Poly Haven",
+      "licence": "CC0",
+      "autor": "Rob Tuytel",
+      "odkaz": "https://polyhaven.com/a/denmin_fabric_02",
+      "url_souboru": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/denmin_fabric_02/denmin_fabric_02_diff_2k.jpg"
+    },
+    {
+      "jmeno": "polyhaven-brown_leather",
+      "kategorie": "textury",
+      "podkategorie": "polyhaven",
+      "stitky": [
+        "poly haven",
+        "fotografie",
+        "fabric",
+        "leather",
+        "leather",
+        "brown",
+        "chair"
+      ],
+      "soubor": "textury/polyhaven/brown_leather.jpg",
+      "rozmer": "1080x1920",
+      "zdroj": "Poly Haven",
+      "licence": "CC0",
+      "autor": "Rob Tuytel",
+      "odkaz": "https://polyhaven.com/a/brown_leather",
+      "url_souboru": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/brown_leather/brown_leather_albedo_2k.jpg"
+    },
+    {
+      "jmeno": "polyhaven-concrete_floor_02",
+      "kategorie": "textury",
+      "podkategorie": "polyhaven",
+      "stitky": [
+        "poly haven",
+        "fotografie",
+        "concrete",
+        "plaster-concrete",
+        "dirty",
+        "man made",
+        "rough",
+        "moss",
+        "plain"
+      ],
+      "soubor": "textury/polyhaven/concrete_floor_02.jpg",
+      "rozmer": "1080x1920",
+      "zdroj": "Poly Haven",
+      "licence": "CC0",
+      "autor": "Rob Tuytel",
+      "odkaz": "https://polyhaven.com/a/concrete_floor_02",
+      "url_souboru": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/concrete_floor_02/concrete_floor_02_diff_2k.jpg"
+    },
+    {
+      "jmeno": "polyhaven-plywood",
+      "kategorie": "textury",
+      "podkategorie": "polyhaven",
+      "stitky": [
+        "poly haven",
+        "fotografie",
+        "wood",
+        "clean",
+        "man made",
+        "natural",
+        "clean",
+        "even",
+        "smooth"
+      ],
+      "soubor": "textury/polyhaven/plywood.jpg",
+      "rozmer": "1080x1920",
+      "zdroj": "Poly Haven",
+      "licence": "CC0",
+      "autor": "Rob Tuytel",
+      "odkaz": "https://polyhaven.com/a/plywood",
+      "url_souboru": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/plywood/plywood_diff_2k.jpg"
+    },
+    {
+      "jmeno": "polyhaven-aerial_beach_01",
+      "kategorie": "textury",
+      "podkategorie": "polyhaven",
+      "stitky": [
+        "poly haven",
+        "fotografie",
+        "terrain",
+        "sand",
+        "outdoor",
+        "natural",
+        "beach",
+        "wavy",
+        "costal"
+      ],
+      "soubor": "textury/polyhaven/aerial_beach_01.jpg",
+      "rozmer": "1080x1920",
+      "zdroj": "Poly Haven",
+      "licence": "CC0",
+      "autor": "Rob Tuytel",
+      "odkaz": "https://polyhaven.com/a/aerial_beach_01",
+      "url_souboru": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/aerial_beach_01/aerial_beach_01_diff_2k.jpg"
+    },
+    {
+      "jmeno": "polyhaven-metal_plate",
+      "kategorie": "textury",
+      "podkategorie": "polyhaven",
+      "stitky": [
+        "poly haven",
+        "fotografie",
+        "metal",
+        "floor",
+        "man made",
+        "indoor",
+        "bare",
+        "painted",
+        "rusty"
+      ],
+      "soubor": "textury/polyhaven/metal_plate.jpg",
+      "rozmer": "1080x1920",
+      "zdroj": "Poly Haven",
+      "licence": "CC0",
+      "autor": "Rob Tuytel",
+      "odkaz": "https://polyhaven.com/a/metal_plate",
+      "url_souboru": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/metal_plate/metal_plate_diff_2k.jpg"
+    },
+    {
+      "jmeno": "polyhaven-aerial_asphalt_01",
+      "kategorie": "textury",
+      "podkategorie": "polyhaven",
+      "stitky": [
+        "poly haven",
+        "fotografie",
+        "asphalt",
+        "outdoor",
+        "floor",
+        "road",
+        "road",
+        "flat",
+        "cracked"
+      ],
+      "soubor": "textury/polyhaven/aerial_asphalt_01.jpg",
+      "rozmer": "1080x1920",
+      "zdroj": "Poly Haven",
+      "licence": "CC0",
+      "autor": "Rob Tuytel",
+      "odkaz": "https://polyhaven.com/a/aerial_asphalt_01",
+      "url_souboru": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/aerial_asphalt_01/aerial_asphalt_01_diff_2k.jpg"
+    },
+    {
+      "jmeno": "polyhaven-moon_01",
+      "kategorie": "textury",
+      "podkategorie": "polyhaven",
+      "stitky": [
+        "poly haven",
+        "fotografie",
+        "outdoor",
+        "sand",
+        "terrain",
+        "collection: moon",
+        "rough",
+        "uneven",
+        "dirt"
+      ],
+      "soubor": "textury/polyhaven/moon_01.jpg",
+      "rozmer": "1080x1920",
+      "zdroj": "Poly Haven",
+      "licence": "CC0",
+      "autor": "Greg Zaal, Rico Cilliers, Jenelle van Heerden, Dario Barresi",
+      "odkaz": "https://polyhaven.com/a/moon_01",
+      "url_souboru": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/moon_01/moon_01_diff_2k.jpg"
+    },
+    {
+      "jmeno": "priroda-vanda-kru-chom-red-butterfly",
+      "kategorie": "fotky",
+      "podkategorie": "priroda",
+      "stitky": [
+        "fotografie",
+        "priroda",
+        "vanda",
+        "chom",
+        "butterfly"
+      ],
+      "soubor": "fotky/priroda-vanda-kru-chom-red-butterfly.jpg",
+      "rozmer": "2000x1401",
+      "zdroj": "Smithsonian Open Access",
+      "licence": "CC0",
+      "autor": "Smithsonian Gardens",
+      "nazev_dila": "Vanda Kru Chom 'Red Butterfly'",
+      "odkaz": "https://collections.si.edu/search/detail/edanmdm:ofeo-sg_2017-0147A",
+      "url_souboru": "https://ids.si.edu/ids/deliveryService?id=SG-2017-0147_A_JR&max=2000",
+      "doklad_licence": "usage.access = CC0 (API Smithsonian)"
+    },
+    {
+      "jmeno": "priroda-psychopsis-mendenhall-hildos",
+      "kategorie": "fotky",
+      "podkategorie": "priroda",
+      "stitky": [
+        "fotografie",
+        "priroda",
+        "psychopsis",
+        "mendenhall",
+        "hildos"
+      ],
+      "soubor": "fotky/priroda-psychopsis-mendenhall-hildos.jpg",
+      "rozmer": "1333x2000",
+      "zdroj": "Smithsonian Open Access",
+      "licence": "CC0",
+      "autor": "Smithsonian Gardens",
+      "nazev_dila": "Psychopsis Mendenhall 'Hildos'",
+      "odkaz": "https://collections.si.edu/search/detail/edanmdm:ofeo-sg_2018-0376A",
+      "url_souboru": "https://ids.si.edu/ids/deliveryService?id=SG-2018-0376A-FLO1-HL&max=2000",
+      "doklad_licence": "usage.access = CC0 (API Smithsonian)"
+    },
+    {
+      "jmeno": "priroda-trees-in-calaveras-grove-and-views-of-yo",
+      "kategorie": "fotky",
+      "podkategorie": "priroda",
+      "stitky": [
+        "fotografie",
+        "priroda",
+        "trees",
+        "calaveras",
+        "grove",
+        "views"
+      ],
+      "soubor": "fotky/priroda-trees-in-calaveras-grove-and-views-of-yo.jpg",
+      "rozmer": "1993x2000",
+      "zdroj": "The Met Open Access",
+      "licence": "CC0",
+      "autor": "Carleton E. Watkins",
+      "nazev_dila": "[Trees in Calaveras Grove and Views of Yosemite, California]",
+      "odkaz": "https://www.metmuseum.org/art/collection/search/286455",
+      "url_souboru": "https://images.metmuseum.org/CRDImages/ph/original/DP136844.jpg",
+      "doklad_licence": "isPublicDomain = true (Met Open Access, CC0)"
+    },
+    {
+      "jmeno": "priroda-waterfall",
+      "kategorie": "fotky",
+      "podkategorie": "priroda",
+      "stitky": [
+        "fotografie",
+        "priroda",
+        "waterfall"
+      ],
+      "soubor": "fotky/priroda-waterfall.jpg",
+      "rozmer": "1589x2000",
+      "zdroj": "The Met Open Access",
+      "licence": "CC0",
+      "autor": "Unknown",
+      "nazev_dila": "[Waterfall]",
+      "odkaz": "https://www.metmuseum.org/art/collection/search/288554",
+      "url_souboru": "https://images.metmuseum.org/CRDImages/ph/original/DP155602.jpg",
+      "doklad_licence": "isPublicDomain = true (Met Open Access, CC0)"
+    },
+    {
+      "jmeno": "architektura-cathedral-at-orleans",
+      "kategorie": "fotky",
+      "podkategorie": "architektura",
+      "stitky": [
+        "fotografie",
+        "architektura",
+        "cathedral",
+        "orleans"
+      ],
+      "soubor": "fotky/architektura-cathedral-at-orleans.jpg",
+      "rozmer": "2000x1640",
+      "zdroj": "The Met Open Access",
+      "licence": "CC0",
+      "autor": "William Henry Fox Talbot",
+      "nazev_dila": "Cathedral at Orléans",
+      "odkaz": "https://www.metmuseum.org/art/collection/search/267370",
+      "url_souboru": "https://images.metmuseum.org/CRDImages/ph/original/DP339363.jpg",
+      "doklad_licence": "isPublicDomain = true (Met Open Access, CC0)"
+    },
+    {
+      "jmeno": "architektura-east-end-troyes-cathedral-under-restorat",
+      "kategorie": "fotky",
+      "podkategorie": "architektura",
+      "stitky": [
+        "fotografie",
+        "architektura",
+        "east",
+        "troyes",
+        "cathedral",
+        "under"
+      ],
+      "soubor": "fotky/architektura-east-end-troyes-cathedral-under-restorat.jpg",
+      "rozmer": "1546x2000",
+      "zdroj": "The Met Open Access",
+      "licence": "CC0",
+      "autor": "Charles Marville",
+      "nazev_dila": "East End, Troyes Cathedral under Restoration, France",
+      "odkaz": "https://www.metmuseum.org/art/collection/search/831092",
+      "url_souboru": "https://images.metmuseum.org/CRDImages/ph/original/TR.307.4.2019_Marville.jpg",
+      "doklad_licence": "isPublicDomain = true (Met Open Access, CC0)"
+    },
+    {
+      "jmeno": "architektura-south-portal-chartres-cathedral",
+      "kategorie": "fotky",
+      "podkategorie": "architektura",
+      "stitky": [
+        "fotografie",
+        "architektura",
+        "south",
+        "portal",
+        "chartres",
+        "cathedral"
+      ],
+      "soubor": "fotky/architektura-south-portal-chartres-cathedral.jpg",
+      "rozmer": "1461x2000",
+      "zdroj": "The Met Open Access",
+      "licence": "CC0",
+      "autor": "Charles Marville",
+      "nazev_dila": "[South Portal, Chartres Cathedral]",
+      "odkaz": "https://www.metmuseum.org/art/collection/search/283734",
+      "url_souboru": "https://images.metmuseum.org/CRDImages/ph/original/DP158042.jpg",
+      "doklad_licence": "isPublicDomain = true (Met Open Access, CC0)"
+    },
+    {
+      "jmeno": "architektura-temple-of-edfu",
+      "kategorie": "fotky",
+      "podkategorie": "architektura",
+      "stitky": [
+        "fotografie",
+        "architektura",
+        "temple",
+        "edfu"
+      ],
+      "soubor": "fotky/architektura-temple-of-edfu.jpg",
+      "rozmer": "2000x1547",
+      "zdroj": "The Met Open Access",
+      "licence": "CC0",
+      "autor": "Gustave Le Gray",
+      "nazev_dila": "Temple of Edfu",
+      "odkaz": "https://www.metmuseum.org/art/collection/search/285473",
+      "url_souboru": "https://images.metmuseum.org/CRDImages/ph/original/DP150960.jpg",
+      "doklad_licence": "isPublicDomain = true (Met Open Access, CC0)"
+    },
+    {
+      "jmeno": "predmety-teapot-made-by-peter-bentzon",
+      "kategorie": "fotky",
+      "podkategorie": "predmety",
+      "stitky": [
+        "fotografie",
+        "predmety",
+        "teapot",
+        "made",
+        "peter",
+        "bentzon"
+      ],
+      "soubor": "fotky/predmety-teapot-made-by-peter-bentzon.jpg",
+      "rozmer": "2000x1499",
+      "zdroj": "Smithsonian Open Access",
+      "licence": "CC0",
+      "autor": "Peter Bentzon, American, ca. 1783 - after 1850",
+      "nazev_dila": "Teapot made by Peter Bentzon",
+      "odkaz": "https://nmaahc.si.edu/object/nmaahc_2010.14",
+      "url_souboru": "https://ids.si.edu/ids/deliveryService?id=NMAAHC-2010_14_001&max=2000",
+      "doklad_licence": "usage.access = CC0 (API Smithsonian)"
+    },
+    {
+      "jmeno": "predmety-teapot-from-a-breakfast-service-theiere",
+      "kategorie": "fotky",
+      "podkategorie": "predmety",
+      "stitky": [
+        "fotografie",
+        "predmety",
+        "teapot",
+        "from",
+        "breakfast",
+        "service"
+      ],
+      "soubor": "fotky/predmety-teapot-from-a-breakfast-service-theiere.jpg",
+      "rozmer": "2000x2000",
+      "zdroj": "Smithsonian Open Access",
+      "licence": "CC0",
+      "autor": "Sèvres Porcelain Manufactory, French, established 1756",
+      "nazev_dila": "Teapot, from a Breakfast Service (Théière; Déjeuner Mosaïque Florentine)",
+      "odkaz": "https://collection.cooperhewitt.org/view/objects/asitem/id/177852",
+      "url_souboru": "https://ids.si.edu/ids/deliveryService?id=CHSDM-1981-38-2abEllenMcDermott&max=2000",
+      "doklad_licence": "usage.access = CC0 (API Smithsonian)"
+    },
+    {
+      "jmeno": "predmety-teapot",
+      "kategorie": "fotky",
+      "podkategorie": "predmety",
+      "stitky": [
+        "fotografie",
+        "predmety",
+        "teapot"
+      ],
+      "soubor": "fotky/predmety-teapot.jpg",
+      "rozmer": "2000x1798",
+      "zdroj": "The Met Open Access",
+      "licence": "CC0",
+      "autor": "I. C.",
+      "nazev_dila": "Teapot",
+      "odkaz": "https://www.metmuseum.org/art/collection/search/200114",
+      "url_souboru": "https://images.metmuseum.org/CRDImages/es/original/DP103146.jpg",
+      "doklad_licence": "isPublicDomain = true (Met Open Access, CC0)"
+    },
+    {
+      "jmeno": "predmety-carriage-clock",
+      "kategorie": "fotky",
+      "podkategorie": "predmety",
+      "stitky": [
+        "fotografie",
+        "predmety",
+        "carriage",
+        "clock"
+      ],
+      "soubor": "fotky/predmety-carriage-clock.jpg",
+      "rozmer": "1482x2000",
+      "zdroj": "The Met Open Access",
+      "licence": "CC0",
+      "autor": "Boston Clock Company",
+      "nazev_dila": "Carriage Clock",
+      "odkaz": "https://www.metmuseum.org/art/collection/search/1454",
+      "url_souboru": "https://images.metmuseum.org/CRDImages/ad/original/233549.jpg",
+      "doklad_licence": "isPublicDomain = true (Met Open Access, CC0)"
+    },
+    {
+      "jmeno": "portret-portrait-of-a-woman-rembrandt-rembrandt-va",
+      "kategorie": "fotky",
+      "podkategorie": "portret",
+      "stitky": [
+        "fotografie",
+        "portret",
+        "portrait",
+        "woman"
+      ],
+      "soubor": "fotky/portret-portrait-of-a-woman-rembrandt-rembrandt-va.jpg",
+      "rozmer": "1483x2000",
+      "zdroj": "The Met Open Access",
+      "licence": "CC0",
+      "autor": "Rembrandt (Rembrandt van Rijn)",
+      "nazev_dila": "Portrait of a Woman",
+      "odkaz": "https://www.metmuseum.org/art/collection/search/437390",
+      "url_souboru": "https://images.metmuseum.org/CRDImages/ep/original/DP145913.jpg",
+      "doklad_licence": "isPublicDomain = true (Met Open Access, CC0)"
+    },
+    {
+      "jmeno": "portret-portrait-of-a-man-johannes-verspronck",
+      "kategorie": "fotky",
+      "podkategorie": "portret",
+      "stitky": [
+        "fotografie",
+        "portret",
+        "portrait"
+      ],
+      "soubor": "fotky/portret-portrait-of-a-man-johannes-verspronck.jpg",
+      "rozmer": "1618x2000",
+      "zdroj": "The Met Open Access",
+      "licence": "CC0",
+      "autor": "Johannes Verspronck",
+      "nazev_dila": "Portrait of a Man",
+      "odkaz": "https://www.metmuseum.org/art/collection/search/437893",
+      "url_souboru": "https://images.metmuseum.org/CRDImages/ep/original/DP143176.jpg",
+      "doklad_licence": "isPublicDomain = true (Met Open Access, CC0)"
+    },
+    {
+      "jmeno": "portret-portrait-of-a-man-hugo-van-der-goes",
+      "kategorie": "fotky",
+      "podkategorie": "portret",
+      "stitky": [
+        "fotografie",
+        "portret",
+        "portrait"
+      ],
+      "soubor": "fotky/portret-portrait-of-a-man-hugo-van-der-goes.jpg",
+      "rozmer": "1684x2000",
+      "zdroj": "The Met Open Access",
+      "licence": "CC0",
+      "autor": "Hugo van der Goes",
+      "nazev_dila": "Portrait of a Man",
+      "odkaz": "https://www.metmuseum.org/art/collection/search/436521",
+      "url_souboru": "https://images.metmuseum.org/CRDImages/ep/original/DP347299.jpg",
+      "doklad_licence": "isPublicDomain = true (Met Open Access, CC0)"
+    },
+    {
+      "jmeno": "portret-portrait-of-a-woman-giovanni-di-francesco",
+      "kategorie": "fotky",
+      "podkategorie": "portret",
+      "stitky": [
+        "fotografie",
+        "portret",
+        "portrait",
+        "woman"
+      ],
+      "soubor": "fotky/portret-portrait-of-a-woman-giovanni-di-francesco.jpg",
+      "rozmer": "1496x2000",
+      "zdroj": "The Met Open Access",
+      "licence": "CC0",
+      "autor": "Giovanni di Francesco del Cervelliera",
+      "nazev_dila": "Portrait of a Woman",
+      "odkaz": "https://www.metmuseum.org/art/collection/search/437859",
+      "url_souboru": "https://images.metmuseum.org/CRDImages/ep/original/DP161259.jpg",
+      "doklad_licence": "isPublicDomain = true (Met Open Access, CC0)"
+    },
+    {
+      "jmeno": "vesmir-apollo-8-mission-image-earth-over-the-ho",
+      "kategorie": "fotky",
+      "podkategorie": "vesmir",
+      "stitky": [
+        "fotografie",
+        "vesmir",
+        "apollo",
+        "mission",
+        "image",
+        "earth"
+      ],
+      "soubor": "fotky/vesmir-apollo-8-mission-image-earth-over-the-ho.jpg",
+      "rozmer": "2000x2000",
+      "zdroj": "NASA Image and Video Library",
+      "licence": "volné dílo (US Government Work, NASA Media Usage Guidelines)",
+      "autor": "JSC",
+      "nazev_dila": "Apollo 8 Mission image, Earth over the horizon of the moon",
+      "odkaz": "https://images.nasa.gov/details/as08-14-2383",
+      "url_souboru": "https://images-assets.nasa.gov/image/as08-14-2383/as08-14-2383~orig.jpg",
+      "doklad_licence": "NASA Media Usage Guidelines: not subject to copyright in the US"
+    },
+    {
+      "jmeno": "vesmir-view-of-the-earth-seen-by-the-apollo-17",
+      "kategorie": "fotky",
+      "podkategorie": "vesmir",
+      "stitky": [
+        "fotografie",
+        "vesmir",
+        "view",
+        "earth",
+        "seen",
+        "apollo"
+      ],
+      "soubor": "fotky/vesmir-view-of-the-earth-seen-by-the-apollo-17.jpg",
+      "rozmer": "2000x2000",
+      "zdroj": "NASA Image and Video Library",
+      "licence": "volné dílo (US Government Work, NASA Media Usage Guidelines)",
+      "autor": "JSC",
+      "nazev_dila": "View of the Earth seen by the Apollo 17 crew traveling toward the moon",
+      "odkaz": "https://images.nasa.gov/details/as17-148-22727",
+      "url_souboru": "https://images-assets.nasa.gov/image/as17-148-22727/as17-148-22727~orig.jpg",
+      "doklad_licence": "NASA Media Usage Guidelines: not subject to copyright in the US"
+    },
+    {
+      "jmeno": "vesmir-close-up-view-of-astronauts-footprint-in",
+      "kategorie": "fotky",
+      "podkategorie": "vesmir",
+      "stitky": [
+        "fotografie",
+        "vesmir",
+        "close",
+        "view",
+        "astronauts",
+        "footprint"
+      ],
+      "soubor": "fotky/vesmir-close-up-view-of-astronauts-footprint-in.jpg",
+      "rozmer": "1992x2000",
+      "zdroj": "NASA Image and Video Library",
+      "licence": "volné dílo (US Government Work, NASA Media Usage Guidelines)",
+      "autor": "JSC",
+      "nazev_dila": "Close-up view of astronauts footprint in lunar soil",
+      "odkaz": "https://images.nasa.gov/details/as11-40-5878",
+      "url_souboru": "https://images-assets.nasa.gov/image/as11-40-5878/as11-40-5878~orig.jpg",
+      "doklad_licence": "NASA Media Usage Guidelines: not subject to copyright in the US"
+    },
+    {
+      "jmeno": "vesmir-view-of-earth-rising-over-moon-s-horizon",
+      "kategorie": "fotky",
+      "podkategorie": "vesmir",
+      "stitky": [
+        "fotografie",
+        "vesmir",
+        "view",
+        "earth",
+        "rising",
+        "over"
+      ],
+      "soubor": "fotky/vesmir-view-of-earth-rising-over-moon-s-horizon.jpg",
+      "rozmer": "2000x2000",
+      "zdroj": "NASA Image and Video Library",
+      "licence": "volné dílo (US Government Work, NASA Media Usage Guidelines)",
+      "autor": "JSC",
+      "nazev_dila": "View of Earth rising over Moon's horizon taken from Apollo 11 spacecraft",
+      "odkaz": "https://images.nasa.gov/details/as11-44-6552",
+      "url_souboru": "https://images-assets.nasa.gov/image/as11-44-6552/as11-44-6552~orig.jpg",
+      "doklad_licence": "NASA Media Usage Guidelines: not subject to copyright in the US"
+    },
+    {
+      "jmeno": "kenney-click1",
+      "kategorie": "zvuk",
+      "podkategorie": "klik",
+      "stitky": [
+        "kenney",
+        "ui",
+        "klik",
+        "click"
+      ],
+      "soubor": "zvuky/kenney/click1.wav",
+      "delka_s": 0.091,
+      "kanaly": 2,
+      "vzorkovani_hz": 48000,
+      "bitu": 16,
+      "spicka_dbfs": -1.4,
+      "smycka": false,
+      "zdroj": "Kenney UI Audio",
+      "licence": "CC0",
+      "autor": "Kenney Vleugels (Kenney.nl)",
+      "odkaz": "https://kenney.nl/assets/ui-audio",
+      "uprava": "převedeno z OGG na WAV 48 kHz, obsah beze změny"
+    },
+    {
+      "jmeno": "kenney-click2",
+      "kategorie": "zvuk",
+      "podkategorie": "klik",
+      "stitky": [
+        "kenney",
+        "ui",
+        "klik",
+        "click"
+      ],
+      "soubor": "zvuky/kenney/click2.wav",
+      "delka_s": 0.053,
+      "kanaly": 2,
+      "vzorkovani_hz": 48000,
+      "bitu": 16,
+      "spicka_dbfs": -1.2,
+      "smycka": false,
+      "zdroj": "Kenney UI Audio",
+      "licence": "CC0",
+      "autor": "Kenney Vleugels (Kenney.nl)",
+      "odkaz": "https://kenney.nl/assets/ui-audio",
+      "uprava": "převedeno z OGG na WAV 48 kHz, obsah beze změny"
+    },
+    {
+      "jmeno": "kenney-click3",
+      "kategorie": "zvuk",
+      "podkategorie": "klik",
+      "stitky": [
+        "kenney",
+        "ui",
+        "klik",
+        "click"
+      ],
+      "soubor": "zvuky/kenney/click3.wav",
+      "delka_s": 0.083,
+      "kanaly": 2,
+      "vzorkovani_hz": 48000,
+      "bitu": 16,
+      "spicka_dbfs": -0.8,
+      "smycka": false,
+      "zdroj": "Kenney UI Audio",
+      "licence": "CC0",
+      "autor": "Kenney Vleugels (Kenney.nl)",
+      "odkaz": "https://kenney.nl/assets/ui-audio",
+      "uprava": "převedeno z OGG na WAV 48 kHz, obsah beze změny"
+    },
+    {
+      "jmeno": "kenney-click4",
+      "kategorie": "zvuk",
+      "podkategorie": "klik",
+      "stitky": [
+        "kenney",
+        "ui",
+        "klik",
+        "click"
+      ],
+      "soubor": "zvuky/kenney/click4.wav",
+      "delka_s": 0.038,
+      "kanaly": 2,
+      "vzorkovani_hz": 48000,
+      "bitu": 16,
+      "spicka_dbfs": -0.6,
+      "smycka": false,
+      "zdroj": "Kenney UI Audio",
+      "licence": "CC0",
+      "autor": "Kenney Vleugels (Kenney.nl)",
+      "odkaz": "https://kenney.nl/assets/ui-audio",
+      "uprava": "převedeno z OGG na WAV 48 kHz, obsah beze změny"
+    },
+    {
+      "jmeno": "kenney-click5",
+      "kategorie": "zvuk",
+      "podkategorie": "klik",
+      "stitky": [
+        "kenney",
+        "ui",
+        "klik",
+        "click"
+      ],
+      "soubor": "zvuky/kenney/click5.wav",
+      "delka_s": 0.035,
+      "kanaly": 2,
+      "vzorkovani_hz": 48000,
+      "bitu": 16,
+      "spicka_dbfs": -1.9,
+      "smycka": false,
+      "zdroj": "Kenney UI Audio",
+      "licence": "CC0",
+      "autor": "Kenney Vleugels (Kenney.nl)",
+      "odkaz": "https://kenney.nl/assets/ui-audio",
+      "uprava": "převedeno z OGG na WAV 48 kHz, obsah beze změny"
+    },
+    {
+      "jmeno": "kenney-mouseclick1",
+      "kategorie": "zvuk",
+      "podkategorie": "klik",
+      "stitky": [
+        "kenney",
+        "ui",
+        "klik",
+        "mouseclick"
+      ],
+      "soubor": "zvuky/kenney/mouseclick1.wav",
+      "delka_s": 0.056,
+      "kanaly": 2,
+      "vzorkovani_hz": 48000,
+      "bitu": 16,
+      "spicka_dbfs": -1.9,
+      "smycka": false,
+      "zdroj": "Kenney UI Audio",
+      "licence": "CC0",
+      "autor": "Kenney Vleugels (Kenney.nl)",
+      "odkaz": "https://kenney.nl/assets/ui-audio",
+      "uprava": "převedeno z OGG na WAV 48 kHz, obsah beze změny"
+    },
+    {
+      "jmeno": "kenney-mouserelease1",
+      "kategorie": "zvuk",
+      "podkategorie": "klik",
+      "stitky": [
+        "kenney",
+        "ui",
+        "klik",
+        "mouserelease"
+      ],
+      "soubor": "zvuky/kenney/mouserelease1.wav",
+      "delka_s": 0.066,
+      "kanaly": 2,
+      "vzorkovani_hz": 48000,
+      "bitu": 16,
+      "spicka_dbfs": -1.6,
+      "smycka": false,
+      "zdroj": "Kenney UI Audio",
+      "licence": "CC0",
+      "autor": "Kenney Vleugels (Kenney.nl)",
+      "odkaz": "https://kenney.nl/assets/ui-audio",
+      "uprava": "převedeno z OGG na WAV 48 kHz, obsah beze změny"
+    },
+    {
+      "jmeno": "kenney-rollover1",
+      "kategorie": "zvuk",
+      "podkategorie": "prejeti",
+      "stitky": [
+        "kenney",
+        "ui",
+        "prejeti",
+        "rollover"
+      ],
+      "soubor": "zvuky/kenney/rollover1.wav",
+      "delka_s": 0.224,
+      "kanaly": 2,
+      "vzorkovani_hz": 48000,
+      "bitu": 16,
+      "spicka_dbfs": -0.1,
+      "smycka": false,
+      "zdroj": "Kenney UI Audio",
+      "licence": "CC0",
+      "autor": "Kenney Vleugels (Kenney.nl)",
+      "odkaz": "https://kenney.nl/assets/ui-audio",
+      "uprava": "převedeno z OGG na WAV 48 kHz, obsah beze změny"
+    },
+    {
+      "jmeno": "kenney-rollover2",
+      "kategorie": "zvuk",
+      "podkategorie": "prejeti",
+      "stitky": [
+        "kenney",
+        "ui",
+        "prejeti",
+        "rollover"
+      ],
+      "soubor": "zvuky/kenney/rollover2.wav",
+      "delka_s": 0.054,
+      "kanaly": 2,
+      "vzorkovani_hz": 48000,
+      "bitu": 16,
+      "spicka_dbfs": -1.7,
+      "smycka": false,
+      "zdroj": "Kenney UI Audio",
+      "licence": "CC0",
+      "autor": "Kenney Vleugels (Kenney.nl)",
+      "odkaz": "https://kenney.nl/assets/ui-audio",
+      "uprava": "převedeno z OGG na WAV 48 kHz, obsah beze změny"
+    },
+    {
+      "jmeno": "kenney-rollover3",
+      "kategorie": "zvuk",
+      "podkategorie": "prejeti",
+      "stitky": [
+        "kenney",
+        "ui",
+        "prejeti",
+        "rollover"
+      ],
+      "soubor": "zvuky/kenney/rollover3.wav",
+      "delka_s": 0.066,
+      "kanaly": 2,
+      "vzorkovani_hz": 48000,
+      "bitu": 16,
+      "spicka_dbfs": -0.8,
+      "smycka": false,
+      "zdroj": "Kenney UI Audio",
+      "licence": "CC0",
+      "autor": "Kenney Vleugels (Kenney.nl)",
+      "odkaz": "https://kenney.nl/assets/ui-audio",
+      "uprava": "převedeno z OGG na WAV 48 kHz, obsah beze změny"
+    },
+    {
+      "jmeno": "kenney-rollover4",
+      "kategorie": "zvuk",
+      "podkategorie": "prejeti",
+      "stitky": [
+        "kenney",
+        "ui",
+        "prejeti",
+        "rollover"
+      ],
+      "soubor": "zvuky/kenney/rollover4.wav",
+      "delka_s": 0.11,
+      "kanaly": 2,
+      "vzorkovani_hz": 48000,
+      "bitu": 16,
+      "spicka_dbfs": -1.4,
+      "smycka": false,
+      "zdroj": "Kenney UI Audio",
+      "licence": "CC0",
+      "autor": "Kenney Vleugels (Kenney.nl)",
+      "odkaz": "https://kenney.nl/assets/ui-audio",
+      "uprava": "převedeno z OGG na WAV 48 kHz, obsah beze změny"
+    },
+    {
+      "jmeno": "kenney-rollover5",
+      "kategorie": "zvuk",
+      "podkategorie": "prejeti",
+      "stitky": [
+        "kenney",
+        "ui",
+        "prejeti",
+        "rollover"
+      ],
+      "soubor": "zvuky/kenney/rollover5.wav",
+      "delka_s": 0.109,
+      "kanaly": 2,
+      "vzorkovani_hz": 48000,
+      "bitu": 16,
+      "spicka_dbfs": -1.3,
+      "smycka": false,
+      "zdroj": "Kenney UI Audio",
+      "licence": "CC0",
+      "autor": "Kenney Vleugels (Kenney.nl)",
+      "odkaz": "https://kenney.nl/assets/ui-audio",
+      "uprava": "převedeno z OGG na WAV 48 kHz, obsah beze změny"
+    },
+    {
+      "jmeno": "kenney-rollover6",
+      "kategorie": "zvuk",
+      "podkategorie": "prejeti",
+      "stitky": [
+        "kenney",
+        "ui",
+        "prejeti",
+        "rollover"
+      ],
+      "soubor": "zvuky/kenney/rollover6.wav",
+      "delka_s": 0.172,
+      "kanaly": 2,
+      "vzorkovani_hz": 48000,
+      "bitu": 16,
+      "spicka_dbfs": -1.6,
+      "smycka": false,
+      "zdroj": "Kenney UI Audio",
+      "licence": "CC0",
+      "autor": "Kenney Vleugels (Kenney.nl)",
+      "odkaz": "https://kenney.nl/assets/ui-audio",
+      "uprava": "převedeno z OGG na WAV 48 kHz, obsah beze změny"
+    },
+    {
+      "jmeno": "kenney-switch1",
+      "kategorie": "zvuk",
+      "podkategorie": "prepinac",
+      "stitky": [
+        "kenney",
+        "ui",
+        "prepinac",
+        "switch"
+      ],
+      "soubor": "zvuky/kenney/switch1.wav",
+      "delka_s": 0.312,
+      "kanaly": 2,
+      "vzorkovani_hz": 48000,
+      "bitu": 16,
+      "spicka_dbfs": -0.0,
+      "smycka": false,
+      "zdroj": "Kenney UI Audio",
+      "licence": "CC0",
+      "autor": "Kenney Vleugels (Kenney.nl)",
+      "odkaz": "https://kenney.nl/assets/ui-audio",
+      "uprava": "převedeno z OGG na WAV 48 kHz, obsah beze změny"
+    },
+    {
+      "jmeno": "kenney-switch10",
+      "kategorie": "zvuk",
+      "podkategorie": "prepinac",
+      "stitky": [
+        "kenney",
+        "ui",
+        "prepinac",
+        "switch"
+      ],
+      "soubor": "zvuky/kenney/switch10.wav",
+      "delka_s": 0.388,
+      "kanaly": 2,
+      "vzorkovani_hz": 48000,
+      "bitu": 16,
+      "spicka_dbfs": -0.9,
+      "smycka": false,
+      "zdroj": "Kenney UI Audio",
+      "licence": "CC0",
+      "autor": "Kenney Vleugels (Kenney.nl)",
+      "odkaz": "https://kenney.nl/assets/ui-audio",
+      "uprava": "převedeno z OGG na WAV 48 kHz, obsah beze změny"
+    },
+    {
+      "jmeno": "kenney-switch15",
+      "kategorie": "zvuk",
+      "podkategorie": "prepinac",
+      "stitky": [
+        "kenney",
+        "ui",
+        "prepinac",
+        "switch"
+      ],
+      "soubor": "zvuky/kenney/switch15.wav",
+      "delka_s": 0.253,
+      "kanaly": 2,
+      "vzorkovani_hz": 48000,
+      "bitu": 16,
+      "spicka_dbfs": -0.0,
+      "smycka": false,
+      "zdroj": "Kenney UI Audio",
+      "licence": "CC0",
+      "autor": "Kenney Vleugels (Kenney.nl)",
+      "odkaz": "https://kenney.nl/assets/ui-audio",
+      "uprava": "převedeno z OGG na WAV 48 kHz, obsah beze změny"
+    },
+    {
+      "jmeno": "kenney-switch20",
+      "kategorie": "zvuk",
+      "podkategorie": "prepinac",
+      "stitky": [
+        "kenney",
+        "ui",
+        "prepinac",
+        "switch"
+      ],
+      "soubor": "zvuky/kenney/switch20.wav",
+      "delka_s": 0.356,
+      "kanaly": 2,
+      "vzorkovani_hz": 48000,
+      "bitu": 16,
+      "spicka_dbfs": -1.0,
+      "smycka": false,
+      "zdroj": "Kenney UI Audio",
+      "licence": "CC0",
+      "autor": "Kenney Vleugels (Kenney.nl)",
+      "odkaz": "https://kenney.nl/assets/ui-audio",
+      "uprava": "převedeno z OGG na WAV 48 kHz, obsah beze změny"
+    },
+    {
+      "jmeno": "kenney-switch25",
+      "kategorie": "zvuk",
+      "podkategorie": "prepinac",
+      "stitky": [
+        "kenney",
+        "ui",
+        "prepinac",
+        "switch"
+      ],
+      "soubor": "zvuky/kenney/switch25.wav",
+      "delka_s": 0.381,
+      "kanaly": 2,
+      "vzorkovani_hz": 48000,
+      "bitu": 16,
+      "spicka_dbfs": 0.0,
+      "smycka": false,
+      "zdroj": "Kenney UI Audio",
+      "licence": "CC0",
+      "autor": "Kenney Vleugels (Kenney.nl)",
+      "odkaz": "https://kenney.nl/assets/ui-audio",
+      "uprava": "převedeno z OGG na WAV 48 kHz, obsah beze změny"
+    },
+    {
+      "jmeno": "kenney-switch30",
+      "kategorie": "zvuk",
+      "podkategorie": "prepinac",
+      "stitky": [
+        "kenney",
+        "ui",
+        "prepinac",
+        "switch"
+      ],
+      "soubor": "zvuky/kenney/switch30.wav",
+      "delka_s": 0.356,
+      "kanaly": 2,
+      "vzorkovani_hz": 48000,
+      "bitu": 16,
+      "spicka_dbfs": 0.0,
+      "smycka": false,
+      "zdroj": "Kenney UI Audio",
+      "licence": "CC0",
+      "autor": "Kenney Vleugels (Kenney.nl)",
+      "odkaz": "https://kenney.nl/assets/ui-audio",
+      "uprava": "převedeno z OGG na WAV 48 kHz, obsah beze změny"
+    },
+    {
+      "jmeno": "kenney-switch5",
+      "kategorie": "zvuk",
+      "podkategorie": "prepinac",
+      "stitky": [
+        "kenney",
+        "ui",
+        "prepinac",
+        "switch"
+      ],
+      "soubor": "zvuky/kenney/switch5.wav",
+      "delka_s": 0.312,
+      "kanaly": 2,
+      "vzorkovani_hz": 48000,
+      "bitu": 16,
+      "spicka_dbfs": 0.0,
+      "smycka": false,
+      "zdroj": "Kenney UI Audio",
+      "licence": "CC0",
+      "autor": "Kenney Vleugels (Kenney.nl)",
+      "odkaz": "https://kenney.nl/assets/ui-audio",
+      "uprava": "převedeno z OGG na WAV 48 kHz, obsah beze změny"
+    },
+    {
+      "jmeno": "pismo-inter-variable",
+      "kategorie": "pisma",
+      "podkategorie": "text",
+      "stitky": [
+        "grotesk",
+        "sans",
+        "text",
+        "rozhraní",
+        "ui",
+        "čitelné",
+        "variabilní"
+      ],
+      "soubor": "pisma/inter/Inter-Variable.ttf",
+      "rodina": "Inter",
+      "styl": "normal",
+      "vahy": [
+        100,
+        900
+      ],
+      "variabilni_osy": {
+        "opsz": [
+          14.0,
+          32.0
+        ],
+        "wght": [
+          100.0,
+          900.0
+        ]
+      },
+      "cestina": true,
+      "format": "TTF",
+      "zdroj": "Google Fonts",
+      "licence": "OFL-1.1",
+      "autor": "Rasmus Andersson (Copyright 2020 The Inter Project Authors (https://github.com/rsms/inter))",
+      "odkaz": "https://fonts.google.com/specimen/Inter",
+      "url_souboru": "https://raw.githubusercontent.com/google/fonts/main/ofl/inter/Inter[opsz,wght].ttf",
+      "soubor_licence": "pisma/inter/OFL.txt"
+    },
+    {
+      "jmeno": "pismo-inter-italic-variable",
+      "kategorie": "pisma",
+      "podkategorie": "text",
+      "stitky": [
+        "grotesk",
+        "sans",
+        "text",
+        "rozhraní",
+        "ui",
+        "čitelné",
+        "variabilní",
+        "kurzíva"
+      ],
+      "soubor": "pisma/inter/Inter-Italic-Variable.ttf",
+      "rodina": "Inter",
+      "styl": "italic",
+      "vahy": [
+        100,
+        900
+      ],
+      "variabilni_osy": {
+        "opsz": [
+          14.0,
+          32.0
+        ],
+        "wght": [
+          100.0,
+          900.0
+        ]
+      },
+      "cestina": true,
+      "format": "TTF",
+      "zdroj": "Google Fonts",
+      "licence": "OFL-1.1",
+      "autor": "Rasmus Andersson (Copyright 2020 The Inter Project Authors (https://github.com/rsms/inter))",
+      "odkaz": "https://fonts.google.com/specimen/Inter",
+      "url_souboru": "https://raw.githubusercontent.com/google/fonts/main/ofl/inter/Inter-Italic[opsz,wght].ttf",
+      "soubor_licence": "pisma/inter/OFL.txt"
+    },
+    {
+      "jmeno": "pismo-spacegrotesk-variable",
+      "kategorie": "pisma",
+      "podkategorie": "grotesk-tech",
+      "stitky": [
+        "grotesk",
+        "sans",
+        "tech",
+        "nadpis",
+        "geometrický",
+        "variabilní"
+      ],
+      "soubor": "pisma/spacegrotesk/SpaceGrotesk-Variable.ttf",
+      "rodina": "Space Grotesk",
+      "styl": "normal",
+      "vahy": [
+        300,
+        700
+      ],
+      "variabilni_osy": {
+        "wght": [
+          300.0,
+          700.0
+        ]
+      },
+      "cestina": true,
+      "format": "TTF",
+      "zdroj": "Google Fonts",
+      "licence": "OFL-1.1",
+      "autor": "Florian Karsten (Copyright 2020 The Space Grotesk Project Authors (https://github.com/floriankarsten/space-grotesk))",
+      "odkaz": "https://fonts.google.com/specimen/Space+Grotesk",
+      "url_souboru": "https://raw.githubusercontent.com/google/fonts/main/ofl/spacegrotesk/SpaceGrotesk[wght].ttf",
+      "soubor_licence": "pisma/spacegrotesk/OFL.txt"
+    },
+    {
+      "jmeno": "pismo-archivo-variable",
+      "kategorie": "pisma",
+      "podkategorie": "grotesk-sirka",
+      "stitky": [
+        "grotesk",
+        "sans",
+        "brutalistní",
+        "široký",
+        "úzký",
+        "nadpis",
+        "variabilní"
+      ],
+      "soubor": "pisma/archivo/Archivo-Variable.ttf",
+      "rodina": "Archivo",
+      "styl": "normal",
+      "vahy": [
+        100,
+        900
+      ],
+      "variabilni_osy": {
+        "wght": [
+          100.0,
+          900.0
+        ],
+        "wdth": [
+          62.0,
+          125.0
+        ]
+      },
+      "cestina": true,
+      "format": "TTF",
+      "zdroj": "Google Fonts",
+      "licence": "OFL-1.1",
+      "autor": "Omnibus-Type (Copyright 2020 The Archivo Project Authors (https://github.com/Omnibus-Type/Archivo))",
+      "odkaz": "https://fonts.google.com/specimen/Archivo",
+      "url_souboru": "https://raw.githubusercontent.com/google/fonts/main/ofl/archivo/Archivo[wdth,wght].ttf",
+      "soubor_licence": "pisma/archivo/OFL.txt"
+    },
+    {
+      "jmeno": "pismo-archivo-italic-variable",
+      "kategorie": "pisma",
+      "podkategorie": "grotesk-sirka",
+      "stitky": [
+        "grotesk",
+        "sans",
+        "brutalistní",
+        "široký",
+        "úzký",
+        "nadpis",
+        "variabilní",
+        "kurzíva"
+      ],
+      "soubor": "pisma/archivo/Archivo-Italic-Variable.ttf",
+      "rodina": "Archivo",
+      "styl": "italic",
+      "vahy": [
+        100,
+        900
+      ],
+      "variabilni_osy": {
+        "wght": [
+          100.0,
+          900.0
+        ],
+        "wdth": [
+          62.0,
+          125.0
+        ]
+      },
+      "cestina": true,
+      "format": "TTF",
+      "zdroj": "Google Fonts",
+      "licence": "OFL-1.1",
+      "autor": "Omnibus-Type (Copyright 2020 The Archivo Project Authors (https://github.com/Omnibus-Type/Archivo))",
+      "odkaz": "https://fonts.google.com/specimen/Archivo",
+      "url_souboru": "https://raw.githubusercontent.com/google/fonts/main/ofl/archivo/Archivo-Italic[wdth,wght].ttf",
+      "soubor_licence": "pisma/archivo/OFL.txt"
+    },
+    {
+      "jmeno": "pismo-bebasneue-regular",
+      "kategorie": "pisma",
+      "podkategorie": "nadpis-uzky",
+      "stitky": [
+        "úzký",
+        "kapitálky",
+        "nadpis",
+        "displej",
+        "plakát"
+      ],
+      "soubor": "pisma/bebasneue/BebasNeue-Regular.ttf",
+      "rodina": "Bebas Neue",
+      "styl": "normal",
+      "vahy": [
+        400,
+        400
+      ],
+      "variabilni_osy": {},
+      "cestina": true,
+      "format": "TTF",
+      "zdroj": "Google Fonts",
+      "licence": "OFL-1.1",
+      "autor": "Ryoichi Tsunekawa (Copyright © 2010 by Dharma Type.)",
+      "odkaz": "https://fonts.google.com/specimen/Bebas+Neue",
+      "url_souboru": "https://raw.githubusercontent.com/google/fonts/main/ofl/bebasneue/BebasNeue-Regular.ttf",
+      "soubor_licence": "pisma/bebasneue/OFL.txt"
+    },
+    {
+      "jmeno": "pismo-anton-regular",
+      "kategorie": "pisma",
+      "podkategorie": "nadpis-tezky",
+      "stitky": [
+        "úzký",
+        "těžký",
+        "nadpis",
+        "displej",
+        "plakát",
+        "titulek"
+      ],
+      "soubor": "pisma/anton/Anton-Regular.ttf",
+      "rodina": "Anton",
+      "styl": "normal",
+      "vahy": [
+        400,
+        400
+      ],
+      "variabilni_osy": {},
+      "cestina": true,
+      "format": "TTF",
+      "zdroj": "Google Fonts",
+      "licence": "OFL-1.1",
+      "autor": "Vernon Adams (Copyright 2020 The Anton Project Authors (https://github.com/googlefonts/AntonFont.git))",
+      "odkaz": "https://fonts.google.com/specimen/Anton",
+      "url_souboru": "https://raw.githubusercontent.com/google/fonts/main/ofl/anton/Anton-Regular.ttf",
+      "soubor_licence": "pisma/anton/OFL.txt"
+    },
+    {
+      "jmeno": "pismo-instrumentserif-regular",
+      "kategorie": "pisma",
+      "podkategorie": "serif-akcent",
+      "stitky": [
+        "serif",
+        "patkové",
+        "kurzíva",
+        "akcent",
+        "editoriál",
+        "elegantní"
+      ],
+      "soubor": "pisma/instrumentserif/InstrumentSerif-Regular.ttf",
+      "rodina": "Instrument Serif",
+      "styl": "normal",
+      "vahy": [
+        400,
+        400
+      ],
+      "variabilni_osy": {},
+      "cestina": true,
+      "format": "TTF",
+      "zdroj": "Google Fonts",
+      "licence": "OFL-1.1",
+      "autor": "Rodrigo Fuenzalida, Jordan Egstad (Copyright 2022 The Instrument Serif Project Authors (https://github.com/Instrument/instrument-serif))",
+      "odkaz": "https://fonts.google.com/specimen/Instrument+Serif",
+      "url_souboru": "https://raw.githubusercontent.com/google/fonts/main/ofl/instrumentserif/InstrumentSerif-Regular.ttf",
+      "soubor_licence": "pisma/instrumentserif/OFL.txt"
+    },
+    {
+      "jmeno": "pismo-instrumentserif-italic",
+      "kategorie": "pisma",
+      "podkategorie": "serif-akcent",
+      "stitky": [
+        "serif",
+        "patkové",
+        "kurzíva",
+        "akcent",
+        "editoriál",
+        "elegantní"
+      ],
+      "soubor": "pisma/instrumentserif/InstrumentSerif-Italic.ttf",
+      "rodina": "Instrument Serif",
+      "styl": "italic",
+      "vahy": [
+        400,
+        400
+      ],
+      "variabilni_osy": {},
+      "cestina": true,
+      "format": "TTF",
+      "zdroj": "Google Fonts",
+      "licence": "OFL-1.1",
+      "autor": "Rodrigo Fuenzalida, Jordan Egstad (Copyright 2022 The Instrument Serif Project Authors (https://github.com/Instrument/instrument-serif))",
+      "odkaz": "https://fonts.google.com/specimen/Instrument+Serif",
+      "url_souboru": "https://raw.githubusercontent.com/google/fonts/main/ofl/instrumentserif/InstrumentSerif-Italic.ttf",
+      "soubor_licence": "pisma/instrumentserif/OFL.txt"
+    },
+    {
+      "jmeno": "pismo-jetbrainsmono-variable",
+      "kategorie": "pisma",
+      "podkategorie": "neproporcionalni",
+      "stitky": [
+        "mono",
+        "neproporcionální",
+        "kód",
+        "štítek",
+        "data",
+        "terminál",
+        "variabilní"
+      ],
+      "soubor": "pisma/jetbrainsmono/JetBrainsMono-Variable.ttf",
+      "rodina": "JetBrains Mono",
+      "styl": "normal",
+      "vahy": [
+        100,
+        800
+      ],
+      "variabilni_osy": {
+        "wght": [
+          100.0,
+          800.0
+        ]
+      },
+      "cestina": true,
+      "format": "TTF",
+      "zdroj": "Google Fonts",
+      "licence": "OFL-1.1",
+      "autor": "JetBrains, Philipp Nurullin, Konstantin Bulenkov (Copyright 2020 The JetBrains Mono Project Authors (https://github.com/JetBrains/JetBrainsMono))",
+      "odkaz": "https://fonts.google.com/specimen/JetBrains+Mono",
+      "url_souboru": "https://raw.githubusercontent.com/google/fonts/main/ofl/jetbrainsmono/JetBrainsMono[wght].ttf",
+      "soubor_licence": "pisma/jetbrainsmono/OFL.txt"
+    },
+    {
+      "jmeno": "pismo-jetbrainsmono-italic-variable",
+      "kategorie": "pisma",
+      "podkategorie": "neproporcionalni",
+      "stitky": [
+        "mono",
+        "neproporcionální",
+        "kód",
+        "štítek",
+        "data",
+        "terminál",
+        "variabilní",
+        "kurzíva"
+      ],
+      "soubor": "pisma/jetbrainsmono/JetBrainsMono-Italic-Variable.ttf",
+      "rodina": "JetBrains Mono",
+      "styl": "italic",
+      "vahy": [
+        100,
+        800
+      ],
+      "variabilni_osy": {
+        "wght": [
+          100.0,
+          800.0
+        ]
+      },
+      "cestina": true,
+      "format": "TTF",
+      "zdroj": "Google Fonts",
+      "licence": "OFL-1.1",
+      "autor": "JetBrains, Philipp Nurullin, Konstantin Bulenkov (Copyright 2020 The JetBrains Mono Project Authors (https://github.com/JetBrains/JetBrainsMono))",
+      "odkaz": "https://fonts.google.com/specimen/JetBrains+Mono",
+      "url_souboru": "https://raw.githubusercontent.com/google/fonts/main/ofl/jetbrainsmono/JetBrainsMono-Italic[wght].ttf",
+      "soubor_licence": "pisma/jetbrainsmono/OFL.txt"
+    },
+    {
+      "jmeno": "pismo-barlow-regular",
+      "kategorie": "pisma",
+      "podkategorie": "grotesk-zaobleny",
+      "stitky": [
+        "grotesk",
+        "sans",
+        "mírně zaoblený",
+        "značení",
+        "nadpis",
+        "text"
+      ],
+      "soubor": "pisma/barlow/Barlow-Regular.ttf",
+      "rodina": "Barlow",
+      "styl": "normal",
+      "vahy": [
+        400,
+        400
+      ],
+      "variabilni_osy": {},
+      "cestina": true,
+      "format": "TTF",
+      "zdroj": "Google Fonts",
+      "licence": "OFL-1.1",
+      "autor": "Jeremy Tribby (Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow))",
+      "odkaz": "https://fonts.google.com/specimen/Barlow",
+      "url_souboru": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlow/Barlow-Regular.ttf",
+      "soubor_licence": "pisma/barlow/OFL.txt"
+    },
+    {
+      "jmeno": "pismo-barlow-semibold",
+      "kategorie": "pisma",
+      "podkategorie": "grotesk-zaobleny",
+      "stitky": [
+        "grotesk",
+        "sans",
+        "mírně zaoblený",
+        "značení",
+        "nadpis",
+        "text"
+      ],
+      "soubor": "pisma/barlow/Barlow-SemiBold.ttf",
+      "rodina": "Barlow",
+      "styl": "normal",
+      "vahy": [
+        600,
+        600
+      ],
+      "variabilni_osy": {},
+      "cestina": true,
+      "format": "TTF",
+      "zdroj": "Google Fonts",
+      "licence": "OFL-1.1",
+      "autor": "Jeremy Tribby (Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow))",
+      "odkaz": "https://fonts.google.com/specimen/Barlow",
+      "url_souboru": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlow/Barlow-SemiBold.ttf",
+      "soubor_licence": "pisma/barlow/OFL.txt"
+    },
+    {
+      "jmeno": "pismo-barlow-bold",
+      "kategorie": "pisma",
+      "podkategorie": "grotesk-zaobleny",
+      "stitky": [
+        "grotesk",
+        "sans",
+        "mírně zaoblený",
+        "značení",
+        "nadpis",
+        "text"
+      ],
+      "soubor": "pisma/barlow/Barlow-Bold.ttf",
+      "rodina": "Barlow",
+      "styl": "normal",
+      "vahy": [
+        700,
+        700
+      ],
+      "variabilni_osy": {},
+      "cestina": true,
+      "format": "TTF",
+      "zdroj": "Google Fonts",
+      "licence": "OFL-1.1",
+      "autor": "Jeremy Tribby (Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow))",
+      "odkaz": "https://fonts.google.com/specimen/Barlow",
+      "url_souboru": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlow/Barlow-Bold.ttf",
+      "soubor_licence": "pisma/barlow/OFL.txt"
+    },
+    {
+      "jmeno": "pismo-barlow-extrabold",
+      "kategorie": "pisma",
+      "podkategorie": "grotesk-zaobleny",
+      "stitky": [
+        "grotesk",
+        "sans",
+        "mírně zaoblený",
+        "značení",
+        "nadpis",
+        "text"
+      ],
+      "soubor": "pisma/barlow/Barlow-ExtraBold.ttf",
+      "rodina": "Barlow",
+      "styl": "normal",
+      "vahy": [
+        800,
+        800
+      ],
+      "variabilni_osy": {},
+      "cestina": true,
+      "format": "TTF",
+      "zdroj": "Google Fonts",
+      "licence": "OFL-1.1",
+      "autor": "Jeremy Tribby (Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow))",
+      "odkaz": "https://fonts.google.com/specimen/Barlow",
+      "url_souboru": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlow/Barlow-ExtraBold.ttf",
+      "soubor_licence": "pisma/barlow/OFL.txt"
+    },
+    {
+      "jmeno": "pismo-barlowcondensed-bold",
+      "kategorie": "pisma",
+      "podkategorie": "nadpis-uzky",
+      "stitky": [
+        "grotesk",
+        "sans",
+        "úzký",
+        "nadpis",
+        "titulek",
+        "značení"
+      ],
+      "soubor": "pisma/barlowcondensed/BarlowCondensed-Bold.ttf",
+      "rodina": "Barlow Condensed",
+      "styl": "normal",
+      "vahy": [
+        700,
+        700
+      ],
+      "variabilni_osy": {},
+      "cestina": true,
+      "format": "TTF",
+      "zdroj": "Google Fonts",
+      "licence": "OFL-1.1",
+      "autor": "Jeremy Tribby (Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow))",
+      "odkaz": "https://fonts.google.com/specimen/Barlow+Condensed",
+      "url_souboru": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlowcondensed/BarlowCondensed-Bold.ttf",
+      "soubor_licence": "pisma/barlowcondensed/OFL.txt"
+    }
+  ]
+}

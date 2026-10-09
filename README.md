@@ -134,8 +134,11 @@ image over the model's 5 MB cap (1, fixed), the montage code (1). The ok batch o
 
 ## Supplied by the author
 
-An asset library mounted read-only (339 items, own and open-licensed, see `LICENSES.md`), a style file,
+An asset library mounted read-only (339 items, own and open-licensed), a style file,
 and some reels that are the author's own videos. Third-party reels are credited, not redistributed.
+
+The asset library is not part of this repository; the list of its items, sources and licences is in
+`docs/assets/` (`manifest.json`, `LICENSES.md`).
 
 Tooling: Claude Code, Docker, Apify, local Whisper.
 
