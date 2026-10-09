@@ -143,7 +143,7 @@ def skill_text(skill: registry.Skill, events: list[dict[str, Any]], record: str)
         "## The run that made it",
         "",
     ]
-    return "\n".join(head) + record.split("\n", 2)[-1]
+    return "\n".join(head) + "\n" + record.split("\n", 2)[-1]
 
 
 def rebuild(home: Path) -> list[Path]:
