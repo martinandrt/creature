@@ -225,3 +225,13 @@ def test_two_makes_never_replace_each_other(world, made):
         fake.queue("judge", _judged())
         _creature(world, fake).make(LINES)
     assert registry.designs(world / "registry") == ["make", "make-2", "typewriter-reveal"]
+
+
+def test_a_silent_make_puts_no_sound_under_the_clip(world, made):
+    fake = FakeModel().queue("compose", _choice("typewriter-reveal", "typewriter-reveal"))
+    fake.queue("judge", _judged())
+    creature = _creature(world, fake)
+    creature.silent = True
+    report = creature.make(LINES)
+    assert report.status == "DONE" and "no sound: asked for a silent clip" in report.notes
+    assert "scored" not in _kinds(creature)

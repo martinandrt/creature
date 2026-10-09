@@ -67,7 +67,8 @@ One creature.
 Zero new authority.</textarea>
 <div class="act"><button id="make">Make</button>
  <div class="price"><b>~$0.02</b><span>1 model call + 1 judge</span></div>
- <label class="opt"><input type="checkbox" id="style"> my style</label></div>
+ <label class="opt"><input type="checkbox" id="style"> my style</label>
+ <label class="opt"><input type="checkbox" id="sound"> sound</label></div>
 <div class="act second"><button id="replay">Replay</button><select id="design"></select>
  <div class="price"><b>$0</b><span>0 model calls</span></div></div>
 <p id="note">Make: one cheap call picks a learned screen for each line, a judge checks it (at most 3 tries). Replay: a saved design on your lines, no model.</p>
@@ -90,7 +91,7 @@ async function load(){const d=await j("/api/home?name="+encodeURIComponent(home)
 function show(job){const ok=["DONE","BUILT","HAVE"].includes(job.status);
  $("result").innerHTML=`<div class="st ${esc(job.status)}">${esc(job.status||"?")}</div>${job.spent?`<div class="spent">${esc(job.spent)}</div>`:""}${job.clip?`<video src="${file(job.clip)}" controls autoplay loop></video>`:""}${job.run?`<div class="links"><a href="${file(job.run+"/page.html")}" target="_blank">run page</a><a href="${file(job.run+"/POSTUP.md")}" target="_blank">POSTUP.md</a></div>`:""}${!ok&&job.gap?`<pre>${esc(job.gap)}</pre>`:""}`}
 async function go(kind){const lines=$("lines").value.split("\n").map(s=>s.trim()).filter(Boolean);
- const body={home,lines,style:$("style").checked,design:$("design").value};
+ const body={home,lines,style:$("style").checked,sound:$("sound").checked,design:$("design").value};
  ["make","replay"].forEach(b=>$(b).disabled=true);$("result").innerHTML='<span class="wait">Working… a make takes a minute or two</span>';
  try{const {job}=await j("/api/"+kind,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
   for(;;){await new Promise(r=>setTimeout(r,2000));const s=await j("/api/job?id="+job);if(s.state==="done"){show(s);break}}

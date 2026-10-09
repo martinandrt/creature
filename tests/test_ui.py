@@ -47,12 +47,13 @@ def test_jobs_are_the_cli_commands_one_at_a_time(desk, world, monkeypatch):
     desk.start("make", {"home": world.name, "lines": ["One.", " ", "Two."], "style": True})
     command = started[0]
     assert command[1:5] == ["-m", "creature", "--home", str(world)] and command[5:7] == ["make", "--script"]
-    assert command[-2] == "--style" and command[-1].endswith("style-martin.json")
+    assert command[-3] == "--style" and command[-2].endswith("style-martin.json")
+    assert command[-1] == "--silent"  # no sound unless the page asks for it
     with pytest.raises(RuntimeError, match="already running"):
         desk.start("make", {"home": world.name, "lines": ["x"]})
     desk.lock.release()
     desk.start("design", {"home": world.name, "design": "typewriter-reveal", "lines": ["A.", "B."]})
-    assert started[1][5:] == ["design", "typewriter-reveal", "--text", "A.", "--text", "B."]
+    assert started[1][5:] == ["design", "typewriter-reveal", "--text", "A.", "--text", "B.", "--silent"]
     desk.lock.release()
     for bad in (
         {"home": "nope", "lines": ["x"]},

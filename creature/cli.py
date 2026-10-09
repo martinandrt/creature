@@ -30,6 +30,7 @@ def main(argv: list[str] | None = None) -> int:
     designed.add_argument("--judge", action="store_true", help="also ask the judge (a paid model call)")
     designed.add_argument("--mark", help="an image (PNG) for a montage's fixed layer, e.g. a logo")
     designed.add_argument("--style", help="a JSON file with my colours and fonts, used over the learned ones")
+    designed.add_argument("--silent", action="store_true", help="no sound under the clip")
     composed = sub.add_parser("compose", help="a new design from designs and skills, in order (no model)")
     composed.add_argument("name")
     composed.add_argument("parts", nargs="+", help="design or skill names, in the order they play")
@@ -40,6 +41,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     made.add_argument("--script", required=True, help="a text file: one line of the script per shot")
     made.add_argument("--style", help="a JSON file with my colours and fonts, used over the learned ones")
+    made.add_argument("--silent", action="store_true", help="no sound under the clip")
     sub.add_parser("cards", help="measure each skill's style card (renders and fixed code, no model)")
     sub.add_parser("postup", help="write POSTUP.md again for every finished run, from its ledger (no model)")
     sub.add_parser("list", help="learned skills and designs")
@@ -93,7 +95,9 @@ def main(argv: list[str] | None = None) -> int:
 
         style = json.loads(Path(args.style).read_text(encoding="utf-8")) if args.style else None
         mark = Path(args.mark) if args.mark else None
-        report = Creature(root).run_design(args.name, args.text, judge=args.judge, mark=mark, style=style)
+        creature = Creature(root)
+        creature.silent = args.silent
+        report = creature.run_design(args.name, args.text, judge=args.judge, mark=mark, style=style)
         print(f"{report.status}  {report.skill}")
         if report.gap:
             print(f"gap: {report.gap[:400]}")
@@ -107,7 +111,9 @@ def main(argv: list[str] | None = None) -> int:
 
         style = json.loads(Path(args.style).read_text(encoding="utf-8")) if args.style else None
         lines = Path(args.script).read_text(encoding="utf-8").splitlines()
-        report = Creature(root).make(lines, style=style)
+        creature = Creature(root)
+        creature.silent = args.silent
+        report = creature.make(lines, style=style)
         print(f"{report.status}  make")
         for note in report.notes:
             print(note)

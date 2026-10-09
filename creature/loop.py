@@ -77,6 +77,7 @@ class Creature:
         self.registry = home / "registry"
         self.reel: perceive.Reel | None = None
         self.installed = 0
+        self.silent = False  # the operator asked for no sound: the clip stays silent
         self.ledger.record("run_start", fingerprint=self.start.digest, image=self.image)
         for problem in registry.broken(self.registry):
             self.ledger.record("seal_broken", problem=problem)
@@ -92,6 +93,9 @@ class Creature:
         that passes its measurement becomes the run's clip; otherwise the silent clip stays and a note says
         why. Sound is a bonus: nothing here can turn a passed run into a failed one."""
         if report.status not in SOUNDED or report.clip is None or not Path(report.clip).is_file():
+            return
+        if self.silent:
+            report.notes.append("no sound: asked for a silent clip")
             return
         if not self.authority.workshop.assets:
             report.notes.append("no sound: this home mounts no asset library, the clip stays silent")

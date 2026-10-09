@@ -118,6 +118,8 @@ class Desk:
                 command += ["make", "--script", str(script)]
                 if data.get("style") and STYLE.is_file():
                     command += ["--style", str(STYLE)]
+                if not data.get("sound"):
+                    command.append("--silent")
             elif kind == "design":
                 name = str(data.get("design", ""))
                 if name not in registry.designs(root / "registry"):
@@ -125,6 +127,8 @@ class Desk:
                 command += ["design", name]
                 for line in lines:
                     command += ["--text", line]
+                if not data.get("sound"):
+                    command.append("--silent")
             else:
                 raise ValueError(f"unknown job {kind!r}")
         except Exception:
