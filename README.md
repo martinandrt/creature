@@ -1,101 +1,98 @@
 # creature
 
-An agent that grows its own capabilities from short videos, while its authority stays fixed.
+An agent that learns motion-design skills from short videos and reuses them later.
+Its capabilities grow. Its authority does not.
 
-> Built from scratch at **From Dusk Till Dawn #01** (Agents 0.0.7, Prague, 8–9 Oct 2026), track
-> **Frankenstein**: *build an agent that can build itself: recognize what capability it's missing,
-> create it, test it, install it, and use it again later.*
+Built from scratch at **From Dusk Till Dawn #01** (Prague, 8–9 Oct 2026), track **Frankenstein**.
 
-The task is always the same: **"try on my input what this reel shows"**. The domain tonight is motion
-design (typewriters, kinetic type, title cards, grids, charts, brand montages). For every reel the
-creature decides what success looks like *before* it tries, then tries with what it already has, and
-only when that fails it writes the missing skill, tests it, installs it and uses it again later.
+## What it does
 
-## The loop
+The task is always the same: *"try on my input what this reel shows"*.
 
-| Step | Who | What happens |
-|---|---|---|
-| Perceive | spine (fixed code) | the reel's frames (24, half picked by cuts), measured cut rhythm and palette, transcript by local Whisper |
-| Plan | model (Haiku) | does an installed skill already do this? It is then judged by **its own stored tests** (HAVE) |
-| Criteria | model (Opus) | before any attempt: the effect, 3–6 criteria (about a third held out from the forge), params with the transcript sentence they come from; or ASK / REFUSE / SKIP |
-| Decompose | model (Opus) | a montage reel splits into graphic surfaces (each learned and judged on its own) and gaps (photos, 3D: ASK) |
-| Forge | model (Haiku) | writes `skill.py`, at most 3 attempts, sees only visible criteria and what failed |
-| Workshop | spine | runs the script in a container: no network, no keys, read-only image, one work folder |
-| Verdict | spine + model | fixed file checks first (format, exact frame count, not black, colours and rhythm against the reel, smooth motion), then a separate judge that sees reel frames, clip frames and criteria, never code |
-| Install | spine | sealed in the registry (`SKILL.md`, `capability.json`, `skill.py`, `tests.json`, reference frames), versions kept |
-| Evolve | spine | a skill that fails its own tests on new input gets v2, judged by the same tests |
-| Compose | model + spine | the creature picks learned surfaces, rhythm and a mark; fixed code cuts them into a timeline (`sequence`, `layer`) |
-| Replay | spine | a saved design (recipe as data) runs on new text with **no model call and $0** |
-| Wishes | model (Haiku) | reads its own ledgers and names what it lacks, with how many reels each would unlock |
-| Tools | model + spine | builds a wished tool that returns data; cases rendered by fixed code, answers compared exactly |
+1. It looks at the reel: frames, cut rhythm, colours.
+2. It checks its registry: can an installed skill already do this?
+3. If not, it writes down what success looks like before it tries. Part of those criteria stays hidden from the builder.
+4. It writes the missing skill as code, in rounds, comparing its own output with the reel.
+5. That code runs only in a container with no network and no keys.
+6. Fixed checks run first, then a separate judge. Only what passes is installed, with its tests and a version.
+7. Next time it reuses the skill without rebuilding it. A saved design replays on new text with no model call, for $0.
 
-**Capabilities may grow. Authority may not.** `authority.json` holds the budget, the caps per step, the
-workshop limits, the models and the ASK and REFUSE lists. Only a human edits it. A fingerprint over
-`authority.json`, the workshop image and the enforcing code is taken at the start of every run and again
-right before install; when it changed, nothing is installed. Every step and every dollar is written to an
-append-only, hash-chained ledger per run, and every run gets a page with the reel next to the clip, the
-verdict in one sentence, every model call with its cost, and the commands that replay it.
+When a reel needs photos, 3D or footage, it asks for them (ASK). When there is nothing to learn, it skips.
+On command, it returns to its own failures by itself.
+
+## Who wrote what
+
+| The creature, at run time | The spine, written by us during the event |
+|---|---|
+| the drawing code of every skill | the loop, the container, the fixed checks |
+| scripts that measure the reel | the judge's instructions, the registry, the caps |
+| the choice of what to reuse and what to learn | the cut that joins screens into a montage |
+| version 2 of a skill that fails on new input | the sound layer |
+| a tool it wished for after a failure (`loop-seam-check`) | |
+
+The rules of the loop were tuned by a human during the night, from his own verdicts.
+The creature does not improve its own method yet.
+
+## Authority
+
+`authority.json` holds the budget per run, the caps per step, the container limits and the ASK and
+REFUSE lists. It changes only on a human's decision. A fingerprint of it, the container image and the
+enforcing code is taken at the start of a run and again before install; if it changed, nothing is
+installed. Every model call and its cost goes to an append-only, hash-chained ledger.
 
 ## Run
 
-Needs Docker, [uv](https://docs.astral.sh/uv/) and Node (the Claude Code CLI is pinned and run via
-`npx @anthropic-ai/claude-code@2.1.294`; it must be logged in). Local Whisper (`whisper-cli` and a ggml
-model at `~/whisper-models/` or `$CREATURE_WHISPER_MODEL`) is optional.
+Needs Docker, uv and Node (Claude Code CLI, logged in).
 
 ```bash
 uv sync
-export CREATURE_HOME=~/creature-home           # state: authority.json, registry/, runs/, queue/
+export CREATURE_HOME=~/creature-home
 mkdir -p $CREATURE_HOME/workshop
-cp authority.json $CREATURE_HOME/ && cp workshop/Dockerfile $CREATURE_HOME/workshop/   # image builds on first run
-
+cp authority.json $CREATURE_HOME/ && cp workshop/Dockerfile $CREATURE_HOME/workshop/
 uv run python -m creature try reel.mp4 --text "Capabilities may grow. Authority may not."
-uv run python -m creature try https://www.instagram.com/reel/XXXX/ --text "..."   # needs CREATURE_SECRETS (Apify)
-uv run python -m creature list                 # what it can do: skills, tools, designs
-uv run python -m creature design <name> --text "..." [--style style.json] [--mark logo.png]   # no model, $0
-uv run python -m creature wishes               # what it lacks, from its own runs
-uv run python -m creature tool                 # build the first wished tool
-uv run python -m creature use <tool> clip.mp4  # use it later, no model
-uv run python -m creature queue                # ASK requests waiting for a human
-uv run python -m creature overview             # one page with every run
+uv run python -m creature list
+uv run python -m creature design <name> --text "..." --style style.json   # no model, $0
 ```
 
-A local `.mp4` may have a sidecar `<name>.json` with `caption` (and `transcript`). Keys are read only from
-the file named by `$CREATURE_SECRETS` and never reach the workshop or a page.
+The results below used `examples/authority-deep-assets.json` (Opus builder, up to 30 rounds, $4 per run,
+the asset library mounted).
 
-Checks: `uv run pytest && uv run ruff check . && uv run ruff format --check .` — offline by default (a
-scripted fake model, no network, no secrets, a temporary registry per test); container tests are marked
-`docker`.
+## The night in numbers
 
-## What is real, measured or missing
+All from the run ledgers. Evidence: `scripts/night.py` over every ledger, its output in `docs/night.json`.
 
-Real: every number below comes from the run ledgers of the night, every clip was rendered by code the
-creature wrote, every verdict came from fixed checks plus a separate judge.
+- Runs: 110 · skills installed: 78 (distinct: 75) · FAILED: 57 · ASK: 6 · SKIP: 3
+- Learning a simple effect: about $0.57
+- Learning a reel of several screens: $1.69 to $3.56
+- The same reel again, screens taken from the registry, no builder call: $0.08 to $0.11 (example: $3.26 → $0.10)
+- Replaying a saved design on new text or a new style: $0.000, no model call
+- Human check: the author looked at 23 outputs: 2 good, 6 close, 15 not met
+- The same reel against a free Claude Code session (LILIUM): the session made it at 9/10 for $9.78; the
+  creature, on the closed asset library, learned 2 of 4 screens and ran out of its $4 budget one call
+  before composing them ($3.77, no montage)
 
-<!-- night numbers are filled in from the ledgers at the end of the night -->
+## Honest limits
 
-**Known limits**
+- **A pass does not mean it looks like the reel.** The judge is a model looking at sampled frames.
+  Our pixel-based audit did not agree with the human eye, so we do not report its number.
+- **Reuse across different reels:** shown for screens, not yet for a whole reel. On a reel it had never
+  seen (`motion-showreel`), it took 3 of 4 screens from skills learned on two other reels without a
+  builder call and learned the fourth; that montage then failed its rhythm check, and a second render crashed.
+- A reel is split into at most 4 screens.
+- A replay on a one-word text failed: a learned screen expected at least two words.
+- A skill cannot call another skill. A montage joins finished clips.
+- Sound is fixed code with library sounds, not a learned skill.
+- Asset library use by the creature: 16 of 88 installed skills declare library files: 15 use its fonts,
+  2 its photos, 1 a texture.
+- Video only. Outside motion design nothing can be verified today.
+- There is no static filter on generated code. The boundary is the container.
 
-- **It composes clips, not capabilities.** A skill cannot call another skill; montage is fixed spine code
-  over finished clips, and the creature only chooses what goes in. Next: registry mounted read-only in
-  the workshop and declared dependencies in the manifest.
-- **Video only.** The workshop and the judge are built for clips; outside motion design nothing can be
-  verified today.
-- **Looks are judged loosely.** Colours and cut rhythm are measured against the reel; layout and density
-  are judged by a model from sampled frames. A clip can pass and still not look like the reel.
-- **Photos, 3D renders and footage** are gaps: the creature asks for them (ASK), it does not fake them.
-- **Smoothness** is measured from frame differences: it catches a dropped or held frame, not every bad ease.
-- The run ledger is a hash chain: editing, removing or reordering a line is detected. Cutting lines off
-  the end leaves a valid shorter chain; only the `run_end` event shows that a run finished. The chain has
-  no secret key: it proves the file was not altered, not who wrote it.
-- A run can overshoot its model budget by at most one call: the CLI checks `--max-budget-usd` only after
-  a turn, so the spine refuses a call when less than a reserve is left; a call over its cap still costs.
-- There is no static filter on generated code. The boundary is the workshop container: no network, a
-  read-only image, no keys or host environment, one work folder of fixed size, an unprivileged user, no
-  capabilities, limits on time, memory, processes and output. Generated code never runs on the host.
+## Supplied by the author
 
-## Tooling used to build it
+An asset library mounted read-only (339 items, own and open-licensed, see `LICENSES.md`), a style file,
+and some reels that are the author's own videos. Third-party reels are credited, not redistributed.
 
-Claude Code, Docker, Apify, local Whisper. The creature itself was written from scratch during the event.
+Tooling: Claude Code, Docker, Apify, local Whisper.
 
 ## License
 

@@ -1,0 +1,2574 @@
+{
+ "summary": {
+  "runs_finished": 110,
+  "skills_installed": 78,
+  "skills_distinct": 75,
+  "FAILED": 57,
+  "ASK": 6,
+  "SKIP": 3,
+  "BUILT": 32,
+  "HAVE": 7,
+  "DONE": 5,
+  "effect_learned_usd_median": 0.57,
+  "effect_learned_n": 10,
+  "screens_learned_usd_range": [
+   0.39,
+   3.82
+  ],
+  "screens_learned_n": 22,
+  "all_screens_reused_usd": [
+   0.08,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.1,
+   0.11,
+   0.11,
+   0.11,
+   0.11,
+   0.11,
+   0.11,
+   0.11,
+   0.11
+  ],
+  "replays_usd": [
+   0.0
+  ],
+  "skills_declaring_assets": []
+ },
+ "runs": [
+  {
+   "home": "creature-deep",
+   "run": "20261008T215955Z-08bae6",
+   "reel": "Dcs-MiOpO2V.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.0,
+   "task": "task",
+   "opus_builder": true,
+   "kind": null,
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-montaz",
+   "run": "20261008T214612Z-92926a",
+   "reel": "DcEZYsvtgQX.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.152,
+   "task": "task",
+   "opus_builder": false,
+   "kind": "montage",
+   "forge_calls": 6,
+   "installed": [
+    "palette-strip-sheet@v1",
+    "dot-pattern-ring@v1",
+    "construction-line-diagram@v1",
+    "centered-minimal-layout@v1"
+   ],
+   "parts": [
+    {
+     "slug": "palette-strip-sheet",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "dot-pattern-ring",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "construction-line-diagram",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "centered-minimal-layout",
+     "status": "built",
+     "skill": null
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-nastroj",
+   "run": "20261008T215241Z-a287c4",
+   "reel": "",
+   "status": "BUILT",
+   "spent_usd": 0.0732,
+   "task": null,
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 1,
+   "installed": [
+    "loop-seam-check@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-negativ",
+   "run": "20261008T214637Z-4852bb",
+   "reel": "DcEZYsvtgQX.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.084,
+   "task": "task",
+   "opus_builder": false,
+   "kind": "montage",
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T212210Z-da5ad7",
+   "reel": "DQ0QXU6kw-D.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.0734,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 1,
+   "installed": [
+    "typewriter-caret-type-on@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T212340Z-cfa8eb",
+   "reel": "DQj7YTHCfuQ.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.0641,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 1,
+   "installed": [
+    "word-by-word-captions@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T212428Z-5b5da0",
+   "reel": "DWZGAXYDYeK.mp4",
+   "status": "HAVE",
+   "spent_usd": 0.0064,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T212457Z-4d37b4",
+   "reel": "DKgFVLQMyGW.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.0761,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 1,
+   "installed": [
+    "word-rise-fade-stagger@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T212614Z-2f10d8",
+   "reel": "DUkny4HjS2Y.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.0914,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 3,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T212933Z-10abe8",
+   "reel": "DYtloldRRhf.mp4",
+   "status": "HAVE",
+   "spent_usd": 0.0071,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T213004Z-28c47c",
+   "reel": "DLTLw1DpgwE.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.0759,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 1,
+   "installed": [
+    "vox-yellow-fill-pop-in@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T213118Z-dd1ecd",
+   "reel": "DDXbHHDIzyx.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.0998,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 3,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T213519Z-4845c9",
+   "reel": "DVHWIkCE6n8.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.085,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 1,
+   "installed": [
+    "kinetic-word-pop-captions@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T213656Z-ccfd3a",
+   "reel": "DTUxRQ1kg-V.mp4",
+   "status": "HAVE",
+   "spent_usd": 0.0085,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T213723Z-47f3ca",
+   "reel": "DP0hpwRCJIv.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.0714,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 1,
+   "installed": [
+    "grid-overlay-invert@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T213832Z-e577e0",
+   "reel": "C_I6sbWNYeX.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.0796,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 2,
+   "installed": [
+    "trim-path-dashed-arrow@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T213921Z-e6d87a",
+   "reel": "",
+   "status": "DONE",
+   "spent_usd": 0.0013,
+   "task": null,
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T214042Z-a45825",
+   "reel": "DbDHzS3Ra57.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.0753,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 1,
+   "installed": [
+    "histogram-bars-grow@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T214226Z-63a88b",
+   "reel": "C-aCKISgqrw.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.0915,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 3,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T214528Z-8760c8",
+   "reel": "Db5sdkFA9-i.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.0926,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 3,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T214833Z-b44447",
+   "reel": "Db3HqvyTLr6.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.0717,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 1,
+   "installed": [
+    "star-to-circle-morph@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T214941Z-21f40e",
+   "reel": "DO8fv7xjw_u.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.1083,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 3,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T215348Z-d1f0a6",
+   "reel": "DYa7ULfK3Cp.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.1042,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 3,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T215838Z-1491a9",
+   "reel": "DaYGsSBNBT2.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.0825,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 1,
+   "installed": [
+    "animated-line-graph-tracker@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T222045Z-96e963",
+   "reel": "DccLbTcNU3g.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.1052,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 3,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T222413Z-fb533c",
+   "reel": "DcEZYsvtgQX.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.091,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 2,
+   "installed": [
+    "anchored-center-cut-montage@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T222636Z-b389fd",
+   "reel": "DeOCrrTqbw6.mp4",
+   "status": "ASK",
+   "spent_usd": 0.0966,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T222718Z-8b6114",
+   "reel": "DeKOzQRouIf.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.0801,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 1,
+   "installed": [
+    "glowing-spark-ring-caption@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T222901Z-3f487c",
+   "reel": "DeM2_JSso6h.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.0827,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 1,
+   "installed": [
+    "headline-accent-reveal@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T223007Z-33ac32",
+   "reel": "DamUa_2tjjm.mp4",
+   "status": "SKIP",
+   "spent_usd": 0.0651,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T223033Z-83ebe9",
+   "reel": "Dd9fZsHSRy-.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.0866,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 1,
+   "installed": [
+    "kinetic-explainer-blob@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T223222Z-79bc33",
+   "reel": "Dd3rVkiAAi6.mp4",
+   "status": "ASK",
+   "spent_usd": 0.0742,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T223253Z-162dba",
+   "reel": "Dd05eFdkjCH.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.0873,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 1,
+   "installed": [
+    "explainer-card-build@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T223428Z-856223",
+   "reel": "Dct7Hc1OO5V.mp4",
+   "status": "ASK",
+   "spent_usd": 0.0709,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T223503Z-863ec1",
+   "reel": "DcDlhYNuoE9.mp4",
+   "status": "ASK",
+   "spent_usd": 0.0691,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T223539Z-5ff31c",
+   "reel": "Db3DFh8Nr5y.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.0814,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 1,
+   "installed": [
+    "radial-ray-burst-cuts@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T223658Z-16cb5f",
+   "reel": "DYFXVQVMhyH.mp4",
+   "status": "ASK",
+   "spent_usd": 0.0656,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T223723Z-292a44",
+   "reel": "DdffhFkR5C7.mp4",
+   "status": "HAVE",
+   "spent_usd": 0.0125,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T223801Z-cdf249",
+   "reel": "DXhdiikkZQ0.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.1082,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 3,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T224346Z-c7d43c",
+   "reel": "DdEXP3nTNNl.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.0755,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 1,
+   "installed": [
+    "block-cursor-typewriter@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T224455Z-64455d",
+   "reel": "DeKymN6SlKb.mp4",
+   "status": "ASK",
+   "spent_usd": 0.08,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T224532Z-3ac658",
+   "reel": "DcLzGYovY9B.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.1004,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 3,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-test",
+   "run": "20261008T225223Z-13c800",
+   "reel": "DbJRnQsuxls.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.0958,
+   "task": "task",
+   "opus_builder": false,
+   "kind": "effect",
+   "forge_calls": 3,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-ukazka",
+   "run": "20261008T203542Z-b0a0bb",
+   "reel": "reel-01.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.0381,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 1,
+   "installed": [
+    "typewriter-caret@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-ukazka",
+   "run": "20261008T203645Z-6d7658",
+   "reel": "reel-10.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.0431,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 1,
+   "installed": [
+    "word-pop-color-flip@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-ukazka",
+   "run": "20261008T203801Z-c6b40b",
+   "reel": "typewriter-caret",
+   "status": "DONE",
+   "spent_usd": 0.0,
+   "task": "design_task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-ukazka",
+   "run": "20261008T205136Z-049c0a",
+   "reel": "motion-mikro.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.0218,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 3,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-ukazka",
+   "run": "20261008T205942Z-75be84",
+   "reel": "DcEZYsvtgQX.mp4",
+   "status": "SKIP",
+   "spent_usd": 0.0408,
+   "task": "task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-ukazka",
+   "run": "20261008T210214Z-1a19fa",
+   "reel": "intro",
+   "status": "DONE",
+   "spent_usd": 0.0,
+   "task": "design_task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "creature-ukazka",
+   "run": "20261008T211914Z-e96923",
+   "reel": "noc",
+   "status": "FAILED",
+   "spent_usd": 0.0,
+   "task": "design_task",
+   "opus_builder": false,
+   "kind": null,
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "lilium-knihovna-uzavrena",
+   "run": "20261008T225223Z-e537b6",
+   "reel": "Dcs-MiOpO2V.mp4",
+   "status": "FAILED",
+   "spent_usd": 1.3054,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 120,
+   "installed": [],
+   "parts": [
+    {
+     "slug": "construction-grid-title",
+     "status": "skipped",
+     "skill": null
+    },
+    {
+     "slug": "pixel-cross-pattern",
+     "status": "skipped",
+     "skill": null
+    },
+    {
+     "slug": "kinetic-wave-type",
+     "status": "skipped",
+     "skill": null
+    },
+    {
+     "slug": "labeled-grid-frames",
+     "status": "skipped",
+     "skill": null
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "lilium-kucharka",
+   "run": "20261009T001144Z-82ac4a",
+   "reel": "Dcs-MiOpO2V.mp4",
+   "status": "FAILED",
+   "spent_usd": 3.772,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 43,
+   "installed": [
+    "grid-title-card@v1",
+    "pixel-block-texture@v1"
+   ],
+   "parts": [
+    {
+     "slug": "grid-title-card",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "pixel-block-texture",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "labelled-box-layout",
+     "status": "skipped",
+     "skill": null
+    },
+    {
+     "slug": "kinetic-oversized-type",
+     "status": "skipped",
+     "skill": null
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "lilium-s-knihovnou",
+   "run": "20261008T223513Z-b0bfa1",
+   "reel": "Dcs-MiOpO2V.mp4",
+   "status": "FAILED",
+   "spent_usd": 3.2698,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 26,
+   "installed": [
+    "grid-title-card@v1",
+    "pixel-cross-dither@v1",
+    "kinetic-big-word@v1"
+   ],
+   "parts": [
+    {
+     "slug": "grid-title-card",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "pixel-cross-dither",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "kinetic-big-word",
+     "status": "built",
+     "skill": null
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "mikro-s-knihovnou",
+   "run": "20261008T223527Z-c1dc8c",
+   "reel": "motion-mikro.mp4",
+   "status": "FAILED",
+   "spent_usd": 2.9735,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 21,
+   "installed": [
+    "bold-title-card@v1",
+    "spec-sheet@v1",
+    "badge-and-icons@v1",
+    "ticket-card@v1"
+   ],
+   "parts": [
+    {
+     "slug": "bold-title-card",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "spec-sheet",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "badge-and-icons",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "ticket-card",
+     "status": "built",
+     "skill": null
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "mikro-s-knihovnou",
+   "run": "20261008T225223Z-cbbac8",
+   "reel": "motion-eduard.mp4",
+   "status": "BUILT",
+   "spent_usd": 1.2706,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "effect",
+   "forge_calls": 9,
+   "installed": [
+    "glow-orb-wordmark-reveal@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "mikro-s-knihovnou",
+   "run": "20261008T232512Z-06007c",
+   "reel": "motion-identita.mp4",
+   "status": "HAVE",
+   "spent_usd": 0.0054,
+   "task": "task",
+   "opus_builder": true,
+   "kind": null,
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "mikro-s-knihovnou",
+   "run": "20261008T232921Z-0159ce",
+   "reel": "motion-identita.mp4",
+   "status": "FAILED",
+   "spent_usd": 3.5578,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 29,
+   "installed": [
+    "orb-glow-intro@v1",
+    "blueprint-construction@v1",
+    "size-scale-sheet@v1",
+    "final-lockup@v1"
+   ],
+   "parts": [
+    {
+     "slug": "orb-glow-intro",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "blueprint-construction",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "size-scale-sheet",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "final-lockup",
+     "status": "built",
+     "skill": null
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "mikro-s-knihovnou",
+   "run": "20261008T233344Z-ebc0bc",
+   "reel": "motion-mikro.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.1069,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [
+    {
+     "slug": "oversized-title-card",
+     "status": "have",
+     "skill": "bold-title-card"
+    },
+    {
+     "slug": "spec-sheet-ticket",
+     "status": "have",
+     "skill": "spec-sheet"
+    },
+    {
+     "slug": "seal-badge",
+     "status": "have",
+     "skill": "badge-and-icons"
+    },
+    {
+     "slug": "icon-grid",
+     "status": "have",
+     "skill": "badge-and-icons"
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "mikro-s-knihovnou",
+   "run": "20261008T234514Z-89d796",
+   "reel": "motion-mikro.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.4947,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 3,
+   "installed": [
+    "bold-title-card@v2"
+   ],
+   "parts": [
+    {
+     "slug": "bold-title-card",
+     "status": "have-failed",
+     "skill": "bold-title-card"
+    },
+    {
+     "slug": "bold-title-card",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "spec-sheet",
+     "status": "have",
+     "skill": "spec-sheet"
+    },
+    {
+     "slug": "ticket-badge",
+     "status": "have",
+     "skill": "ticket-card"
+    },
+    {
+     "slug": "pictogram-grid",
+     "status": "have",
+     "skill": "badge-and-icons"
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "mikro-s-knihovnou",
+   "run": "20261008T235114Z-1f5ef3",
+   "reel": "motion-mikro.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.6306,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 5,
+   "installed": [
+    "glow-orb-title@v1"
+   ],
+   "parts": [
+    {
+     "slug": "oversized-title-poster",
+     "status": "have",
+     "skill": "bold-title-card"
+    },
+    {
+     "slug": "mono-spec-sheet",
+     "status": "have",
+     "skill": "spec-sheet"
+    },
+    {
+     "slug": "pictogram-grid",
+     "status": "have",
+     "skill": "badge-and-icons"
+    },
+    {
+     "slug": "glow-orb-title",
+     "status": "built",
+     "skill": null
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "mikro-s-knihovnou",
+   "run": "20261009T000105Z-0a9d99",
+   "reel": "motion-showreel-vyska.mp4",
+   "status": "FAILED",
+   "spent_usd": 1.0928,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 8,
+   "installed": [
+    "micro-type-card@v1"
+   ],
+   "parts": [
+    {
+     "slug": "navy-grid-orb",
+     "status": "have",
+     "skill": "orb-glow-intro"
+    },
+    {
+     "slug": "micro-type-card",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "numeral-title",
+     "status": "have",
+     "skill": "bold-title-card"
+    },
+    {
+     "slug": "circle-construction",
+     "status": "have",
+     "skill": "blueprint-construction"
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "mikro-s-knihovnou",
+   "run": "20261009T001014Z-aa489f",
+   "reel": "motion-mikro.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.1029,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [
+    {
+     "slug": "big-title-card",
+     "status": "have",
+     "skill": "bold-title-card"
+    },
+    {
+     "slug": "spec-sheet-card",
+     "status": "have",
+     "skill": "spec-sheet"
+    },
+    {
+     "slug": "pictogram-grid",
+     "status": "have",
+     "skill": "badge-and-icons"
+    },
+    {
+     "slug": "ticket-card",
+     "status": "have",
+     "skill": "ticket-card"
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "mikro-s-knihovnou",
+   "run": "20261009T001016Z-32af6d",
+   "reel": "motion-identita.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.1142,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [
+    {
+     "slug": "dot-intro",
+     "status": "have",
+     "skill": "orb-glow-intro"
+    },
+    {
+     "slug": "blueprint-construction",
+     "status": "have",
+     "skill": "blueprint-construction"
+    },
+    {
+     "slug": "size-specimen",
+     "status": "have",
+     "skill": "size-scale-sheet"
+    },
+    {
+     "slug": "final-lockup",
+     "status": "have",
+     "skill": "final-lockup"
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "mikro-s-knihovnou",
+   "run": "20261009T001018Z-386589",
+   "reel": "motion-eduard.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.1114,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [
+    {
+     "slug": "orb-wordmark",
+     "status": "have",
+     "skill": "glow-orb-wordmark-reveal"
+    },
+    {
+     "slug": "icon-trio",
+     "status": "have",
+     "skill": "glow-orb-wordmark-reveal"
+    },
+    {
+     "slug": "headline-cards",
+     "status": "have",
+     "skill": "glow-orb-wordmark-reveal"
+    },
+    {
+     "slug": "pill-toggle",
+     "status": "have",
+     "skill": "glow-orb-wordmark-reveal"
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "mikro-s-knihovnou",
+   "run": "20261009T001755Z-69b935",
+   "reel": "motion-eduard.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.106,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [
+    {
+     "slug": "orb-wordmark-reveal",
+     "status": "have",
+     "skill": "glow-orb-wordmark-reveal"
+    },
+    {
+     "slug": "icon-orbit-row",
+     "status": "have",
+     "skill": "glow-orb-wordmark-reveal"
+    },
+    {
+     "slug": "headline-command-list",
+     "status": "have",
+     "skill": "glow-orb-wordmark-reveal"
+    },
+    {
+     "slug": "closing-pill-toggle",
+     "status": "have",
+     "skill": "glow-orb-wordmark-reveal"
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "mikro-s-knihovnou",
+   "run": "20261009T001848Z-1e6c65",
+   "reel": "motion-mikro.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.3946,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 3,
+   "installed": [
+    "bold-title-card@v3"
+   ],
+   "parts": [
+    {
+     "slug": "bold-title-card",
+     "status": "have-failed",
+     "skill": "bold-title-card"
+    },
+    {
+     "slug": "bold-title-card",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "spec-sheet",
+     "status": "have",
+     "skill": "spec-sheet"
+    },
+    {
+     "slug": "pictogram-grid",
+     "status": "have",
+     "skill": "badge-and-icons"
+    },
+    {
+     "slug": "barcode-ticket",
+     "status": "have",
+     "skill": "ticket-card"
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "mikro-s-knihovnou",
+   "run": "20261009T002018Z-2ccd84",
+   "reel": "motion-identita.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.1047,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [
+    {
+     "slug": "blueprint-construction",
+     "status": "have",
+     "skill": "blueprint-construction"
+    },
+    {
+     "slug": "size-specimen",
+     "status": "have",
+     "skill": "size-scale-sheet"
+    },
+    {
+     "slug": "glow-end-card",
+     "status": "have",
+     "skill": "final-lockup"
+    },
+    {
+     "slug": "glow-orb-intro",
+     "status": "have",
+     "skill": "orb-glow-intro"
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "mikro-s-knihovnou",
+   "run": "20261009T002424Z-69e628",
+   "reel": "motion-eduard.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.8946,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 11,
+   "installed": [],
+   "parts": [
+    {
+     "slug": "orb-wordmark-reveal",
+     "status": "have",
+     "skill": "glow-orb-wordmark-reveal"
+    },
+    {
+     "slug": "icon-node-spread",
+     "status": "have",
+     "skill": "glow-orb-wordmark-reveal"
+    },
+    {
+     "slug": "headline-card-list",
+     "status": "have",
+     "skill": "glow-orb-wordmark-reveal"
+    },
+    {
+     "slug": "pill-toggle",
+     "status": "skipped",
+     "skill": null
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-C-aCKISgqrw",
+   "run": "20261008T233501Z-fb6e23",
+   "reel": "C-aCKISgqrw.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.5963,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "effect",
+   "forge_calls": 3,
+   "installed": [
+    "stroke-trail-dot-logo-reveal@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-C-aCKISgqrw",
+   "run": "20261009T000556Z-ed6ed4",
+   "reel": "C-aCKISgqrw.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.395,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "effect",
+   "forge_calls": 3,
+   "installed": [
+    "snake-stroke-dot-logo-reveal@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DDXbHHDIzyx",
+   "run": "20261009T003237Z-43ff5a",
+   "reel": "DDXbHHDIzyx.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.4896,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "effect",
+   "forge_calls": 4,
+   "installed": [
+    "corner-pin-diagonal-type@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DO8fv7xjw_u",
+   "run": "20261008T233459Z-2dfda9",
+   "reel": "DO8fv7xjw_u.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.5346,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "effect",
+   "forge_calls": 4,
+   "installed": [
+    "accent-letter-sweep-reveal@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DO8fv7xjw_u",
+   "run": "20261009T000606Z-25a890",
+   "reel": "DO8fv7xjw_u.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.4917,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "effect",
+   "forge_calls": 3,
+   "installed": [
+    "stretch-letter-mask-reveal@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DP0hpwRCJIv",
+   "run": "20261009T003245Z-d80767",
+   "reel": "DP0hpwRCJIv.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.5436,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "effect",
+   "forge_calls": 5,
+   "installed": [
+    "grid-overlay-resize-invert@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DQ0QXU6kw-D",
+   "run": "20261009T002906Z-25286f",
+   "reel": "DQ0QXU6kw-D.mp4",
+   "status": "BUILT",
+   "spent_usd": 1.1056,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "effect",
+   "forge_calls": 10,
+   "installed": [
+    "typewriter-type-on-caret@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DXhdiikkZQ0",
+   "run": "20261008T233311Z-b1604b",
+   "reel": "DXhdiikkZQ0.mp4",
+   "status": "BUILT",
+   "spent_usd": 3.6118,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "effect",
+   "forge_calls": 24,
+   "installed": [
+    "flat-shape-morph-title@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DXhdiikkZQ0",
+   "run": "20261008T235450Z-35ba55",
+   "reel": "DXhdiikkZQ0.mp4",
+   "status": "HAVE",
+   "spent_usd": 0.0057,
+   "task": "task",
+   "opus_builder": true,
+   "kind": null,
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DXhdiikkZQ0",
+   "run": "20261009T000450Z-adbc2c",
+   "reel": "DXhdiikkZQ0.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.1108,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [
+    {
+     "slug": "concentric-shape-tunnel",
+     "status": "have",
+     "skill": "flat-shape-morph-title"
+    },
+    {
+     "slug": "orbiting-dot-clusters",
+     "status": "have",
+     "skill": "flat-shape-morph-title"
+    },
+    {
+     "slug": "chevron-color-blocks",
+     "status": "have",
+     "skill": "flat-shape-morph-title"
+    },
+    {
+     "slug": "gradient-title-card",
+     "status": "have",
+     "skill": "flat-shape-morph-title"
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DXhdiikkZQ0",
+   "run": "20261009T001020Z-7b6cba",
+   "reel": "DXhdiikkZQ0.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.598,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 6,
+   "installed": [
+    "concentric-nested-shapes@v1"
+   ],
+   "parts": [
+    {
+     "slug": "concentric-nested-shapes",
+     "status": "have-failed",
+     "skill": "flat-shape-morph-title"
+    },
+    {
+     "slug": "concentric-nested-shapes",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "dot-and-capsule-orbits",
+     "status": "have",
+     "skill": "flat-shape-morph-title"
+    },
+    {
+     "slug": "chevron-diamonds",
+     "status": "have",
+     "skill": "flat-shape-morph-title"
+    },
+    {
+     "slug": "color-block-title-panel",
+     "status": "have",
+     "skill": "flat-shape-morph-title"
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DXhdiikkZQ0",
+   "run": "20261009T002815Z-3054a6",
+   "reel": "DXhdiikkZQ0.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.1057,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [
+    {
+     "slug": "centered-shape-morph",
+     "status": "have",
+     "skill": "flat-shape-morph-title"
+    },
+    {
+     "slug": "fullbleed-color-blocks",
+     "status": "have",
+     "skill": "flat-shape-morph-title"
+    },
+    {
+     "slug": "gradient-title-card",
+     "status": "have",
+     "skill": "flat-shape-morph-title"
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DYa7ULfK3Cp",
+   "run": "20261008T233457Z-f491f8",
+   "reel": "DYa7ULfK3Cp.mp4",
+   "status": "FAILED",
+   "spent_usd": 1.2372,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "effect",
+   "forge_calls": 9,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DYa7ULfK3Cp",
+   "run": "20261008T235305Z-648d6a",
+   "reel": "DYa7ULfK3Cp.mp4",
+   "status": "FAILED",
+   "spent_usd": 3.773,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 40,
+   "installed": [],
+   "parts": [
+    {
+     "slug": "dot-glyph-field",
+     "status": "skipped",
+     "skill": null
+    },
+    {
+     "slug": "monoline-letter-block",
+     "status": "skipped",
+     "skill": null
+    },
+    {
+     "slug": "gooey-morph-midstate",
+     "status": "skipped",
+     "skill": null
+    },
+    {
+     "slug": "zoomed-letter-crop",
+     "status": "skipped",
+     "skill": null
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DYa7ULfK3Cp",
+   "run": "20261009T000525Z-01585d",
+   "reel": "DYa7ULfK3Cp.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.9637,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "effect",
+   "forge_calls": 8,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DYa7ULfK3Cp",
+   "run": "20261009T001138Z-c6cbce",
+   "reel": "DYa7ULfK3Cp.mp4",
+   "status": "FAILED",
+   "spent_usd": 1.6857,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "effect",
+   "forge_calls": 13,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DYa7ULfK3Cp",
+   "run": "20261009T002552Z-1b78be",
+   "reel": "DYa7ULfK3Cp.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.9773,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "effect",
+   "forge_calls": 7,
+   "installed": [
+    "dot-letter-gooey-morph@v1"
+   ],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-Db3DFh8Nr5y",
+   "run": "20261008T233309Z-6f355f",
+   "reel": "Db3DFh8Nr5y.mp4",
+   "status": "FAILED",
+   "spent_usd": 3.2553,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 33,
+   "installed": [
+    "ray-burst-pattern@v1",
+    "type-specimen-card@v1",
+    "info-card@v1",
+    "logo-construction@v1"
+   ],
+   "parts": [
+    {
+     "slug": "ray-burst-pattern",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "type-specimen-card",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "info-card",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "logo-construction",
+     "status": "built",
+     "skill": null
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-Db3DFh8Nr5y",
+   "run": "20261008T235258Z-a6488a",
+   "reel": "Db3DFh8Nr5y.mp4",
+   "status": "BUILT",
+   "spent_usd": 0.0963,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [
+    {
+     "slug": "ray-burst-pattern",
+     "status": "have",
+     "skill": "ray-burst-pattern"
+    },
+    {
+     "slug": "type-specimen",
+     "status": "have",
+     "skill": "type-specimen-card"
+    },
+    {
+     "slug": "dark-event-card",
+     "status": "have",
+     "skill": "info-card"
+    },
+    {
+     "slug": "logo-structure",
+     "status": "have",
+     "skill": "logo-construction"
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-Db3DFh8Nr5y",
+   "run": "20261008T235613Z-f5842a",
+   "reel": "radiant-brand-montage",
+   "status": "DONE",
+   "spent_usd": 0.0,
+   "task": "design_task",
+   "opus_builder": true,
+   "kind": null,
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-Db3DFh8Nr5y",
+   "run": "20261008T235645Z-db6aa9",
+   "reel": "radiant-brand-montage",
+   "status": "DONE",
+   "spent_usd": 0.0,
+   "task": "design_task",
+   "opus_builder": true,
+   "kind": null,
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-Db3DFh8Nr5y",
+   "run": "20261008T235737Z-b6b466",
+   "reel": "kratsi-o-2s",
+   "status": "FAILED",
+   "spent_usd": 0.0,
+   "task": "design_task",
+   "opus_builder": true,
+   "kind": null,
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DcEZYsvtgQX",
+   "run": "20261008T233452Z-55bc6c",
+   "reel": "DcEZYsvtgQX.mp4",
+   "status": "FAILED",
+   "spent_usd": 2.9485,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 28,
+   "installed": [
+    "label-poster@v1",
+    "palette-stripes@v1",
+    "dot-ring-pattern@v1"
+   ],
+   "parts": [
+    {
+     "slug": "label-poster",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "palette-stripes",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "construction-lines",
+     "status": "skipped",
+     "skill": null
+    },
+    {
+     "slug": "dot-ring-pattern",
+     "status": "built",
+     "skill": null
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DcEZYsvtgQX",
+   "run": "20261008T235256Z-fe36e3",
+   "reel": "DcEZYsvtgQX.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.4044,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 3,
+   "installed": [
+    "construction-linework@v1"
+   ],
+   "parts": [
+    {
+     "slug": "palette-stripes",
+     "status": "have",
+     "skill": "palette-stripes"
+    },
+    {
+     "slug": "construction-linework",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "dot-pill-pattern",
+     "status": "have",
+     "skill": "dot-ring-pattern"
+    },
+    {
+     "slug": "typographic-card",
+     "status": "have",
+     "skill": "label-poster"
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DcEZYsvtgQX",
+   "run": "20261009T000518Z-d118ad",
+   "reel": "DcEZYsvtgQX.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.6029,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 5,
+   "installed": [
+    "construction-lines@v1"
+   ],
+   "parts": [
+    {
+     "slug": "logo-spec-sheet",
+     "status": "have",
+     "skill": "label-poster"
+    },
+    {
+     "slug": "colour-palette-stripes",
+     "status": "have",
+     "skill": "palette-stripes"
+    },
+    {
+     "slug": "construction-lines",
+     "status": "have-failed",
+     "skill": "construction-linework"
+    },
+    {
+     "slug": "construction-lines",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "typographic-poster",
+     "status": "have",
+     "skill": "label-poster"
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DcEZYsvtgQX",
+   "run": "20261009T001305Z-ba0d7b",
+   "reel": "DcEZYsvtgQX.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.1056,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [
+    {
+     "slug": "dot-pattern-ring",
+     "status": "have",
+     "skill": "dot-ring-pattern"
+    },
+    {
+     "slug": "construction-diagram",
+     "status": "have",
+     "skill": "construction-lines"
+    },
+    {
+     "slug": "palette-stripes",
+     "status": "have",
+     "skill": "palette-stripes"
+    },
+    {
+     "slug": "specimen-layout",
+     "status": "have",
+     "skill": "label-poster"
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DcEZYsvtgQX",
+   "run": "20261009T001955Z-67b104",
+   "reel": "DcEZYsvtgQX.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.1113,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [
+    {
+     "slug": "symbol-diagram-card",
+     "status": "have",
+     "skill": "label-poster"
+    },
+    {
+     "slug": "palette-stripes",
+     "status": "have",
+     "skill": "palette-stripes"
+    },
+    {
+     "slug": "construction-lines",
+     "status": "have",
+     "skill": "construction-lines"
+    },
+    {
+     "slug": "dot-pattern-ring",
+     "status": "have",
+     "skill": "dot-ring-pattern"
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DcEZYsvtgQX",
+   "run": "20261009T002659Z-0b5510",
+   "reel": "DcEZYsvtgQX.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.0969,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [
+    {
+     "slug": "dot-pill-ring-poster",
+     "status": "have",
+     "skill": "dot-ring-pattern"
+    },
+    {
+     "slug": "construction-line-drawing",
+     "status": "have",
+     "skill": "construction-lines"
+    },
+    {
+     "slug": "colour-swatch-stack",
+     "status": "have",
+     "skill": "palette-stripes"
+    },
+    {
+     "slug": "symbol-spec-sheet",
+     "status": "have",
+     "skill": "label-poster"
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DcEZYsvtgQX",
+   "run": "20261009T003329Z-0689ad",
+   "reel": "DcEZYsvtgQX.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.1017,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [
+    {
+     "slug": "centered-mark-poster",
+     "status": "have",
+     "skill": "label-poster"
+    },
+    {
+     "slug": "palette-stripes",
+     "status": "have",
+     "skill": "palette-stripes"
+    },
+    {
+     "slug": "dot-pattern-field",
+     "status": "have",
+     "skill": "dot-ring-pattern"
+    },
+    {
+     "slug": "construction-lines",
+     "status": "have",
+     "skill": "construction-lines"
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DcLzGYovY9B",
+   "run": "20261009T002059Z-c17d72",
+   "reel": "DcLzGYovY9B.mp4",
+   "status": "FAILED",
+   "spent_usd": 1.0634,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 10,
+   "installed": [
+    "kinetic-text-card@v1",
+    "logo-mark-card@v1"
+   ],
+   "parts": [
+    {
+     "slug": "kinetic-text-card",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "logo-mark-card",
+     "status": "built",
+     "skill": null
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DcLzGYovY9B",
+   "run": "20261009T003212Z-5673e7",
+   "reel": "DcLzGYovY9B.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.0842,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [
+    {
+     "slug": "kinetic-type-card",
+     "status": "have",
+     "skill": "kinetic-text-card"
+    },
+    {
+     "slug": "stage-tab-frame",
+     "status": "have",
+     "skill": "logo-mark-card"
+    },
+    {
+     "slug": "logo-ring-reveal",
+     "status": "have",
+     "skill": "logo-mark-card"
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DdEXP3nTNNl",
+   "run": "20261008T233455Z-4dd385",
+   "reel": "DdEXP3nTNNl.mp4",
+   "status": "FAILED",
+   "spent_usd": 2.1886,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 18,
+   "installed": [
+    "ascii-art-poster@v1",
+    "brutalist-editorial-poster@v1",
+    "construction-grid-poster@v1",
+    "data-visual-poster@v1"
+   ],
+   "parts": [
+    {
+     "slug": "ascii-art-poster",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "brutalist-editorial-poster",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "construction-grid-poster",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "data-visual-poster",
+     "status": "built",
+     "skill": null
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DdEXP3nTNNl",
+   "run": "20261008T235300Z-f1283f",
+   "reel": "DdEXP3nTNNl.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.6117,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 5,
+   "installed": [
+    "editorial-brutalist-poster@v1"
+   ],
+   "parts": [
+    {
+     "slug": "ascii-art-poster",
+     "status": "have",
+     "skill": "ascii-art-poster"
+    },
+    {
+     "slug": "swiss-construction-grid-poster",
+     "status": "have",
+     "skill": "construction-grid-poster"
+    },
+    {
+     "slug": "dot-matrix-data-poster",
+     "status": "have",
+     "skill": "data-visual-poster"
+    },
+    {
+     "slug": "editorial-brutalist-poster",
+     "status": "have-failed",
+     "skill": "brutalist-editorial-poster"
+    },
+    {
+     "slug": "editorial-brutalist-poster",
+     "status": "built",
+     "skill": null
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DdEXP3nTNNl",
+   "run": "20261009T000520Z-7cc8e2",
+   "reel": "DdEXP3nTNNl.mp4",
+   "status": "FAILED",
+   "spent_usd": 0.3963,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 4,
+   "installed": [
+    "typed-style-label@v1"
+   ],
+   "parts": [
+    {
+     "slug": "ascii-poster",
+     "status": "have",
+     "skill": "ascii-art-poster"
+    },
+    {
+     "slug": "construction-grid-poster",
+     "status": "have",
+     "skill": "construction-grid-poster"
+    },
+    {
+     "slug": "data-dot-poster",
+     "status": "have",
+     "skill": "data-visual-poster"
+    },
+    {
+     "slug": "typed-style-label",
+     "status": "built",
+     "skill": null
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DdEXP3nTNNl",
+   "run": "20261009T001450Z-ec7e2b",
+   "reel": "DdEXP3nTNNl.mp4",
+   "status": "HAVE",
+   "spent_usd": 0.0041,
+   "task": "task",
+   "opus_builder": true,
+   "kind": null,
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DdffhFkR5C7",
+   "run": "20261008T233307Z-5b7168",
+   "reel": "DdffhFkR5C7.mp4",
+   "status": "FAILED",
+   "spent_usd": 3.8172,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 39,
+   "installed": [
+    "cream-construction-grid@v1"
+   ],
+   "parts": [
+    {
+     "slug": "orange-title-card",
+     "status": "skipped",
+     "skill": null
+    },
+    {
+     "slug": "cream-construction-grid",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "pixel-dot-texture",
+     "status": "skipped",
+     "skill": null
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DdffhFkR5C7",
+   "run": "20261008T235303Z-3974aa",
+   "reel": "DdffhFkR5C7.mp4",
+   "status": "FAILED",
+   "spent_usd": 3.799,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 55,
+   "installed": [
+    "orange-wordmark-card@v1"
+   ],
+   "parts": [
+    {
+     "slug": "cream-construction-grid",
+     "status": "have",
+     "skill": "cream-construction-grid"
+    },
+    {
+     "slug": "orange-wordmark-card",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "dot-matrix-mask",
+     "status": "skipped",
+     "skill": null
+    },
+    {
+     "slug": "scattered-kinetic-letters",
+     "status": "skipped",
+     "skill": null
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DdffhFkR5C7",
+   "run": "20261009T000522Z-344bdd",
+   "reel": "DdffhFkR5C7.mp4",
+   "status": "BUILT",
+   "spent_usd": 2.1585,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 29,
+   "installed": [
+    "scattered-letter-type@v1"
+   ],
+   "parts": [
+    {
+     "slug": "orange-wordmark-card",
+     "status": "have-failed",
+     "skill": "orange-wordmark-card"
+    },
+    {
+     "slug": "orange-wordmark-card",
+     "status": "skipped",
+     "skill": null
+    },
+    {
+     "slug": "cream-construction-grid",
+     "status": "have",
+     "skill": "cream-construction-grid"
+    },
+    {
+     "slug": "pixel-dither-field",
+     "status": "skipped",
+     "skill": null
+    },
+    {
+     "slug": "scattered-letter-type",
+     "status": "built",
+     "skill": null
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DdffhFkR5C7",
+   "run": "20261009T002110Z-902243",
+   "reel": "DdffhFkR5C7.mp4",
+   "status": "FAILED",
+   "spent_usd": 1.402,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 20,
+   "installed": [],
+   "parts": [
+    {
+     "slug": "orange-title-card",
+     "status": "have-failed",
+     "skill": "orange-wordmark-card"
+    },
+    {
+     "slug": "orange-title-card",
+     "status": "skipped",
+     "skill": null
+    },
+    {
+     "slug": "pixel-mask",
+     "status": "skipped",
+     "skill": null
+    },
+    {
+     "slug": "construction-grid",
+     "status": "have",
+     "skill": "cream-construction-grid"
+    },
+    {
+     "slug": "scatter-type",
+     "status": "have",
+     "skill": "scattered-letter-type"
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "opus-DeKymN6SlKb",
+   "run": "20261009T002101Z-37ad94",
+   "reel": "DeKymN6SlKb.mp4",
+   "status": "FAILED",
+   "spent_usd": 1.416,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 16,
+   "installed": [
+    "spectrogram-heatmap@v1",
+    "peak-pins@v1"
+   ],
+   "parts": [
+    {
+     "slug": "constellation-dots",
+     "status": "skipped",
+     "skill": null
+    },
+    {
+     "slug": "spectrogram-heatmap",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "peak-pins",
+     "status": "built",
+     "skill": null
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "uceni-ok",
+   "run": "20261009T002051Z-3a7e8e",
+   "reel": "01-hvmudvlab-DdzH3FpONMD.mp4",
+   "status": "FAILED",
+   "spent_usd": 1.6882,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "montage",
+   "forge_calls": 16,
+   "installed": [
+    "type-verb-swap@v1",
+    "primitives-poster@v1",
+    "scrolling-word-rows@v1",
+    "counter-dashboard@v1"
+   ],
+   "parts": [
+    {
+     "slug": "type-verb-swap",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "primitives-poster",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "scrolling-word-rows",
+     "status": "built",
+     "skill": null
+    },
+    {
+     "slug": "counter-dashboard",
+     "status": "built",
+     "skill": null
+    }
+   ],
+   "assets_declared": []
+  },
+  {
+   "home": "uceni-ok",
+   "run": "20261009T002053Z-9fa2b9",
+   "reel": "02-io_klik-Dceu7fFIkly.mp4",
+   "status": "SKIP",
+   "spent_usd": 0.0593,
+   "task": "task",
+   "opus_builder": true,
+   "kind": "effect",
+   "forge_calls": 0,
+   "installed": [],
+   "parts": [],
+   "assets_declared": []
+  }
+ ]
+}
