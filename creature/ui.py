@@ -18,6 +18,7 @@ import tempfile
 import threading
 import time
 import uuid
+from collections.abc import Mapping
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
@@ -180,6 +181,18 @@ def _result(out: str, homes: Path) -> dict[str, Any]:
     return found
 
 
+def allowed(headers: Mapping[str, str], port: int, *, post: bool) -> bool:
+    """Only the desk's own page may use it. Host must be this server (no DNS rebinding); a POST must come
+    from this page's own origin and carry JSON, which a form or a simple request from another site cannot."""
+    own = {f"127.0.0.1:{port}", f"localhost:{port}"}
+    if headers.get("Host") not in own:
+        return False
+    if not post:
+        return True
+    kind = (headers.get("Content-Type") or "").split(";")[0].strip()
+    return headers.get("Origin") in {f"http://{h}" for h in own} and kind == "application/json"
+
+
 class Handler(BaseHTTPRequestHandler):
     desk: Desk
 
@@ -197,6 +210,9 @@ class Handler(BaseHTTPRequestHandler):
         self._send(code, json.dumps(data, ensure_ascii=False).encode(), "application/json; charset=utf-8")
 
     def do_GET(self) -> None:
+        if not allowed(self.headers, self.server.server_address[1], post=False):
+            self._json({"error": "not the desk's own page"}, 403)
+            return
         url = urlparse(self.path)
         query = {k: v[0] for k, v in parse_qs(url.query).items()}
         try:
@@ -222,6 +238,9 @@ class Handler(BaseHTTPRequestHandler):
             self._json({"error": str(error)}, 400)
 
     def do_POST(self) -> None:
+        if not allowed(self.headers, self.server.server_address[1], post=True):
+            self._json({"error": "not the desk's own page"}, 403)
+            return
         url = urlparse(self.path)
         try:
             size = min(int(self.headers.get("Content-Length", 0)), 64_000)

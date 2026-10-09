@@ -75,3 +75,54 @@ def test_the_result_is_read_from_what_the_command_printed(tmp_path):
     found = ui._result(out, tmp_path)
     assert found["status"] == "DONE" and found["run"] == "20261009T022906Z-f416b5"
     assert found["clip"] == "20261009T022906Z-f416b5/make-2/joined-sound.mp4"
+
+
+@pytest.mark.slow  # a real local server on 127.0.0.1
+def test_only_this_page_may_start_a_job(desk, world, monkeypatch):
+    # another site open in the same browser must not start a run on localhost
+    import json
+    import threading
+    import urllib.request
+
+    monkeypatch.setattr(ui.Desk, "start", lambda self, kind, data: "job1")
+    ui.Handler.desk = desk
+    server = ui.ThreadingHTTPServer(("127.0.0.1", 0), ui.Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    port = server.server_address[1]
+    body = json.dumps({"home": world.name, "lines": ["x"]}).encode()
+
+    def post(headers):
+        request = urllib.request.Request(f"http://127.0.0.1:{port}/api/make", data=body, headers=headers)
+        try:
+            return urllib.request.urlopen(request).status
+        except urllib.error.HTTPError as error:
+            return error.code
+
+    try:
+        own = f"http://127.0.0.1:{port}"
+        assert post({"Origin": own, "Content-Type": "application/json"}) == 200
+        assert post({"Origin": "https://evil.example", "Content-Type": "application/json"}) == 403
+        assert post({"Content-Type": "application/json"}) == 403  # no origin: not a page of ours
+        assert post({"Origin": own, "Content-Type": "text/plain"}) == 403  # a form-like post
+        rebound = urllib.request.Request(
+            f"http://127.0.0.1:{port}/api/homes", headers={"Host": "evil.example"}
+        )
+        try:
+            code = urllib.request.urlopen(rebound).status
+        except urllib.error.HTTPError as error:
+            code = error.code
+        assert code == 403
+    finally:
+        server.shutdown()
+
+
+def test_allowed_is_only_the_desks_own_page():
+    own = {"Host": "127.0.0.1:8765", "Origin": "http://127.0.0.1:8765", "Content-Type": "application/json"}
+    assert ui.allowed(own, 8765, post=True)
+    assert ui.allowed({**own, "Host": "localhost:8765", "Origin": "http://localhost:8765"}, 8765, post=True)
+    assert not ui.allowed({**own, "Origin": "http://evil.example"}, 8765, post=True)
+    assert not ui.allowed({**own, "Host": "evil.example"}, 8765, post=True)
+    assert not ui.allowed({**own, "Host": "evil.example"}, 8765, post=False)  # DNS rebinding, even a GET
+    assert not ui.allowed({**own, "Content-Type": "text/plain"}, 8765, post=True)  # a simple request
+    assert not ui.allowed({k: v for k, v in own.items() if k != "Origin"}, 8765, post=True)
+    assert ui.allowed({"Host": "127.0.0.1:8765"}, 8765, post=False)
