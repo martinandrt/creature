@@ -85,6 +85,7 @@ From the ledgers of all 30 homes (`scripts/outcomes.py`, `docs/outcomes.json`): 
 
 A read-only asset library (339 items, own and open-licensed; list in `docs/assets/`), a style file and
 some of the author's own reels. Third-party reels are credited, not redistributed.
+The library was mounted read-only during runs; 26 of 116 installed skills declare files from it, mostly fonts.
 Tooling: Claude Code, Docker, Apify, local Whisper.
 
 ## License
