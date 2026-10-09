@@ -720,7 +720,10 @@ def test_a_montage_is_checked_for_the_reels_rhythm_and_palette(montage_world, fa
     report = _creature(home, fake_model).try_reel("reel.mp4", "Stay curious.")
     assert report.status == "BUILT", report.gap
     assert "palette" in seen["grid-cards-attempt-1"] and "rhythm" not in seen["grid-cards-attempt-1"]
-    assert {"palette", "rhythm", "smooth", "frames"} <= set(seen["montage-1"]), seen["montage-1"]
+    # one learned surface: the sources play in step, so a cut to the same source is no cut and rhythm
+    # cannot be measured; the palette and the smoothness still are
+    assert {"palette", "smooth", "frames"} <= set(seen["montage-1"]), seen["montage-1"]
+    assert "rhythm" not in seen["montage-1"]
 
 
 # --- the round forge (a home whose authority names a forge model) -------------------
