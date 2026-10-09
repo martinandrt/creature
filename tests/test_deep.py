@@ -443,6 +443,8 @@ def test_a_score_that_keeps_improving_is_not_a_plateau(home, tmp_path, monkeypat
 def test_the_forge_is_told_that_motion_eases():
     # 9. 10.: "ok, but it could be smoother" on a montage the judge passed: easing is a rule, not a recipe
     assert "eases in and out" in deep.SYSTEM and "at least 6 frames" in deep.SYSTEM
+    # DQ0QXU6kw-D: a caret that blinked far faster than the reel's passed the judge
+    assert "blinks" in deep.SYSTEM and "no faster than it does in the reel" in deep.SYSTEM
 
 
 def test_a_done_claim_the_judge_fails_does_not_restart_the_plateau_count(home, tmp_path, monkeypatch):
