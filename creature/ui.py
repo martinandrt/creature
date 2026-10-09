@@ -404,6 +404,8 @@ class Handler(BaseHTTPRequestHandler):
                     query.get("home", ""), query.get("skill", ""), query.get("run", "")
                 )
                 self._send(200, body, "video/mp4")
+            elif url.path == "/api/skill":  # where one skill was learned: its reel and what it cost
+                self._json(self.desk.reel(query.get("home", ""), query.get("skill", "")))
             elif url.path == "/api/home":
                 self._json(self.desk.describe(query.get("name", "")))
             elif url.path == "/api/current":
