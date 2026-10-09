@@ -629,7 +629,7 @@
   {
    "home": "creature-test",
    "run": "20261008T223723Z-292a44",
-   "reel": "DdffhFkR5C7.mp4",
+   "reel": "removed-by-author.mp4",
    "status": "HAVE",
    "spent_usd": 0.0125,
    "task": "task",
@@ -2995,9 +2995,9 @@
    "assets_declared": []
   },
   {
-   "home": "opus-DdffhFkR5C7",
+   "home": "opus-removed-by-author",
    "run": "20261008T233307Z-5b7168",
-   "reel": "DdffhFkR5C7.mp4",
+   "reel": "removed-by-author.mp4",
    "status": "FAILED",
    "spent_usd": 3.8172,
    "task": "task",
@@ -3027,9 +3027,9 @@
    "assets_declared": []
   },
   {
-   "home": "opus-DdffhFkR5C7",
+   "home": "opus-removed-by-author",
    "run": "20261008T235303Z-3974aa",
-   "reel": "DdffhFkR5C7.mp4",
+   "reel": "removed-by-author.mp4",
    "status": "FAILED",
    "spent_usd": 3.799,
    "task": "task",
@@ -3064,9 +3064,9 @@
    "assets_declared": []
   },
   {
-   "home": "opus-DdffhFkR5C7",
+   "home": "opus-removed-by-author",
    "run": "20261009T000522Z-344bdd",
-   "reel": "DdffhFkR5C7.mp4",
+   "reel": "removed-by-author.mp4",
    "status": "BUILT",
    "spent_usd": 2.1585,
    "task": "task",
@@ -3106,9 +3106,9 @@
    "assets_declared": []
   },
   {
-   "home": "opus-DdffhFkR5C7",
+   "home": "opus-removed-by-author",
    "run": "20261009T002110Z-902243",
-   "reel": "DdffhFkR5C7.mp4",
+   "reel": "removed-by-author.mp4",
    "status": "FAILED",
    "spent_usd": 1.402,
    "task": "task",
@@ -3146,9 +3146,9 @@
    "assets_declared": []
   },
   {
-   "home": "opus-DdffhFkR5C7",
+   "home": "opus-removed-by-author",
    "run": "20261009T004835Z-98b96d",
-   "reel": "DdffhFkR5C7.mp4",
+   "reel": "removed-by-author.mp4",
    "status": "FAILED",
    "spent_usd": 1.1374,
    "task": "task",
@@ -3188,9 +3188,9 @@
    "assets_declared": []
   },
   {
-   "home": "opus-DdffhFkR5C7",
+   "home": "opus-removed-by-author",
    "run": "20261009T005846Z-fef3bb",
-   "reel": "DdffhFkR5C7.mp4",
+   "reel": "removed-by-author.mp4",
    "status": "FAILED",
    "spent_usd": 0.798,
    "task": "task",
