@@ -83,7 +83,7 @@ textarea{flex:none;field-sizing:content;min-height:2.9em;max-height:42vh;width:1
 #replay{background:transparent;color:var(--text);border:2px solid var(--line)}#replay:not(:disabled):hover{border-color:var(--text)}
 button:disabled{opacity:.35;cursor:not-allowed}
 .what b{color:var(--text);font-weight:700}
-.rp{display:flex;flex-direction:column;gap:6px;align-items:stretch}
+.rp{display:flex;flex-direction:column;gap:6px;align-items:stretch}#rnote:empty{display:none}
 #rnote.bad{color:var(--bad)}
 
 .frame{height:min(64vh,720px);aspect-ratio:9/16;background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(10px);position:relative;overflow:hidden;border-radius:var(--r)}
@@ -186,7 +186,7 @@ const fits=(d,n)=>!!d&&(n===1||n===d.steps);  // replay takes one text for every
 function fit(){const n=count();const d=designs.find(x=>x.steps===n)||(n===1&&designs[0]);if(d)pick.design=d.name;else if(!designs.some(x=>x.name===pick.design))pick.design=designs[0]?designs[0].name:"";designMenu()}
 function check(){const n=count();const d=designs.find(x=>x.name===pick.design);const ok=fits(d,n);
  const sizes=[...new Set(designs.map(x=>x.steps))].sort((a,b)=>a-b);
- $("rnote").textContent=!d?"":ok?`replays ${named(d)} with your ${n} ${n==1?"line":"lines"} · no AI · $0`:designs.some(x=>x.steps===n)?`needs ${d.steps} ${d.steps==1?"line":"lines"}, you have ${n}`:`no saved video has ${n} lines · write ${[...new Set([1,...sizes])].join(", ")}`;
+ $("rnote").textContent=!d||ok?"":designs.some(x=>x.steps===n)?`needs ${d.steps} ${d.steps==1?"line":"lines"}, you have ${n}`:`no saved video has ${n} lines · write ${[...new Set([1,...sizes])].join(", ")}`;
  $("rnote").className=d&&!ok?"bad":"";$("replay").disabled=busy||!ok;$("make").disabled=busy||!n}
 function source(x,play){if(!x){$("learned").innerHTML='<div class="dot"></div>';$("lname").textContent="—";$("lsub").innerHTML="";return}
  const url=x.src?(x.src.startsWith("file:")?file(x.src.slice(5)):`/reel?home=${encodeURIComponent(home)}&${x.src.slice(5)}`):null;
