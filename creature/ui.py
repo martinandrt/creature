@@ -358,6 +358,19 @@ def _result(out: str, homes: Path) -> dict[str, Any]:
     return found
 
 
+def byte_range(header: str | None, size: int) -> tuple[int, int] | None:
+    """The one byte range a `Range: bytes=a-b` header asks for, clipped to the file; None for a whole file."""
+    match = re.fullmatch(r"bytes=(\d*)-(\d*)", (header or "").strip())
+    if not match or size == 0 or match.groups() == ("", ""):
+        return None
+    first, last = match.groups()
+    if first == "":  # the last N bytes
+        return max(0, size - int(last)), size - 1
+    start = int(first)
+    end = min(int(last), size - 1) if last else size - 1
+    return (start, end) if start <= end else None
+
+
 def allowed(headers: Mapping[str, str], port: int, *, post: bool) -> bool:
     """Only the desk's own page may use it. Host must be this server (no DNS rebinding); a POST must come
     from this page's own origin and carry JSON, which a form or a simple request from another site cannot."""
@@ -377,11 +390,20 @@ class Handler(BaseHTTPRequestHandler):
         return
 
     def _send(self, code: int, body: bytes, kind: str) -> None:
-        self.send_response(code)
+        part = byte_range(self.headers.get("Range"), len(body)) if code == 200 else None
+        if part:  # a player seeking in a video asks for one part of the file
+            start, end = part
+            self.send_response(206)
+            self.send_header("Content-Range", f"bytes {start}-{end}/{len(body)}")
+            body = body[start : end + 1]
+        else:
+            self.send_response(code)
         self.send_header("Content-Type", kind)
+        self.send_header("Accept-Ranges", "bytes")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
-        self.wfile.write(body)
+        with contextlib.suppress(BrokenPipeError, ConnectionResetError):  # the player moved on
+            self.wfile.write(body)
 
     def _json(self, data: Any, code: int = 200) -> None:
         self._send(code, json.dumps(data, ensure_ascii=False).encode(), "application/json; charset=utf-8")

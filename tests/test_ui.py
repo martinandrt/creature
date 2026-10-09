@@ -192,3 +192,12 @@ def test_a_learning_run_shows_the_reel_it_learned_on(desk, world):
         desk.reel_file(world.name, run=run)  # its source path is not a file on this machine
     with pytest.raises(KeyError):
         desk.reel_file(world.name, run="../../x")
+
+
+def test_a_video_can_be_sought_in_parts():
+    assert ui.byte_range("bytes=0-", 100) == (0, 99)
+    assert ui.byte_range("bytes=10-19", 100) == (10, 19)
+    assert ui.byte_range("bytes=90-500", 100) == (90, 99)
+    assert ui.byte_range("bytes=-30", 100) == (70, 99)
+    for whole in (None, "", "bytes=-", "items=0-1", "bytes=200-300", "bytes=1-2,5-6"):
+        assert ui.byte_range(whole, 100) is None

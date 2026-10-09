@@ -37,7 +37,7 @@ h1{font:800 30px/1 var(--sans);letter-spacing:.03em;margin:0;text-transform:uppe
 .dd li.on{color:var(--acc)}.dd li.on .v::before{content:"● ";font-size:11px;vertical-align:2px}
 .dd li.g{cursor:default;background:none;font:500 12px var(--mono);text-transform:uppercase;letter-spacing:.14em;color:var(--mute);padding:12px 14px 4px}
 .dd li.bad{opacity:.45}
-#home{width:min(420px,60vw)}#design{flex:1;min-width:240px}
+#home{width:min(420px,60vw)}#design{width:100%;min-width:0}
 #skillsbtn{all:unset;cursor:pointer;font:500 16px var(--mono);color:var(--mute)}#skillsbtn:hover,#skillsbtn.on{color:var(--acc)}
 #skills{display:none;position:absolute;left:32px;top:calc(100% + 6px);z-index:5;width:min(860px,calc(100vw - 64px));max-height:70vh;overflow:auto;
   background:var(--glass);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:var(--r);padding:6px 0}
@@ -64,7 +64,7 @@ textarea{flex:1;min-height:200px;width:100%;background:transparent;border:0;colo
 #picks .chip:hover,#picks .chip.on{text-decoration:underline}#picks .chip.none{color:var(--mute);cursor:default}
 #edit{all:unset;cursor:pointer;font:500 14px var(--mono);color:var(--mute);margin-top:10px}#edit:hover{color:var(--acc)}#edit[hidden]{display:none}
 
-.acts{display:grid;grid-template-columns:auto 1fr;gap:12px 18px;align-items:center;padding-top:18px;border-top:1px solid var(--line)}
+.acts{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px 18px;align-items:center;padding-top:18px;border-top:1px solid var(--line)}
 .acts>button{height:56px;min-width:150px;padding:0 24px;font:800 22px var(--sans);text-transform:uppercase;letter-spacing:.05em;cursor:pointer;border-radius:var(--r)}
 #make{background:var(--acc);color:var(--ink);border:2px solid var(--acc)}
 #replay{background:transparent;color:var(--text);border:2px solid var(--line)}#replay:not(:disabled):hover{border-color:var(--text)}
