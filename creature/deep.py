@@ -720,7 +720,6 @@ def build(
             space.files = dict(base[1])
             ledger.record("plateau", round=number, best=lowest, best_round=base[0])
         if reply.get("done") is True or number == rounds or stalled:
-            moved = number
             judged = json.dumps(space.files, sort_keys=True)
             if judged in failed:  # the same files again: forge and judge disagree, more rounds buy nothing
                 ledger.record("stalemate", round=number, why=feedback.strip()[-400:])
@@ -730,10 +729,16 @@ def build(
             if outcome.ok:
                 return Result(True, space.files, number, "", tuple(used_assets(space.files, said)))
             failed.add(judged)
+            # a failed check buys rounds only when it says something new; the same verdict twice ends the run
+            same = "\n" + outcome.feedback == last_verdict
+            if not same:
+                moved = number
             last_verdict = "\n" + outcome.feedback
-            if stalled:
-                return Result(False, space.files, number, f"plateau: no better score for {PLATEAU} rounds, "
-                              "the best version did not pass:" + last_verdict)  # fmt: skip
+            if same:
+                ledger.record("plateau", round=number, best=lowest, best_round=base[0], why="same verdict")
+            if stalled or same:
+                why = "plateau: no better score, or the same verdict again; the best version did not pass:"
+                return Result(False, space.files, number, why + last_verdict)
             feedback += "\nYour whole clip was checked and did not pass:\n" + outcome.feedback
     return Result(False, space.files, rounds, feedback.strip() or "no round passed")
 

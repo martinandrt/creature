@@ -443,3 +443,18 @@ def test_a_score_that_keeps_improving_is_not_a_plateau(home, tmp_path, monkeypat
 def test_the_forge_is_told_that_motion_eases():
     # 9. 10.: "ok, but it could be smoother" on a montage the judge passed: easing is a rule, not a recipe
     assert "eases in and out" in deep.SYSTEM and "at least 6 frames" in deep.SYSTEM
+
+
+def test_a_done_claim_the_judge_fails_does_not_restart_the_plateau_count(home, tmp_path, monkeypatch):
+    # lilium-kucharka 02:22: best 13.25 at round 8, then "done" at 9, 11, 13, 14, each failed by the judge
+    # with the same verdict, each resetting the plateau count; files differed by a pixel size, so no
+    # stalemate either: $1.9 and counting. A failed whole-clip check is no progress
+    # unless its verdict is new.
+    r = Rounds(home, tmp_path, monkeypatch, scores=[10.0] + [9.9] * 13, finish_ok=(False,) * 8)
+    r.fake.queue("forge", _reply("v1", files=[V1, LAYOUT]))
+    for n in range(2, 15):
+        r.fake.queue("forge", _reply(f"v{n}", edits=[_edit(f"V = {n - 1}", f"V = {n}")], done=n % 2 == 1))
+    result = r.build(rounds=14)
+    assert not result.ok
+    assert result.rounds <= 9 and len(r.fake.calls) <= 9, (result.rounds, result.gap)  # not all 14 paid
+    assert r.events("plateau") and len(r.finished) <= 2  # a failed verdict buys time once, not forever
