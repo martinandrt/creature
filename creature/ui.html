@@ -64,11 +64,11 @@ textarea{flex:none;field-sizing:content;min-height:2.9em;max-height:42vh;width:1
 #picks .chip:hover,#picks .chip.on{text-decoration:underline}#picks .chip.none{color:var(--mute);cursor:default}
 #edit{all:unset;cursor:pointer;font:500 14px var(--mono);color:var(--mute);margin-top:10px}#edit:hover{color:var(--acc)}#edit[hidden]{display:none}
 
-#how{flex:1;min-height:280px;display:flex;flex-direction:column;justify-content:center;gap:14px;padding-top:16px;border-top:1px solid var(--line)}
-#flow{flex:none;width:100%;height:auto}
+#how{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:14px;padding-top:16px;border-top:1px solid var(--line)}
+#flow{flex:none;width:100%;height:auto;max-height:40vh}
 #say{font:600 19px/1.35 var(--sans);min-height:52px}#say b{font:500 14px var(--mono);color:var(--acc);letter-spacing:.1em;margin-right:12px}
 .nd rect{fill:rgba(11,16,34,.75);stroke:rgba(245,246,248,.14);transition:stroke .35s,fill .35s}
-.nd .a{font:700 18px "Barlow UI","Barlow",system-ui,sans-serif;fill:var(--text);transition:fill .35s}.nd .b{font:500 13.5px "Barlow UI","Barlow",sans-serif;fill:rgba(245,246,248,.75)}.nd .c{font:500 10px "Mono UI","JetBrains Mono",monospace;fill:var(--mute);letter-spacing:.04em}
+.nd .a{font:700 19px "Barlow UI","Barlow",system-ui,sans-serif;fill:var(--text);transition:fill .35s}.nd .b{font:500 13.5px "Barlow UI","Barlow",sans-serif;fill:rgba(245,246,248,.75)}.nd .c{font:500 10px "Mono UI","JetBrains Mono",monospace;fill:var(--mute);letter-spacing:.04em}
 .ed.dash{fill:none;stroke-dasharray:3 4}
 .nd.hub rect{stroke:rgba(245,246,248,.32)}.nd.done rect{stroke:rgba(245,246,248,.4)}
 .nd.on rect{stroke:var(--acc);fill:rgba(255,201,38,.09)}.nd.on .a{fill:var(--acc)}
@@ -122,7 +122,7 @@ button:disabled{opacity:.35;cursor:not-allowed}
 Seventeen reels.
 One creature.
 Zero new authority.</textarea><div id="picks"></div><button id="edit" hidden>✎ edit script</button></div>
- <div id="how"><svg id="flow" viewBox="0 0 600 264" preserveAspectRatio="xMidYMid meet" role="img" aria-label="how the creature works"></svg><div id="say"></div></div>
+ <div id="how"><svg id="flow" viewBox="0 0 600 336" preserveAspectRatio="xMidYMid meet" role="img" aria-label="how the creature works"></svg><div id="say"></div></div>
  <div class="acts">
   <button id="make">Make</button><span class="sub what"><b>new video</b> · AI picks a screen per line · ~$0.02 · ~2 min</span>
   <button id="replay">Replay</button><span class="sub rp"><span class="dd" id="design"></span><span id="rnote"></span></span>
@@ -240,42 +240,35 @@ $("skills").onclick=e=>e.stopPropagation();document.addEventListener("click",()=
 document.addEventListener("keydown",e=>{if(e.key==="Escape")skillsOpen(false)});
 homes().then(resume);
 (()=>{  // how it works, in general: an illustration on a loop, not a live run
- const W=112,H=74,X=[0,122,244,366,488],Y={L:34,M:186};
- const N={reel:["L",0,"Reel","from Instagram","Apify"],opus:["L",1,"Opus","writes the code","Claude API"],sbx1:["L",2,"Sandbox","runs the code","Docker · offline"],
-  jdg1:["L",3,"Judge","checks + Haiku","Claude API"],reg:["L",4,"Registry","skill saved","disk"],
-  script:["M",0,"Script","your lines","you"],haiku:["M",1,"Haiku","picks skills","Claude API"],sbx2:["M",2,"Sandbox","renders shots","Docker · offline"],
-  jdg2:["M",3,"Judge","checks + Haiku","Claude API"],video:["M",4,"Video","mp4","file"]};
- const S=[["LEARN","reel","","A reel comes in, downloaded via Apify."],["LEARN","opus","reel","Opus writes the missing skill as Python code.",1],
-  ["LEARN","sbx1","opus","The code runs in Docker: no network, no keys."],["LEARN","jdg1","sbx1","Fixed checks, then a Haiku judge. Fail: Opus tries again.",1],
-  ["LEARN","reg","jdg1","Pass: saved as a skill, with tests and a version."],
-  ["MAKE","script","","Later: your script, one line per shot."],["MAKE","haiku","script","Haiku picks a learned skill for each line.",1],
-  ["MAKE","sbx2","haiku","Each shot renders in the sandbox."],["MAKE","jdg2","sbx2","The judge checks every line is readable.",1],
-  ["MAKE","video","jdg2","Video. Replay with new words: $0, no AI."]];
- const svg=$("flow"),ns="http://www.w3.org/2000/svg",nodes={},links={};
+ const W=176,H=76,X=[0,212,424],Y=[26,142,258],G=36;
+ const R=[["LEARN · ONCE PER REEL",[["Reel","a video from Instagram","Apify"],["Opus writes code","runs in a Docker sandbox","Claude API · offline"],["Skill","kept only if the judge passes","registry on disk"]],
+   ["A reel comes in.","Opus writes the skill as Python code. It runs in a sandbox with no network.","A judge checks it. Only a pass is kept as a skill."]],
+  ["MAKE · EVERY NEW VIDEO",[["Your script","one line per shot","you"],["Haiku picks skills","shots render in the sandbox","Claude API · Docker"],["Video","checked by the judge","~$0.02 · ~2 min"]],
+   ["Your script: one line per shot.","Haiku picks a learned skill for each line. The sandbox renders every shot.","The judge checks the video before you see it."]],
+  ["REPLAY · NEW WORDS",[["New words","same number of lines","you"],["Saved recipe","same skills, same cuts","no AI"],["Video","new text, same look","$0 · seconds"]],
+   ["New words for a video it already made.","The saved recipe: same skills, same cuts. No AI.","A new video in seconds, for $0."]]];
+ const svg=$("flow"),ns="http://www.w3.org/2000/svg",cells=[],arrows=[],drops=[];
  const el=(t,a,p)=>{const e=document.createElementNS(ns,t);for(const k in a)e.setAttribute(k,a[k]);(p||svg).appendChild(e);return e};
- const box=k=>{const [r,c]=N[k];return {x:X[c],y:Y[r]}};
- el("text",{x:0,y:Y.L-12,class:"mt"}).textContent="LEARN · ONCE PER REEL";el("text",{x:0,y:Y.M-12,class:"mt"}).textContent="MAKE · EVERY VIDEO";
- const reg=box("reg"),hk=box("haiku");
- links.reg=el("path",{d:`M${reg.x+W/2} ${reg.y+H} V${Y.M-28} H${hk.x+W/2} V${hk.y}`,class:"ed dash"});
- el("text",{x:reg.x+W/2-6,y:Y.M-32,"text-anchor":"end",class:"mt"}).textContent="LEARNED SKILLS";
- for(const s of S)if(s[2]){const a=box(s[2]),b=box(s[1]);links[s[1]]=el("line",{x1:a.x+W,y1:a.y+H/2,x2:b.x,y2:b.y+H/2,class:"ed"})}
- for(const k in N){const {x,y}=box(k),[, ,a,b,c]=N[k],g=el("g",{class:"nd"});el("rect",{x,y,width:W,height:H,rx:9},g);
-  el("text",{x:x+W/2,y:y+25,"text-anchor":"middle",class:"a"},g).textContent=a;el("text",{x:x+W/2,y:y+44,"text-anchor":"middle",class:"b"},g).textContent=b;
-  el("text",{x:x+W/2,y:y+61,"text-anchor":"middle",class:"c"},g).textContent=c;nodes[k]=g}
+ R.forEach(([title],r)=>{el("text",{x:0,y:Y[r]-10,class:"mt"}).textContent=title;arrows[r]=[0,1].map(c=>el("line",{x1:X[c]+W,y1:Y[r]+H/2,x2:X[c+1],y2:Y[r]+H/2,class:"ed"}))});
+ for(const r of [0,1])drops[r]=el("path",{d:`M${X[2]+W/2} ${Y[r]+H} V${Y[r+1]-26} H${X[1]+W/2} V${Y[r+1]}`,class:"ed dash"});
+ R.forEach(([,row],r)=>{cells[r]=row.map(([a,b,c],k)=>{const x=X[k],y=Y[r],g=el("g",{class:"nd"});el("rect",{x,y,width:W,height:H,rx:10},g);
+  el("text",{x:x+W/2,y:y+26,"text-anchor":"middle",class:"a"},g).textContent=a;el("text",{x:x+W/2,y:y+46,"text-anchor":"middle",class:"b"},g).textContent=b;
+  el("text",{x:x+W/2,y:y+64,"text-anchor":"middle",class:"c"},g).textContent=c;return g})});
  const comet=el("circle",{r:4.5,id:"comet",opacity:0});
- const STEP=2100,RIDE=650,HOLD=3000;let i=-1,t0=0;
- function go(n,now){if(i>=0&&i<S.length){nodes[S[i][1]].classList.remove("on");nodes[S[i][1]].classList.add("done");Object.values(links).forEach(l=>l.classList.remove("on"))}
-  i=n;t0=now;if(i===0)Object.values(nodes).forEach(g=>g.classList.remove("on","done"));if(i>=S.length){comet.setAttribute("opacity",0);return}
-  const s=S[i],same=S.filter(x=>x[0]===s[0]);if(links[s[1]])links[s[1]].classList.add("on");if(s[1]==="haiku")links.reg.classList.add("on");
-  if(!s[2])nodes[s[1]].classList.add("on");$("say").innerHTML=`<b>${s[0]} ${same.indexOf(s)+1}/${same.length}</b>${esc(s[3])}`}
+ const S=[];R.forEach((row,r)=>[0,1,2].forEach(k=>S.push([r,k])));
+ const STEP=2300,RIDE=650,HOLD=3000;let i=-1,t0=0;
+ const all=()=>[...cells.flat(),...arrows.flat(),...drops];
+ function go(n,now){if(i>=0&&i<S.length){const [r,k]=S[i];cells[r][k].classList.replace("on","done")}all().forEach(e=>e.classList.remove("on"));
+  i=n;t0=now;if(i===0)cells.flat().forEach(g=>g.classList.remove("on","done"));if(i>=S.length){comet.setAttribute("opacity",0);return}
+  const [r,k]=S[i];if(k>0)arrows[r][k-1].classList.add("on");else{cells[r][0].classList.add("on")}if(k===1&&r>0)drops[r-1].classList.add("on");
+  $("say").innerHTML=`<b>${R[r][0].split(" · ")[0]} ${k+1}/3</b>${esc(R[r][2][k])}`}
  function tick(now){if(i<0)go(0,now);const e=now-t0;
-  if(i<S.length){const s=S[i];if(s[2]){const a=box(s[2]),b=box(s[1]),p=Math.min(1,e/RIDE),k=p<.5?2*p*p:1-2*(1-p)*(1-p);
-    comet.setAttribute("cx",a.x+W+(b.x-a.x-W)*k);comet.setAttribute("cy",a.y+H/2);comet.setAttribute("opacity",p<1?1:0);
-    if(p===1)nodes[s[1]].classList.add("on")}
-   if(e>=STEP)go(i+1,now)}
+  if(i<S.length){const [r,k]=S[i];if(k>0){const p=Math.min(1,e/RIDE),q=p<.5?2*p*p:1-2*(1-p)*(1-p),x1=X[k-1]+W,x2=X[k];
+    comet.setAttribute("cx",x1+(x2-x1)*q);comet.setAttribute("cy",Y[r]+H/2);comet.setAttribute("opacity",p<1?1:0);if(p===1)cells[r][k].classList.add("on")}
+   else comet.setAttribute("opacity",0);if(e>=STEP)go(i+1,now)}
   else if(e>=HOLD)go(0,now);
   requestAnimationFrame(tick)}
- if(matchMedia("(prefers-reduced-motion: reduce)").matches){$("say").textContent="Learn once from a reel; make many videos from a script."}
+ if(matchMedia("(prefers-reduced-motion: reduce)").matches)$("say").textContent="Learn once from a reel. Make a video from a script. Replay it with new words for $0.";
  else requestAnimationFrame(tick)})();
 (()=>{  // the video's night: near-black, two slow navy clouds, rising dust, a vignette
  const c=$("space"),x=c.getContext("2d"),dust=[];let w=0,h=0;
