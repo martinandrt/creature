@@ -64,14 +64,8 @@ textarea{flex:none;field-sizing:content;min-height:2.9em;max-height:42vh;width:1
 #picks .chip:hover,#picks .chip.on{text-decoration:underline}#picks .chip.none{color:var(--mute);cursor:default}
 #edit{all:unset;cursor:pointer;font:500 14px var(--mono);color:var(--mute);margin-top:10px}#edit:hover{color:var(--acc)}#edit[hidden]{display:none}
 
-#night{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px}#night[hidden]{display:none}
-#nlist{flex:1;min-height:0;max-height:62vh;overflow:auto}
-#nlist button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:76px minmax(0,1fr) auto;gap:14px;align-items:baseline;width:100%;padding:9px 6px;border-bottom:1px solid var(--line);cursor:pointer}
-#nlist button:hover,#nlist button.on{background:rgba(255,201,38,.08)}
-#nlist .r{font:600 18px var(--sans);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#nlist .r small{display:block;font:500 13px var(--mono);color:var(--mute)}
-#nlist .m{font:500 14px var(--mono);color:var(--mute)}#nlist .st{font:700 13px var(--mono)}
-.s.learning .script,.s.learning #how,.s.learning>.cap{display:none!important}
-#learn{background:transparent;color:var(--text);border:2px solid var(--line)}#learn:hover,.s.learning #learn{border-color:var(--acc);color:var(--acc)}
+.acts>a.btn{box-sizing:border-box;display:flex;align-items:center;justify-content:center;height:56px;min-width:150px;padding:0 24px;font:800 22px var(--sans);text-transform:uppercase;letter-spacing:.05em;text-decoration:none;border-radius:var(--r)}
+#learn{background:transparent;color:var(--text);border:2px solid var(--line)}#learn:hover{border-color:var(--acc);color:var(--acc)}
 #how{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:14px;padding-top:16px;border-top:1px solid var(--line)}
 #flow{flex:none;width:100%;height:auto;max-height:26vh}
 #say{font:600 19px/1.35 var(--sans);min-height:52px}#say b{font:500 14px var(--mono);color:var(--acc);letter-spacing:.1em;margin-right:12px}
@@ -131,11 +125,10 @@ button:disabled{opacity:.35;cursor:not-allowed}
 Seventeen reels.
 One creature.
 Zero new authority.</textarea><div id="picks"></div><button id="edit" hidden>✎ edit script</button></div>
- <div id="night" hidden><div class="cap">Learning runs · click one</div><div id="nlist"></div></div>
  <div id="how"><svg id="flow" viewBox="0 0 600 244" preserveAspectRatio="xMidYMid meet" role="img" aria-label="how the creature works"></svg></div>
  <div class="acts">
   <button id="make">Make</button><span class="sub what"><b>new video</b> · AI picks a screen per line · ~$0.02 · ~2 min</span>
-  <button id="learn">Learn</button><span class="sub what"><b>tonight's learning</b> · <span id="nlearn">every reel it tried</span></span>
+  <a id="learn" class="btn" href="/night/" target="_blank">Learn</a><span class="sub what"><b>the night's learning</b> · every reel it tried</span>
   <button id="replay">Replay</button><span class="sub rp"><span class="dd" id="design"></span><span id="rnote"></span></span>
  </div>
 </section>
@@ -208,7 +201,7 @@ async function show(run){shown=run;const g=gen;const r=await j(`/api/run?home=${
  $("frame").innerHTML=r.clip?`<video id="vb" src="${file(r.clip)}#t=1.2" loop playsinline preload="auto" controls muted></video>`:`<div class="state"><div class="word ${esc(st)}">${esc(st)}</div><div class="sub">${esc(r.gap.slice(0,160))}</div></div>`;
  $("mname").textContent=r.kind==="learn"?"learning run":`${r.lines.length} ${r.lines.length==1?"line":"lines"} · ${r.kind==="design"?"replay":r.kind}`;
  sources=r.learned||[];
- $("under").innerHTML=`<span class="st ${esc(st)}">${esc(st)}</span><span>${usd(p.spent)}</span><span>${p.calls||0} AI calls</span>${r.seconds!=null?`<span>${r.seconds} s</span>`:""}<a href="/h/${encodeURIComponent(home)}/${encodeURIComponent(run)}/page.html" target="_blank">details</a>${r.clip&&r.gap&&st!=="DONE"?`<span class="why">${reason(r.gap)}</span>`:""}`;
+ $("under").innerHTML=`<span class="st ${esc(st)}">${esc(st)}</span><span>${usd(p.spent)}</span><span>${p.calls||0} AI calls</span>${r.seconds!=null?`<span>${r.seconds} s</span>`:""}<a href="/h/${encodeURIComponent(home)}/${encodeURIComponent(run)}/page.html" target="_blank">${st==="FAILED"?"why it failed":"details"}</a>`;
  remember();lastPicks=null;editing();if(r.kind==="make"||r.kind==="design"){$("lines").value=r.lines.join("\n");if(r.kind==="make")picks(r.lines,p.picks)}
  const first=((p.picks||[]).find(x=>x.skill)||{}).skill;source(sources.find(x=>x.src&&x.skill===first)||sources.find(x=>x.src)||sources[0]);
  check()}
@@ -259,14 +252,6 @@ $("skillsbtn").onclick=e=>{e.stopPropagation();document.querySelectorAll(".dd.op
 $("skills").onclick=e=>e.stopPropagation();document.addEventListener("click",()=>skillsOpen(false));
 document.addEventListener("keydown",e=>{if(e.key==="Escape")skillsOpen(false)});
 homes().then(resume);
-let night=[];
-async function learnMode(on){const col=document.querySelector(".col.s");col.classList.toggle("learning",on);$("night").hidden=!on;if(!on)return;
- night=await j("/api/learning");const built=night.filter(r=>r.status==="BUILT").length,spent=night.reduce((a,r)=>a+(r.spent||0),0);
- $("nlearn").textContent=`${night.length} reels · ${built} learned · $${spent.toFixed(2)}`;
- $("nlist").innerHTML=night.map((r,i)=>`<button data-i="${i}" class="${r.run===shown?"on":""}"><span class="st ${esc(r.status)}">${esc(r.status)}</span><span class="r">${esc(r.reel||"reel")}<small>${esc(r.skill||r.home)}</small></span><span class="m">${r.spent!=null?usd(r.spent):""}</span></button>`).join("")||'<span class="sub">No learning runs.</span>';
- $("nlist").querySelectorAll("button").forEach(b=>b.onclick=async()=>{const r=night[+b.dataset.i];$("nlist").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));
-  if(r.home!==home){home=r.home;homeMenu();gen++;blank();shown=r.run;await load()}show(r.run)})}
-$("learn").onclick=()=>learnMode(!document.querySelector(".col.s").classList.contains("learning"));
 (()=>{  // how it works, in general: an illustration on a loop, not a live run
  const W=176,H=46,X=[0,212,424],Y=[22,108,194];
  const R=[["LEARN · ONCE PER REEL",["Reel","Opus writes code","Skill kept"]],

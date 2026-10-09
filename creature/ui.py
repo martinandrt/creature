@@ -149,6 +149,20 @@ class Desk:
                 })  # fmt: skip
         return sorted(found, key=lambda r: r["run"], reverse=True)
 
+    def night(self, data: bool = False) -> Path:
+        """The night's board: every run of the offered homes, a page beside them; fresh data on ask."""
+        from creature import board
+
+        out = self.homes / "night.html"
+        if not data:
+            board._write_if_changed(out, board.shell(out))
+            return out
+        homes = [self.homes / home["name"] for home in self.home_list()]
+        seen = board.snapshot(homes, self.homes, time.time())
+        seen["runs"] = [r for r in seen["runs"] if not self.hides(r["id"] + r["html"])]
+        board._write_data(out, seen)
+        return board.data_path(out)
+
     def start(self, kind: str, data: dict[str, Any]) -> str:
         """One job at a time: `make` from lines, or `design` replay with one text per step."""
         if not self.lock.acquire(blocking=False):
@@ -468,6 +482,18 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(200, PAGE.encode(), "text/html; charset=utf-8")
             elif url.path == "/api/homes":
                 self._json(self.desk.home_list())
+            elif url.path == "/night":
+                self.send_response(302)
+                self.send_header("Location", "/night/")
+                self.end_headers()
+            elif url.path == "/night/":
+                self._send(200, self.desk.night().read_bytes(), "text/html; charset=utf-8")
+            elif url.path == "/night/night-data.js":
+                self._send(200, self.desk.night(data=True).read_bytes(), "text/javascript; charset=utf-8")
+            elif url.path.startswith("/night/") and "/runs/" in url.path:  # a clip the board shows
+                name, _, path = url.path[7:].partition("/runs/")
+                body, kind = self.desk.file(unquote(name), unquote(path))
+                self._send(200, body, kind)
             elif url.path == "/api/learning":
                 self._json(self.desk.learning())
             elif url.path == "/api/run":
