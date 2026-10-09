@@ -65,7 +65,7 @@ textarea{flex:none;field-sizing:content;min-height:2.9em;max-height:42vh;width:1
 #edit{all:unset;cursor:pointer;font:500 14px var(--mono);color:var(--mute);margin-top:10px}#edit:hover{color:var(--acc)}#edit[hidden]{display:none}
 
 #how{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:14px;padding-top:16px;border-top:1px solid var(--line)}
-#flow{flex:none;width:100%;height:auto;max-height:40vh}
+#flow{flex:none;width:100%;height:auto;max-height:26vh}
 #say{font:600 19px/1.35 var(--sans);min-height:52px}#say b{font:500 14px var(--mono);color:var(--acc);letter-spacing:.1em;margin-right:12px}
 .nd rect{fill:rgba(11,16,34,.75);stroke:rgba(245,246,248,.14);transition:stroke .35s,fill .35s}
 .nd .a{font:700 19px "Barlow UI","Barlow",system-ui,sans-serif;fill:var(--text);transition:fill .35s}.nd .b{font:500 13px "Barlow UI","Barlow",sans-serif;fill:rgba(245,246,248,.75)}.nd .c{font:500 10px "Mono UI","JetBrains Mono",monospace;fill:var(--mute);letter-spacing:.04em}
@@ -122,10 +122,10 @@ button:disabled{opacity:.35;cursor:not-allowed}
 Seventeen reels.
 One creature.
 Zero new authority.</textarea><div id="picks"></div><button id="edit" hidden>✎ edit script</button></div>
- <div id="how"><svg id="flow" viewBox="0 0 600 336" preserveAspectRatio="xMidYMid meet" role="img" aria-label="how the creature works"></svg></div>
+ <div id="how"><svg id="flow" viewBox="0 0 600 244" preserveAspectRatio="xMidYMid meet" role="img" aria-label="how the creature works"></svg></div>
  <div class="acts">
   <button id="make">Make</button><span class="sub what"><b>new video</b> · AI picks a screen per line · ~$0.02 · ~2 min</span>
-  <button id="replay">Replay</button><span class="sub rp"><span class="cap">Saved video · same cuts, your words</span><span class="dd" id="design"></span><span id="rnote"></span></span>
+  <button id="replay">Replay</button><span class="sub rp"><span class="dd" id="design"></span><span id="rnote"></span></span>
  </div>
 </section>
 <section class="col">
@@ -196,10 +196,11 @@ async function show(run){shown=run;const g=gen;const r=await j(`/api/run?home=${
  $("frame").innerHTML=r.clip?`<video id="vb" src="${file(r.clip)}#t=1.2" loop playsinline preload="auto" controls muted></video>`:`<div class="state"><div class="word ${esc(st)}">${esc(st)}</div><div class="sub">${esc(r.gap.slice(0,160))}</div></div>`;
  $("mname").textContent=r.kind==="learn"?"learning run":`${r.lines.length} ${r.lines.length==1?"line":"lines"} · ${r.kind==="design"?"replay":r.kind}`;
  sources=r.learned||[];
- $("under").innerHTML=`<span class="st ${esc(st)}">${esc(st)}</span><span>${usd(p.spent)}</span><span>${p.calls||0} AI calls</span>${r.seconds!=null?`<span>${r.seconds} s</span>`:""}<a href="/h/${encodeURIComponent(home)}/${encodeURIComponent(run)}/page.html" target="_blank">details</a>${r.clip&&r.gap&&st!=="DONE"?`<span class="why">${esc(r.gap.split(/(?<=\.)\s/)[0].slice(0,140))}</span>`:""}`;
+ $("under").innerHTML=`<span class="st ${esc(st)}">${esc(st)}</span><span>${usd(p.spent)}</span><span>${p.calls||0} AI calls</span>${r.seconds!=null?`<span>${r.seconds} s</span>`:""}<a href="/h/${encodeURIComponent(home)}/${encodeURIComponent(run)}/page.html" target="_blank">details</a>${r.clip&&r.gap&&st!=="DONE"?`<span class="why">${esc(reason(r.gap))}</span>`:""}`;
  remember();lastPicks=null;editing();if(r.kind==="make"||r.kind==="design"){$("lines").value=r.lines.join("\n");if(r.kind==="make")picks(r.lines,p.picks)}
  const first=((p.picks||[]).find(x=>x.skill)||{}).skill;source(sources.find(x=>x.src&&x.skill===first)||sources.find(x=>x.src)||sources[0]);
  check()}
+function reason(gap){const all=gap.split(/(?<=\.)\s+/);return (all.find(x=>/problem|fail|not |no /i.test(x))||all.slice(0,2).join(" ")).slice(0,240)}
 function picks(lines,list){if(!list||!list.length)return;const by={};list.forEach(p=>by[p.line]=p);
  $("picks").innerHTML=lines.map((l,i)=>{const p=by[i+1];return `<div><span class="t">${esc(l)}</span>${p&&p.skill?`<button class="chip" data-skill="${esc(p.skill)}" title="${esc(p.why)}">${esc(p.skill)}</button>`:`<span class="chip none">—</span>`}</div>`}).join("");
  $("picks").querySelectorAll("button.chip").forEach(c=>c.onclick=()=>source(sources.find(x=>x.skill===c.dataset.skill),true));
@@ -245,20 +246,16 @@ $("skills").onclick=e=>e.stopPropagation();document.addEventListener("click",()=
 document.addEventListener("keydown",e=>{if(e.key==="Escape")skillsOpen(false)});
 homes().then(resume);
 (()=>{  // how it works, in general: an illustration on a loop, not a live run
- const W=176,H=76,X=[0,212,424],Y=[26,142,258],G=36;
- const R=[["LEARN · ONCE PER REEL",[["Reel","a video from Instagram","Apify"],["Opus writes code","runs in a Docker sandbox","Claude API · offline"],["Skill","kept only if it passes","registry on disk"]],
-   ["A reel comes in.","Opus writes the skill as Python code. It runs in a sandbox with no network.","A judge checks it. Only a pass is kept as a skill."]],
-  ["MAKE · EVERY NEW VIDEO",[["Your script","one line per shot","you"],["Haiku picks skills","renders in the sandbox","Claude API · Docker"],["Video","checked by the judge","~$0.02 · ~2 min"]],
-   ["Your script: one line per shot.","Haiku picks a learned skill for each line. The sandbox renders every shot.","The judge checks the video before you see it."]],
-  ["REPLAY · NEW WORDS",[["New words","same number of lines","you"],["Saved recipe","same skills, same cuts","no AI"],["Video","new text, same look","$0 · seconds"]],
-   ["New words for a video it already made.","The saved recipe: same skills, same cuts. No AI.","A new video in seconds, for $0."]]];
+ const W=176,H=46,X=[0,212,424],Y=[22,108,194];
+ const R=[["LEARN · ONCE PER REEL",["Reel","Opus writes code","Skill kept"]],
+  ["MAKE · EVERY NEW VIDEO",["Your lines","Haiku picks skills","Video · ~$0.02"]],
+  ["REPLAY · NEW WORDS",["New words","Saved recipe","Video · $0"]]];
  const svg=$("flow"),ns="http://www.w3.org/2000/svg",cells=[],arrows=[],drops=[];
  const el=(t,a,p)=>{const e=document.createElementNS(ns,t);for(const k in a)e.setAttribute(k,a[k]);(p||svg).appendChild(e);return e};
  R.forEach(([title],r)=>{el("text",{x:0,y:Y[r]-10,class:"mt"}).textContent=title;arrows[r]=[0,1].map(c=>el("line",{x1:X[c]+W,y1:Y[r]+H/2,x2:X[c+1],y2:Y[r]+H/2,class:"ed"}))});
  for(const r of [0,1])drops[r]=el("path",{d:`M${X[2]+W/2} ${Y[r]+H} V${Y[r+1]-26} H${X[1]+W/2} V${Y[r+1]}`,class:"ed dash"});
- R.forEach(([,row],r)=>{cells[r]=row.map(([a,b,c],k)=>{const x=X[k],y=Y[r],g=el("g",{class:"nd"});el("rect",{x,y,width:W,height:H,rx:10},g);
-  el("text",{x:x+W/2,y:y+26,"text-anchor":"middle",class:"a"},g).textContent=a;el("text",{x:x+W/2,y:y+46,"text-anchor":"middle",class:"b"},g).textContent=b;
-  el("text",{x:x+W/2,y:y+64,"text-anchor":"middle",class:"c"},g).textContent=c;return g})});
+ R.forEach(([,row],r)=>{cells[r]=row.map((a,k)=>{const x=X[k],y=Y[r],g=el("g",{class:"nd"});el("rect",{x,y,width:W,height:H,rx:10},g);
+  el("text",{x:x+W/2,y:y+29,"text-anchor":"middle",class:"a"},g).textContent=a;return g})});
  const comet=el("circle",{r:4.5,id:"comet",opacity:0});
  const S=[];R.forEach((row,r)=>[0,1,2].forEach(k=>S.push([r,k])));
  const STEP=2300,RIDE=650,HOLD=3000;let i=-1,t0=0;
