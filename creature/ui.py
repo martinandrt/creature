@@ -145,6 +145,7 @@ class Desk:
             "started": time.time(),
             "out": "",
             "lines": len(lines),
+            "texts": lines,
             "known": sorted(p.name for p in (root / "runs").glob("*.jsonl")),  # the run is the new one
         }
         threading.Thread(target=self._run, args=(job, command), daemon=True).start()
@@ -163,6 +164,18 @@ class Desk:
             self.jobs[job].update(state="done", out=f"{type(error).__name__}: {error}")
         finally:
             self.lock.release()
+
+    def current(self) -> dict[str, Any]:
+        """The job still running, if any, so a reloaded page picks it up again."""
+        for job, found in self.jobs.items():
+            if found["state"] == "running":
+                return {
+                    "job": job,
+                    "kind": found["kind"],
+                    "home": found["home"],
+                    "lines": found.get("texts", []),
+                }
+        return {}
 
     def job(self, job: str) -> dict[str, Any]:
         """A job as the page sees it: its state, and the progress read from its run's own ledger."""
@@ -341,6 +354,8 @@ class Handler(BaseHTTPRequestHandler):
                 )
             elif url.path == "/api/home":
                 self._json(self.desk.describe(query.get("name", "")))
+            elif url.path == "/api/current":
+                self._json(self.desk.current())
             elif url.path == "/api/job":
                 self._json(self.desk.job(query.get("id", "")))
             elif url.path.startswith("/font/") and url.path[6:] in FONTS:

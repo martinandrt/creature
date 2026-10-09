@@ -160,3 +160,20 @@ def test_a_run_shows_the_reel_its_skills_were_learned_from(desk, world):
     )
     with pytest.raises(PermissionError):
         desk.reel_file(world.name, "typewriter-reveal")  # the reel is not on this machine
+
+
+def test_a_reloaded_page_finds_the_running_job(desk, world, monkeypatch):
+    class Thread:
+        def __init__(self, target, args, daemon):
+            pass
+
+        def start(self):
+            return None
+
+    monkeypatch.setattr(ui.threading, "Thread", Thread)
+    assert desk.current() == {}
+    job = desk.start("make", {"home": world.name, "lines": ["One.", "Two."]})
+    assert desk.current() == {"job": job, "kind": "make", "home": world.name, "lines": ["One.", "Two."]}
+    desk.jobs[job]["state"] = "done"
+    desk.lock.release()
+    assert desk.current() == {}

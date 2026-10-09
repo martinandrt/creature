@@ -37,6 +37,10 @@ textarea{flex:1;min-height:0;width:100%;background:transparent;border:0;color:va
 #picks div{display:flex;align-items:baseline;gap:18px;font:600 40px/1.5 var(--sans)}
 #picks .chip{flex:none;font:500 16px var(--mono);color:var(--acc);border-left:3px solid var(--acc);padding-left:10px;cursor:help;text-transform:lowercase}
 #picks .chip.none{color:var(--mute);border-color:var(--line)}
+.how{margin:0 0 26px;padding:0 0 22px;list-style:none;counter-reset:h;border-bottom:1px solid var(--line);font-size:18px;color:var(--mute)}
+.how li{counter-increment:h;position:relative;padding-left:28px;margin:6px 0}.how li::before{content:counter(h);position:absolute;left:0;top:2px;font:700 16px var(--mono);color:var(--acc)}
+.how b{color:var(--text);font-weight:600}
+.hint{font:400 15px/1.35 var(--sans);color:var(--mute);max-width:230px}
 .bar{display:flex;align-items:flex-start;gap:28px;margin-top:24px;flex-wrap:wrap}
 .do{display:flex;flex-direction:column;gap:8px}
 .do button{height:64px;padding:0 34px;font:800 28px var(--sans);text-transform:uppercase;letter-spacing:.05em;cursor:pointer;border-radius:var(--r)}
@@ -78,28 +82,33 @@ footer{border-top:1px solid var(--line);padding:12px 40px 16px}
 }
 @media (max-width:600px){textarea,#picks div{font-size:24px}.do button{height:56px;padding:0 22px;font-size:22px}h1{font-size:26px}}
 </style>
-<header><h1>Crea<span>t</span>ure</h1><select id="home"></select>
-<button id="skillsbtn"><b id="nskills">0</b> skills</button><span class="cap" id="ndesigns"></span>
+<header><h1>Crea<span>t</span>ure</h1><select id="home" title="a home: its own learned skills, runs and budget"></select>
+<button id="skillsbtn" title="screens it has learned in this home; click to see them"><b id="nskills">0</b> skills learned</button><span class="cap" id="ndesigns"></span>
 <div id="skills"></div></header>
 <main>
 <section class="left">
- <div class="cap" style="margin-bottom:18px">Script · one line per shot</div>
+ <ol class="how">
+  <li><b>Write a script.</b> Each line becomes one shot of the video.</li>
+  <li><b>Make.</b> For every line the creature picks a screen it once learned from a reel, renders it with your words, and a judge checks the result. About a minute, about $0.02.</li>
+  <li><b>Watch on the right:</b> the original reel it learned from, next to what it made from your script.</li>
+ </ol>
+ <div class="cap" style="margin-bottom:12px">Your script · one line per shot</div>
  <textarea id="lines" spellcheck="false">Night shift.
 Seventeen reels.
 One creature.
 Zero new authority.</textarea>
  <div id="picks"></div>
  <div class="bar">
-  <div class="do"><button id="make">Make</button><span class="price"><b>~$0.02</b> · 1 model call + 1 judge</span></div>
-  <div class="do"><button id="replay">Replay</button><span class="price"><b>$0</b> · 0 model calls</span></div>
+  <div class="do"><button id="make">Make</button><span class="price"><b>~$0.02</b> · 1 model call + 1 judge</span><span class="hint">New video from your script.</span></div>
+  <div class="do"><button id="replay">Replay</button><span class="price"><b>$0</b> · 0 model calls</span><span class="hint">A saved result again, with your words. No model.</span></div>
   <div class="opts"><select id="design" title="saved design to replay"></select>
    <label><input type="checkbox" id="style"> my style</label><label><input type="checkbox" id="sound"> sound</label></div>
   <button id="edit" hidden>edit script</button>
  </div>
 </section>
 <section class="right"><div class="pair">
- <figure><figcaption class="cap">Learned from<b id="lname">—</b></figcaption><div class="frame" id="learned"><div class="dot"></div></div></figure>
- <figure><figcaption class="cap">Made <button id="playboth">▶ play both</button><b id="mname">—</b></figcaption><div class="frame" id="frame"><div class="dot"></div></div></figure>
+ <figure><figcaption class="cap">Original reel it learned from<b id="lname">—</b></figcaption><div class="frame" id="learned"><div class="dot"></div></div></figure>
+ <figure><figcaption class="cap">Made from your script <button id="playboth">▶ play both</button><b id="mname">—</b></figcaption><div class="frame" id="frame"><div class="dot"></div></div></figure>
 </div><div class="under" id="under"></div><div class="under" id="under2"></div></section>
 </main>
 <footer><div class="cap" style="margin-bottom:6px">Last runs · click one to show it</div><div id="runs"></div></footer>
@@ -110,7 +119,7 @@ const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&g
 const file=p=>`/file?home=${encodeURIComponent(home)}&path=${encodeURIComponent(p)}`;
 async function j(u,o){const r=await fetch(u,o);const d=await r.json();if(!r.ok)throw new Error(d.error||r.status);return d}
 async function homes(){const hs=await j("/api/homes");$("home").innerHTML=hs.map(h=>`<option>${esc(h)}</option>`).join("");
- home=hs.includes("mikro-s-knihovnou")?"mikro-s-knihovnou":hs[0];$("home").value=home;load()}
+ home=hs.includes("mikro-s-knihovnou")?"mikro-s-knihovnou":hs[0];$("home").value=home;const c=await j("/api/current");if(!c.job)await load()}
 async function load(){const d=await j("/api/home?name="+encodeURIComponent(home));
  $("nskills").textContent=d.skills.length;$("ndesigns").textContent=`${d.designs.length} designs`;
  $("skills").innerHTML=d.skills.map(s=>`<details><summary><span class="sw">${(s.colors||[]).map(c=>`<i style="background:${esc(c)}"></i>`).join("")}</span>${esc(s.slug)}</summary><p>${esc(s.effect)}<br><span class="mono">${s.tone?esc(s.tone)+" · ":""}${s.seconds??"?"} s${s.text_share!=null?" · text "+Math.round(s.text_share*100)+" %":""}</span></p></details>`).join("")||"Nothing learned yet.";
@@ -143,12 +152,20 @@ function done(job,lines){if(job.run){show(job.run);return}const p=job.progress||
  if(job.kind==="make")picks(lines,p.picks)}
 async function go(kind){const lines=$("lines").value.split("\n").map(s=>s.trim()).filter(Boolean);
  const body={home,lines,style:$("style").checked,sound:$("sound").checked,design:$("design").value};
- ["make","replay"].forEach(b=>$(b).disabled=true);editing();$("under").innerHTML="";working(null);
  try{const {job}=await j("/api/"+kind,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
-  for(;;){await new Promise(r=>setTimeout(r,1500));const s=await j("/api/job?id="+job);
-   if(s.state==="done"){done(s,lines);break}working(s.progress);if(kind==="make")picks(lines,s.progress&&s.progress.picks)}
- }catch(e){$("frame").innerHTML=`<div class="state"><div class="word FAILED">ERROR</div><div class="sub">${esc(e.message)}</div></div>`}
+  await follow(job,kind,lines)}catch(e){fail(e)}}
+function fail(e){$("frame").innerHTML=`<div class="state"><div class="word FAILED">ERROR</div><div class="sub">${esc(e.message)}</div></div>`;
+ ["make","replay"].forEach(b=>$(b).disabled=false)}
+async function follow(job,kind,lines){["make","replay"].forEach(b=>$(b).disabled=true);editing();$("under").innerHTML="";$("under2").innerHTML="";
+ $("mname").textContent=`${lines.length} ${lines.length==1?"line":"lines"} · ${kind==="make"?"make":"design"}`;working(null);
+ try{for(;;){const s=await j("/api/job?id="+job);
+   if(s.state==="done"){done(s,lines);break}working(s.progress);if(kind==="make")picks(lines,s.progress&&s.progress.picks);
+   await new Promise(r=>setTimeout(r,1500))}
+ }catch(e){fail(e);return}
  ["make","replay"].forEach(b=>$(b).disabled=false);load()}
+async function resume(){const c=await j("/api/current");if(!c.job)return false;
+ if(c.home!==home){home=c.home;$("home").value=home}$("lines").value=(c.lines||[]).join("\n");
+ shown="(running)";await load();follow(c.job,c.kind,c.lines||[]);return true}
 $("home").onchange=e=>{home=e.target.value;shown="";load()};$("make").onclick=()=>go("make");$("replay").onclick=()=>go("design");
-$("edit").onclick=editing;$("playboth").onclick=()=>{["va","vb"].forEach(id=>{const v=$(id);if(v){v.currentTime=0;v.play()}})};$("skillsbtn").onclick=()=>$("skills").classList.toggle("open");homes();
+$("edit").onclick=editing;$("playboth").onclick=()=>{["va","vb"].forEach(id=>{const v=$(id);if(v){v.currentTime=0;v.play()}})};$("skillsbtn").onclick=()=>$("skills").classList.toggle("open");homes().then(resume);
 </script></html>
