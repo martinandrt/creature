@@ -68,7 +68,7 @@ textarea{flex:none;field-sizing:content;min-height:2.9em;max-height:42vh;width:1
 #flow{flex:none;width:100%;height:auto;max-height:40vh}
 #say{font:600 19px/1.35 var(--sans);min-height:52px}#say b{font:500 14px var(--mono);color:var(--acc);letter-spacing:.1em;margin-right:12px}
 .nd rect{fill:rgba(11,16,34,.75);stroke:rgba(245,246,248,.14);transition:stroke .35s,fill .35s}
-.nd .a{font:700 19px "Barlow UI","Barlow",system-ui,sans-serif;fill:var(--text);transition:fill .35s}.nd .b{font:500 13.5px "Barlow UI","Barlow",sans-serif;fill:rgba(245,246,248,.75)}.nd .c{font:500 10px "Mono UI","JetBrains Mono",monospace;fill:var(--mute);letter-spacing:.04em}
+.nd .a{font:700 19px "Barlow UI","Barlow",system-ui,sans-serif;fill:var(--text);transition:fill .35s}.nd .b{font:500 13px "Barlow UI","Barlow",sans-serif;fill:rgba(245,246,248,.75)}.nd .c{font:500 10px "Mono UI","JetBrains Mono",monospace;fill:var(--mute);letter-spacing:.04em}
 .ed.dash{fill:none;stroke-dasharray:3 4}
 .nd.hub rect{stroke:rgba(245,246,248,.32)}.nd.done rect{stroke:rgba(245,246,248,.4)}
 .nd.on rect{stroke:var(--acc);fill:rgba(255,201,38,.09)}.nd.on .a{fill:var(--acc)}
@@ -241,9 +241,9 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")skillsOpen(false)});
 homes().then(resume);
 (()=>{  // how it works, in general: an illustration on a loop, not a live run
  const W=176,H=76,X=[0,212,424],Y=[26,142,258],G=36;
- const R=[["LEARN · ONCE PER REEL",[["Reel","a video from Instagram","Apify"],["Opus writes code","runs in a Docker sandbox","Claude API · offline"],["Skill","kept only if the judge passes","registry on disk"]],
+ const R=[["LEARN · ONCE PER REEL",[["Reel","a video from Instagram","Apify"],["Opus writes code","runs in a Docker sandbox","Claude API · offline"],["Skill","kept only if it passes","registry on disk"]],
    ["A reel comes in.","Opus writes the skill as Python code. It runs in a sandbox with no network.","A judge checks it. Only a pass is kept as a skill."]],
-  ["MAKE · EVERY NEW VIDEO",[["Your script","one line per shot","you"],["Haiku picks skills","shots render in the sandbox","Claude API · Docker"],["Video","checked by the judge","~$0.02 · ~2 min"]],
+  ["MAKE · EVERY NEW VIDEO",[["Your script","one line per shot","you"],["Haiku picks skills","renders in the sandbox","Claude API · Docker"],["Video","checked by the judge","~$0.02 · ~2 min"]],
    ["Your script: one line per shot.","Haiku picks a learned skill for each line. The sandbox renders every shot.","The judge checks the video before you see it."]],
   ["REPLAY · NEW WORDS",[["New words","same number of lines","you"],["Saved recipe","same skills, same cuts","no AI"],["Video","new text, same look","$0 · seconds"]],
    ["New words for a video it already made.","The saved recipe: same skills, same cuts. No AI.","A new video in seconds, for $0."]]];
