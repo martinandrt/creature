@@ -51,6 +51,14 @@ class Desk:
         self.lock = threading.Lock()
         self.jobs: dict[str, dict[str, Any]] = {}
 
+    def hides(self, source: Any) -> bool:
+        """A reel the author took off the page: a line of <homes>/.hidden (kept out of the repo)."""
+        try:
+            words = [w.strip() for w in (self.homes / ".hidden").read_text().splitlines() if w.strip()]
+        except OSError:
+            return False
+        return any(word in str(source or "") for word in words)
+
     def home_names(self) -> list[str]:
         return sorted(
             p.name
@@ -99,6 +107,8 @@ class Desk:
             events = ledger.read(path)
             end = next((e for e in events if e["type"] == "run_end"), None)
             task = next((e for e in events if e["type"].endswith("task") or e["type"] == "task"), {})
+            if self.hides(task.get("source")):
+                continue
             what = task.get("lines") or task.get("text") or task.get("design") or task.get("source") or ""
             what = (
                 " | ".join(what)
@@ -139,7 +149,7 @@ class Desk:
                     raise KeyError(f"no design {name!r}")
                 command += ["design", name]
                 for line in lines:
-                    command += ["--text", line]
+                    command.append(f"--text={line}")  # a line may start with "-"
                 if not data.get("sound"):
                     command.append("--silent")
             else:
@@ -211,6 +221,8 @@ class Desk:
             raise KeyError(f"no run {run!r}")
         events = ledger.read(path)
         task = next((e for e in events if e["type"] in ("make_task", "design_task", "task")), {})
+        if self.hides(task.get("source")):
+            raise KeyError(f"no run {run!r}")
         kind = {"make_task": "make", "design_task": "design", "task": "learn"}.get(
             task.get("type", ""), "other"
         )
@@ -256,6 +268,8 @@ class Desk:
         except (KeyError, ValueError):
             return None
         origin, cost = skill.capability.get("origin", {}), skill.capability.get("cost", {})
+        if self.hides(origin.get("reel")):
+            return None
         source = Path(str(origin.get("reel", "")))
         learned_in = str(origin.get("run", ""))
         src = None
@@ -281,7 +295,7 @@ class Desk:
         else:
             origin = registry.get(root / "registry", skill).capability.get("origin", {})
             source = Path(str(origin.get("reel", "")))
-        if source.suffix != ".mp4" or not source.is_file():
+        if source.suffix != ".mp4" or not source.is_file() or self.hides(source):
             raise PermissionError("the reel is not on this machine")
         return source.read_bytes()
 
@@ -290,6 +304,11 @@ class Desk:
         runs = (self.home(home) / "runs").resolve()
         wanted = (runs / path).resolve()
         if runs not in wanted.parents or wanted.suffix not in SHOWN or not wanted.is_file():
+            raise PermissionError("not a file of this home's runs")
+        record = runs / f"{wanted.relative_to(runs).parts[0]}.jsonl"
+        if record.is_file() and self.hides(
+            next((e for e in ledger.read(record) if e["type"] == "task"), {}).get("source")
+        ):
             raise PermissionError("not a file of this home's runs")
         return wanted.read_bytes(), SHOWN[wanted.suffix]
 

@@ -57,7 +57,7 @@ def test_jobs_are_the_cli_commands_one_at_a_time(desk, world, monkeypatch):
         desk.start("make", {"home": world.name, "lines": ["x"]})
     desk.lock.release()
     desk.start("design", {"home": world.name, "design": "typewriter-reveal", "lines": ["A.", "B."]})
-    assert started[1][5:] == ["design", "typewriter-reveal", "--text", "A.", "--text", "B.", "--silent"]
+    assert started[1][5:] == ["design", "typewriter-reveal", "--text=A.", "--text=B.", "--silent"]
     desk.lock.release()
     for bad in (
         {"home": "nope", "lines": ["x"]},
@@ -201,3 +201,14 @@ def test_a_video_can_be_sought_in_parts():
     assert ui.byte_range("bytes=-30", 100) == (70, 99)
     for whole in (None, "", "bytes=-", "items=0-1", "bytes=200-300", "bytes=1-2,5-6"):
         assert ui.byte_range(whole, 100) is None
+
+
+def test_a_reel_the_author_hid_is_not_shown(desk, world):
+    run = desk.describe(world.name)["runs"][0]["run"]
+    (world.parent / ".hidden").write_text("reel\n")
+    assert desk.describe(world.name)["runs"] == []
+    with pytest.raises(KeyError):
+        desk.run(world.name, run)
+    assert desk.reel(world.name, "typewriter-reveal") is None
+    with pytest.raises(PermissionError):
+        desk.file(world.name, f"{run}/page.html")
