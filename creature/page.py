@@ -52,10 +52,21 @@ def _rel(path: Path | None, folder: Path) -> str | None:
         return None
 
 
-def sentence(report: Any) -> str:
+def _task(events: list[dict[str, Any]]) -> dict[str, Any]:
+    """What the run was asked: a reel to learn, a design to replay or a script to make."""
+    return next((e for e in events if e["type"] in ("task", "design_task", "make_task")), {})
+
+
+def sentence(report: Any, events: list[dict[str, Any]] = ()) -> str:
     """The verdict in one sentence."""
     spent = f"${report.spent_usd:.4f}"
     status = report.status
+    if status == "DONE" and report.skill == "make":
+        lines = len(_task(events).get("lines") or [])
+        tries = sum(1 for e in events if e["type"] == "make_choice")
+        calls = sum(1 for e in events if e["type"] == "model_call")
+        composed = "1 composition" if tries == 1 else f"{tries} compositions"
+        return f"Made {lines} shots from {lines} lines in {composed} with {calls} model calls, for {spent}."
     if status == "BUILT":
         tries = "1 attempt" if report.attempts == 1 else f"{report.attempts} attempts"
         passed = "the clip passed every file check and every criterion"
@@ -85,17 +96,21 @@ def render(folder: Path, report: Any, events: list[dict[str, Any]]) -> Path:
     attempt = _attempt_folder(folder, report)
     name = spec.slug if spec else report.skill or "run"
     headline = spec.effect.splitlines()[0][:120] if spec else report.skill or ""
+    task = _task(events)
+    asked = task.get("lines") or task.get("texts") or [spec.text if spec else task.get("text", "")]
+    choice = next((e for e in reversed(events) if e["type"] == "make_choice"), None)
     parts = [
         "<!doctype html><meta charset='utf-8'>",
         "<meta name='viewport' content='width=device-width,initial-scale=1'>",
         f"<title>{_e(report.status)} · {_e(name)}</title><style>{STYLE}</style><main>",
         f"<h1>{_e(report.status)} · {_e(headline)}</h1>",
-        f"<p class='sub'>Input text: “{_e(spec.text if spec else '')}” · run {_e(report.run_id)}</p>",
+        f"<p class='sub'>{'Script' if task.get('type') == 'make_task' else 'Input text'}: "
+        f"{' · '.join(f'“{_e(x)}”' for x in asked)} · run {_e(report.run_id)}</p>",
         "<div class='players'>",
-        _player("WHAT THE REEL SHOWED", reel),
+        _asked(choice) if choice else _player("WHAT THE REEL SHOWED", reel),
         _player("WHAT THE CREATURE MADE", clip),
         "</div>",
-        f"<p class='verdict {tone}'>{_e(sentence(report))}</p>",
+        f"<p class='verdict {tone}'>{_e(sentence(report, events))}</p>",
     ]
     parts.append(_source(events))
     parts.append(_timeline(events))
@@ -127,8 +142,21 @@ def render(folder: Path, report: Any, events: list[dict[str, Any]]) -> Path:
     return path
 
 
+def _asked(choice: dict[str, Any]) -> str:
+    """For a make: each line of the script and the learned screen it got."""
+    rows = "".join(
+        f"<tr><td>{_e(shot.get('line'))}</td><td>{_e(shot.get('skill') or '—')}</td>"
+        f"<td class='h'>{_e(shot.get('why'))}</td></tr>"
+        for shot in choice.get("shots", [])
+    )
+    caption = "WHAT IT WAS ASKED · line → learned screen"
+    return f"<figure><figcaption>{caption}</figcaption><table>{rows}</table></figure>"
+
+
 def _source(events: list[dict[str, Any]]) -> str:
-    task = next((e for e in events if e["type"] in ("task", "design_task")), {})
+    task = _task(events)
+    if task.get("type") == "make_task":
+        return f"<p class='sub'>Source: a script of {len(task.get('lines') or [])} lines</p>"
     apify = next((e for e in events if e["type"] == "perceive_apify"), None)
     seen = next((e for e in events if e["type"] == "perceived"), None)
     source = _shown(task.get("source")) or f"design {task.get('design', '')}"
@@ -231,9 +259,18 @@ def _seconds(ts: str) -> float:
 def _replay(report: Any, events: list[dict[str, Any]]) -> str:
     """How to repeat the result: the sealed tests and the command that replays the skill at $0."""
     installed = next((e for e in events if e["type"] == "installed"), None)
-    task = next((e for e in events if e["type"] in ("task", "design_task")), {})
+    task = _task(events)
     lines = []
-    if installed and installed.get("kind") == "tool":
+    name = ""
+    if task.get("type") == "make_task":
+        saved = next((n[8:].split()[0] for n in report.notes if n.startswith("design: ")), "")
+        given = " ".join(f"--text={shlex.quote(t)}" for t in task.get("lines") or [])
+        lines.append(
+            f"python -m creature design {saved} {given}   # no model, $0"
+            if saved
+            else "python -m creature list   # the design this run saved; replay: creature design <name>"
+        )
+    elif installed and installed.get("kind") == "tool":
         name = ""  # a tool replays with `creature use`, below
     elif installed:
         name = installed.get("design") or installed.get("skill", "")
