@@ -19,6 +19,10 @@ were verified on a temporary copy of `creature-ukazka`'s registry.
   and the tab you picked stays. Keep the two files next to each other.
 - The library closed (no more files added to `~/Desktop/creature-assets`): a change mid-run refuses the
   install (fingerprint part "asset library"), which is correct and not what you want on camera.
+- The tree frozen: the fingerprint also covers the enforcing modules (`authority.py`, `registry.py`,
+  `verdict.py`, …). A commit touching one of them while a run is going prints `authority unchanged: False`
+  with the file named (QA saw exactly that once at 02:04, a $0 replay during the builder's commit). Nobody
+  edits `creature/` while the camera runs.
 - Keys: `CREATURE_SECRETS` points at the file with `APIFY_TOKEN=…` (Instagram reels only; a local `.mp4`
   needs none).
 
@@ -94,6 +98,12 @@ uv run python -m creature design <timeline design> --text "…" --style examples
   shows it as `design: <name>` and this step is $0. If none finishes, skip the style on camera or say
   it is for montages.
 - A second montage of the same kind never overwrites the first: it is saved as `<slug>-2` (pinned).
+- **Verified 02:07 on a copy of `opus-Db3DFh8Nr5y`:** `design radiant-brand-montage --text "Capabilities
+  may grow. Authority may not." --style examples/style-martin.json --mark <png>` → `DONE`, 36 s, 0 model
+  calls, $0.0000, all checks passed, `authority unchanged: True`. Use the saved home's own four surfaces.
+- **Texts of at least two words.** `type-specimen-card` splits the text into two blocks and dies on a
+  one-word text (`"Frankenstein."` → `4 of 4 render workers failed`, at any length; `"From Dusk Till
+  Dawn."` passes even at 3.8 s). Replay texts on camera: two short sentences, as the learned one.
 
 ## 6. What it lacks (PAID, one small call, ~$0.03)
 
