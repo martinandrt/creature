@@ -93,8 +93,38 @@ def text(events: list[dict[str, Any]], spec: dict[str, Any] | None = None) -> st
 
 def write(folder: Path, events: list[dict[str, Any]]) -> Path:
     path = folder / NAME
-    path.write_text(text(events, _spec(folder)), encoding="utf-8")
+    path.write_text(hide(text(events, _spec(folder)), _held_out(folder)), encoding="utf-8")
     return path
+
+
+def hide(record: str, held_out: list[str]) -> str:
+    """A held-out criterion quoted anywhere (a judge's feedback in a gap, say) is replaced, never shown."""
+    for criterion in sorted({h.strip() for h in held_out if h.strip()}, key=len, reverse=True):
+        record = record.replace(criterion, "[a held-out criterion]")
+    return record
+
+
+def _held_out(folder: Path) -> list[str]:
+    """Every held-out criterion in the run's spec, its parts' included."""
+    try:
+        data = json.loads((folder / "spec.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    found: list[str] = []
+
+    def walk(node: Any) -> None:
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if key == "held_out" and isinstance(value, list):
+                    found.extend(str(v) for v in value)
+                else:
+                    walk(value)
+        elif isinstance(node, list):
+            for item in node:
+                walk(item)
+
+    walk(data)
+    return found
 
 
 def for_skills(root: Path, events: list[dict[str, Any]], record: str) -> list[str]:

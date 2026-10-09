@@ -68,3 +68,18 @@ def test_postup_of_an_unknown_event_mix_still_reads():
     text = postup.text(events)
     assert '- lines: ["a", "b"]' in text and "time: 30 s" in text and "status: DONE" in text
     assert HIDDEN not in text
+
+
+def test_a_held_out_criterion_quoted_in_a_gap_is_hidden(world, fake_model, tmp_path):
+    report = _build(world, fake_model)
+    spec = json.loads((report.folder / "spec.json").read_text(encoding="utf-8"))
+    hidden = spec["held_out"][0]
+    events = ledger.read(world / "runs" / f"{report.run_id}.jsonl")
+    events[-1] = {**events[-1], "gap": f"the judge said no: {hidden}"}
+    folder = tmp_path / "run"
+    folder.mkdir()
+    (folder / "spec.json").write_text(
+        json.dumps({"parts": [spec]}), encoding="utf-8"
+    )  # a part's held-out too
+    text = postup.write(folder, events).read_text(encoding="utf-8")
+    assert hidden not in text and "the judge said no: [a held-out criterion]" in text
