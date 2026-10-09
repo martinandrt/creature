@@ -5,9 +5,10 @@ rounds while looking at its own frames next to the reel's, installs a sealed ski
 design on new text at $0, names what it lacks, waits for a human on an ASK, and the board shows every
 run of the night with its cost. Authority stays the same: every run prints `authority unchanged: True`.
 
-Each step says whether it costs money and how it was verified (QA, 9 Oct, ~02:40; board and montage
-notes updated ~03:50 on 87702bf, 345 tests green). Nothing below was run in a live home: the $0 steps
-were verified on a temporary copy of `creature-ukazka`'s registry.
+Each step says whether it costs money and how it was verified (QA, 9 Oct, ~02:40; updated ~05:20 on
+9ace75a: the full suite is 457 green on a clean worktree, and `list`, `show`, `page`, `overview` and the
+styled replay were rehearsed on a copy of `opus-Db3DFh8Nr5y`). Nothing below was run in a live home: the
+$0 steps were verified on temporary copies of `creature-ukazka`'s and `opus-Db3DFh8Nr5y`'s registries.
 
 ## 0. Before the camera
 
