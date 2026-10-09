@@ -59,12 +59,12 @@ class Desk:
         )
 
     def home_list(self) -> list[dict[str, Any]]:
-        """The homes worth opening: those with at least one learned skill, with how many."""
+        """The homes worth opening: a learned skill and a clip to show, with how many skills."""
         counted = []
         for name in self.home_names():
             skills = registry.skills(self.homes / name / "registry")
             count = sum(1 for skill in skills if skill.capability.get("kind") != "tool")
-            if count:
+            if count and any(run["clip"] for run in self.runs(self.homes / name)):
                 counted.append({"name": name, "skills": count})
         return counted
 
