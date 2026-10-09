@@ -20,6 +20,17 @@ The task is always the same: *"try on my input what this reel shows"*.
 When a reel needs photos, 3D or footage, it asks for them (ASK). When there is nothing to learn, it skips.
 On command, it returns to its own failures by itself.
 
+**From a script** (`creature make --script lines.txt`): one line per shot. One cheap model call picks a
+learned skill for each line from a catalog where every skill carries a style card (its background,
+main colours, length, how much of the frame the text takes, how much moves), measured by fixed code
+from two renders of the skill. Each shot plays its skill's whole learned length with its line; one judge
+call with fixed criteria (every line readable, nothing over it, the shots feel like one piece) decides,
+and a failed result is composed again at most twice. No builder call: nothing new is learned there.
+
+Every run and every installed skill gets a `POSTUP.md`, written by fixed code from the run's ledger:
+source, what it saw and how it meant to make it, the rounds, the result and the cost. Hidden criteria
+never appear in it. For now the creature only writes it; it does not read it.
+
 ## Who wrote what
 
 | The creature, at run time | The spine, written by us during the event |
@@ -29,6 +40,7 @@ On command, it returns to its own failures by itself.
 | the choice of what to reuse and what to learn | the cut that joins screens into a montage |
 | version 2 of a skill that fails on new input | the sound layer |
 | a tool it wished for after a failure (`loop-seam-check`) | |
+| which skill plays which line of a script (`make`) | the style cards' measuring code, `POSTUP.md` |
 
 The rules of the loop were tuned by a human during the night, from his own verdicts.
 The creature does not improve its own method yet.
@@ -52,6 +64,7 @@ cp authority.json $CREATURE_HOME/ && cp workshop/Dockerfile $CREATURE_HOME/works
 uv run python -m creature try reel.mp4 --text "Capabilities may grow. Authority may not."
 uv run python -m creature list
 uv run python -m creature design <name> --text "..." --style style.json   # no model, $0
+uv run python -m creature make --script lines.txt --style style.json      # one cheap call + one judge
 ```
 
 The results below used `examples/authority-deep-assets.json` (Opus builder, up to 30 rounds, $4 per run,
@@ -61,11 +74,19 @@ the asset library mounted).
 
 All from the run ledgers. Evidence: `scripts/night.py` over every ledger, its output in `docs/night.json`.
 
-- Runs: 110 · skills installed: 78 (distinct: 75) · FAILED: 57 · ASK: 6 · SKIP: 3
-- Learning a simple effect: about $0.57
-- Learning a reel of several screens: $1.69 to $3.56
-- The same reel again, screens taken from the registry, no builder call: $0.08 to $0.11 (example: $3.26 → $0.10)
+- Runs: 152 · skills installed: 116 (distinct: 113) · BUILT: 34 · HAVE: 8 · DONE: 10 · FAILED: 90 ·
+  ASK: 6 · SKIP: 4
+- Learning a simple effect: about $0.54 (median of 11)
+- Learning a reel of several screens: $0.32 to $3.82 (40 runs)
+- The same reel again, screens taken from the registry, no builder call: $0.08 to $0.12 (24 runs;
+  example: $3.26 → $0.10)
 - Replaying a saved design on new text or a new style: $0.000, no model call
+- A 7-line script with `make` on 14 learned screens: $0.016, passed on the second composition. It
+  chose one screen for all seven lines: of the 14, five do not draw the user's text at all (their card
+  says the text takes 0 % of the frame)
+- Practice, once, $4 cap: it went back to 3 of its failed reels, took 2 to 3 screens from the registry
+  each time, and all 3 failed again ($3.81)
+- Costs count model calls only; the Apify download of a reel is not in them
 - Human check: the author looked at 23 outputs: 2 good, 6 close, 15 not met
 - The same reel against a free Claude Code session (LILIUM): the session made it at 9/10 for $9.78; the
   creature, on the closed asset library, learned 2 of 4 screens and ran out of its $4 budget one call
@@ -82,8 +103,10 @@ All from the run ledgers. Evidence: `scripts/night.py` over every ledger, its ou
 - A replay on a one-word text failed: a learned screen expected at least two words.
 - A skill cannot call another skill. A montage joins finished clips.
 - Sound is fixed code with library sounds, not a learned skill.
-- Asset library use by the creature: 16 of 88 installed skills declare library files: 15 use its fonts,
-  2 its photos, 1 a texture.
+- Asset library use by the creature: 26 of 116 installed skills declare library files: 23 use its
+  fonts, 3 its glows, 2 its photos, 2 its textures.
+- A screen is learned whole, text and layout together. Some screens keep text from the reel they were
+  learned on, and a screen cannot lend just its title or its motion to another.
 - Video only. Outside motion design nothing can be verified today.
 - There is no static filter on generated code. The boundary is the container.
 
