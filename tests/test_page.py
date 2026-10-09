@@ -36,3 +36,27 @@ def test_a_make_runs_page_says_what_it_was_asked_and_what_it_cost(tmp_path):
     assert "no model call" not in text and "2 model calls" in text  # it composed and judged with the model
     assert "Source: design" not in text
     assert "creature design make " not in text  # no design named "make" exists; the saved one has a free name
+
+
+def test_a_make_runs_page_can_be_rebuilt_from_its_ledger(tmp_path):
+    import json
+
+    run = "20261009T030617Z-880ab4"
+    (tmp_path / "runs" / run / "make-1").mkdir(parents=True)
+    (tmp_path / "runs" / run / "make-1" / "joined.mp4").write_bytes(b"\x00")
+    ts = "2026-10-09T03:06:17+00:00"
+    events = [
+        {"type": "run_start", "ts": ts, "image": "sha256:x"},
+        {"type": "make_task", "ts": ts, "lines": ["One.", "Two."], "style": False},
+        {"type": "model_call", "ts": ts, "step": "compose", "model": "m", "ok": True, "cost_usd": 0.001},
+        {"type": "make_choice", "ts": ts, "attempt": 1,
+         "shots": [{"line": 1, "skill": "a"}, {"line": 2, "skill": "b"}]},
+        {"type": "make_judged", "ts": ts, "ok": True},
+        {"type": "make_saved", "ts": ts, "design": "make-7"},
+        {"type": "run_end", "ts": ts, "status": "DONE", "skill": "make", "clip": "make-1/joined.mp4",
+         "spent_usd": 0.001, "fingerprint_same": True},
+    ]  # fmt: skip
+    (tmp_path / "runs" / f"{run}.jsonl").write_text("".join(json.dumps(e) + "\n" for e in events))
+    text = page.rebuild(tmp_path, run).read_text(encoding="utf-8")
+    assert "One." in text and "Two." in text
+    assert "creature design make-7 --text=One. --text=Two." in text  # the design it saved, by the name it got

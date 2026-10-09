@@ -263,7 +263,9 @@ def _replay(report: Any, events: list[dict[str, Any]]) -> str:
     lines = []
     name = ""
     if task.get("type") == "make_task":
-        saved = next((n[8:].split()[0] for n in report.notes if n.startswith("design: ")), "")
+        logged = next((e.get("design", "") for e in events if e["type"] == "make_saved"), "")
+        notes = getattr(report, "notes", [])
+        saved = logged or next((n[8:].split()[0] for n in notes if n.startswith("design: ")), "")
         given = " ".join(f"--text={shlex.quote(t)}" for t in task.get("lines") or [])
         lines.append(
             f"python -m creature design {saved} {given}   # no model, $0"
@@ -451,7 +453,7 @@ def rebuild(home: Path, run_id: str) -> Path:
     report = SimpleNamespace(
         run_id=run_id, status=end["status"], spec=spec, skill=end.get("skill"),
         attempts=end.get("attempts", 0), gap=end.get("gap", ""), spent_usd=end.get("spent_usd", 0.0),
-        fingerprint_same=end.get("fingerprint_same"), clip=clip,
+        fingerprint_same=end.get("fingerprint_same"), clip=clip, folder=folder, notes=[],
     )  # fmt: skip
     return render(folder, report, events)
 

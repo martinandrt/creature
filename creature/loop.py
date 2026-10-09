@@ -1009,6 +1009,7 @@ class Creature:
                 ]
                 origin = {"composed_by": "make", "run": self.ledger.run_id, "lines": lines}
                 name = registry.save_design(self.registry, "make", steps, origin=origin, free=True)["name"]
+                self.ledger.record("make_saved", design=name)  # the page and a rebuild name the replay
                 report.notes.append(f"design: {name} (replay: creature design {name} --text <each line>)")
                 report.status, report.clip, report.cues = "DONE", joined, cues
                 return self.finish(report)
