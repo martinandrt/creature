@@ -125,6 +125,22 @@ them into tool / effect / input / authority wishes, sorted by how many reels eac
 `wishes.json` and a page. Best on a home with a few failures: run it on `lilium-s-knihovnou` or
 `creature-test` rather than the fresh recording home (one BUILT run gives an empty list).
 
+## 6b. Practice: it returns to its own failures, within Martin's number (PAID, bounded)
+
+```bash
+uv run python -m creature practice
+# prints:  practice <run>: <returns…>, ended: <why>   (ended: "budget" or "no failures left")
+```
+
+Reads this home's ledgers (no model): every reel whose latest `try` ended `FAILED` and whose file is still
+there, oldest first, at most 3 returns per reel ever. The whole practice spends at most
+`caps.practice_budget_usd` from `authority.json` (Martin set 4.0 in bf56aa1; a home without the key does
+not practise, pinned). Each return is an ordinary run with its own ledger and page; the practice's own
+ledger has one line per return (reel, return number, what it took from the registry, result, cost) and
+shows on the board. The story line: capabilities grow on their own, the budget for growing is a human's
+number. Best on a home with a few `FAILED` runs (`lilium-kucharka` has two skipped screens). Not verified
+live by QA (paid); the gating is tested offline (tests/test_practice.py).
+
 ## 7. The ASK queue (depends on a run that asked)
 
 ```bash
