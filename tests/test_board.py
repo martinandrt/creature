@@ -272,6 +272,39 @@ def test_the_same_run_name_in_two_homes_is_two_tabs(tmp_path):
     assert "data-run='one/r'" in group["html"] and "data-run='two/r'" in group["html"]
 
 
+def test_a_design_replay_sits_with_the_reel_it_was_learned_from(tmp_path):
+    # a $0 replay has no reel of its own: it belongs with the reel its design was learned from (the design's
+    # origin in the registry) and shows that run's copy of the reel; a composed design keeps its own name
+    base = tmp_path / "creature-homes"
+    home = _home(base, "one")
+    learned = _run(home, "learn", ("run_end", {"status": "BUILT", "skill": "design:promo"}), source="R.mp4")
+    (learned / "reel.mp4").write_bytes(b"mp4")
+    (home / "registry").mkdir()
+    index = {
+        "skills": {},
+        "designs": {
+            "promo": {"kind": "timeline", "origin": {"reel": "/somewhere/R.mp4", "run": "learn"}},
+            "shorter": {"kind": "timeline", "origin": {"composed_by": "compose"}},
+        },
+    }
+    (home / "registry" / "index.json").write_text(json.dumps(index), encoding="utf-8")
+    for rid, design, status in (("replay", "promo", "DONE"), ("composed", "shorter", "FAILED")):
+        _later()
+        log = Ledger.start(home, run_id=rid)
+        log.record("run_start", fingerprint="f")
+        log.record("design_task", design=design, text="New words", kind="timeline", mark=False, style=True)
+        log.record("run_end", status=status, skill=f"design:{design}")
+        (home / "runs" / rid).mkdir()
+    out = base / "board.html"
+    board.render([home], out)
+    groups = {g["id"]: g["html"] for g in _data(out)["runs"]}
+    assert list(groups) == ["src:shorter", "src:R.mp4"]  # newest first; no reel origin: its own name
+    reel = groups["src:R.mp4"]
+    assert reel.count("<section class='run'>") == 2 and "přehrání designu promo" in reel
+    assert reel.count("<video src='one/runs/learn/reel.mp4'") == 2  # the learning run's reel, shown twice
+    assert "přehrání designu shorter" in groups["src:shorter"] and "<video" not in groups["src:shorter"]
+
+
 def test_a_render_that_fails_leaves_the_shell_and_says_why_in_the_data(tmp_path, monkeypatch):
     base = tmp_path / "creature-homes"
     home = _home(base, "one")
