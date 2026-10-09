@@ -177,3 +177,14 @@ def test_a_reloaded_page_finds_the_running_job(desk, world, monkeypatch):
     desk.jobs[job]["state"] = "done"
     desk.lock.release()
     assert desk.current() == {}
+
+
+def test_a_learning_run_shows_the_reel_it_learned_on(desk, world):
+    run = desk.describe(world.name)["runs"][0]["run"]
+    (world / "runs" / run / "reel.mp4").write_bytes(b"mp4")
+    seen = desk.run(world.name, run)
+    assert seen["kind"] == "learn" and seen["learned"][0]["src"] == f"file:{run}/reel.mp4"
+    with pytest.raises(PermissionError):
+        desk.reel_file(world.name, run=run)  # its source path is not a file on this machine
+    with pytest.raises(KeyError):
+        desk.reel_file(world.name, run="../../x")

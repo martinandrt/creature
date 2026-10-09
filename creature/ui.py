@@ -192,50 +192,85 @@ class Desk:
         return {k: v for k, v in found.items() if k != "known"} | {"progress": progress}
 
     def run(self, home: str, run: str) -> dict[str, Any]:
-        """One finished run as the page shows it: state, clip, progress (cost, calls, picks), and for each
-        skill it used the reel that skill was learned from, with that skill's learning cost."""
+        """One finished run as the page shows it: state, clip, progress (cost, calls, picks), and where it
+        came from: for a run on a reel that reel, for a make or a replay the reel each used skill was
+        learned from, with that skill's learning cost."""
         root = self.home(home)
         path = root / "runs" / f"{run}.jsonl"
         if not RUN_ID.fullmatch(run) or not path.is_file():
             raise KeyError(f"no run {run!r}")
         events = ledger.read(path)
-        task = next((e for e in events if e["type"] in ("make_task", "design_task")), {})
+        task = next((e for e in events if e["type"] in ("make_task", "design_task", "task")), {})
+        kind = {"make_task": "make", "design_task": "design", "task": "learn"}.get(
+            task.get("type", ""), "other"
+        )
         lines = task.get("lines") or task.get("texts") or [task.get("text", "")]
         end = next((e for e in events if e["type"] == "run_end"), {})
         progress = progress_of(events, len(lines))
-        used = [p["skill"] for p in progress["picks"] if p.get("skill")]
-        used += [e["skill"] for e in events if e["type"] == "design_step" and e.get("skill")]
         learned = []
+        if kind == "learn":
+            learned.append({
+                "skill": None, "reel": _reel_name(task.get("source")), "src": self._run_reel(root, run, task),
+                "learn_usd": end.get("spent_usd"), "attempts": end.get("attempts"),
+            })  # fmt: skip
+        used = [p["skill"] for p in progress["picks"] if p.get("skill")]
+        used += [e["skill"] for e in events if e["type"] in ("design_step", "have_try") and e.get("skill")]
         for slug in dict.fromkeys(used):
             reel = self.reel(home, slug)
             if reel:
                 learned.append(reel)
         return {
-            "kind": "make" if task.get("type") == "make_task" else "design", "run": run, "lines": lines,
+            "kind": kind, "run": run, "lines": lines,
             "status": end.get("status", "STOPPED"),
             "clip": f"{run}/{end['clip']}" if end.get("clip") else None,
             "gap": (end.get("gap") or "")[:300], "progress": progress, "learned": learned,
             "seconds": _seconds(events[0].get("ts"), end.get("ts")) if events and end else None,
         }  # fmt: skip
 
+    def _run_reel(self, root: Path, run: str, task: dict[str, Any]) -> str | None:
+        """Where the page can play a run's reel: the copy in the run's folder (a downloaded reel), else the
+        local file the run was given (served by /reel?run=), else nowhere."""
+        if (root / "runs" / run / "reel.mp4").is_file():
+            return f"file:{run}/reel.mp4"
+        source = Path(str(task.get("source", "")))
+        if source.suffix == ".mp4" and source.is_file():
+            return f"reel:run={run}"
+        return None
+
     def reel(self, home: str, slug: str) -> dict[str, Any] | None:
-        """Where a skill came from: its reel (served by /reel when the file is still on this machine), the
-        run that learned it, and what learning it cost."""
+        """Where a skill came from: its reel (when it can still be played here), the run that learned it,
+        and what learning it cost."""
+        root = self.home(home)
         try:
-            skill = registry.get(self.home(home) / "registry", slug)
+            skill = registry.get(root / "registry", slug)
         except (KeyError, ValueError):
             return None
         origin, cost = skill.capability.get("origin", {}), skill.capability.get("cost", {})
         source = Path(str(origin.get("reel", "")))
+        learned_in = str(origin.get("run", ""))
+        src = None
+        if source.suffix == ".mp4" and source.is_file():
+            src = f"reel:skill={slug}"
+        elif RUN_ID.fullmatch(learned_in) and (root / "runs" / learned_in / "reel.mp4").is_file():
+            src = f"file:{learned_in}/reel.mp4"
         return {
-            "skill": slug, "reel": source.stem, "has_video": source.suffix == ".mp4" and source.is_file(),
+            "skill": slug, "reel": _reel_name(origin.get("reel")), "src": src, "has_video": src is not None,
             "learn_usd": cost.get("learn_usd"), "attempts": cost.get("forge_attempts"),
         }  # fmt: skip
 
-    def reel_file(self, home: str, slug: str) -> bytes:
-        """The reel a skill of this home was learned from: the path comes from its sealed record only."""
-        skill = registry.get(self.home(home) / "registry", slug)
-        source = Path(str(skill.capability.get("origin", {}).get("reel", "")))
+    def reel_file(self, home: str, skill: str = "", run: str = "") -> bytes:
+        """A reel that is not in runs/: the local file a skill was learned from (from its sealed record) or
+        that a run was given (from that run's own ledger). Only an .mp4 that is still on this machine."""
+        root = self.home(home)
+        if run:
+            path = root / "runs" / f"{run}.jsonl"
+            if not RUN_ID.fullmatch(run) or not path.is_file():
+                raise KeyError(f"no run {run!r}")
+            task = next((e for e in ledger.read(path) if e["type"] == "task"), {})
+            source = Path(str(task.get("source", "")))
+        else:
+            origin = registry.get(root / "registry", skill).capability.get("origin", {})
+            source = Path(str(origin.get("reel", "")))
         if source.suffix != ".mp4" or not source.is_file():
             raise PermissionError("the reel is not on this machine")
         return source.read_bytes()
@@ -250,6 +285,12 @@ class Desk:
 
 
 RUN_ID = re.compile(r"\d{8}T\d{6}Z-[0-9a-f]{6}")
+
+
+def _reel_name(source: Any) -> str:
+    """A reel's short name: a file's stem, or the code at the end of a reel URL."""
+    text = str(source or "").rstrip("/")
+    return Path(text.split("?")[0]).stem or "—"
 
 
 def _seconds(start: str | None, end: str | None) -> float | None:
@@ -349,9 +390,10 @@ class Handler(BaseHTTPRequestHandler):
             elif url.path == "/api/run":
                 self._json(self.desk.run(query.get("home", ""), query.get("run", "")))
             elif url.path == "/reel":
-                self._send(
-                    200, self.desk.reel_file(query.get("home", ""), query.get("skill", "")), "video/mp4"
+                body = self.desk.reel_file(
+                    query.get("home", ""), query.get("skill", ""), query.get("run", "")
                 )
+                self._send(200, body, "video/mp4")
             elif url.path == "/api/home":
                 self._json(self.desk.describe(query.get("name", "")))
             elif url.path == "/api/current":
