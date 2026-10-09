@@ -126,3 +126,21 @@ def test_allowed_is_only_the_desks_own_page():
     assert not ui.allowed({**own, "Content-Type": "text/plain"}, 8765, post=True)  # a simple request
     assert not ui.allowed({k: v for k, v in own.items() if k != "Origin"}, 8765, post=True)
     assert ui.allowed({"Host": "127.0.0.1:8765"}, 8765, post=False)
+
+
+def test_progress_is_read_from_the_runs_ledger():
+    events = [
+        {"type": "make_task", "lines": ["a", "b"]},
+        {"type": "model_call", "cost_usd": 0.002},
+        {
+            "type": "make_choice",
+            "attempt": 1,
+            "shots": [{"line": 1, "skill": "s1", "why": "dark"}, {"line": 2, "skill": "s2", "why": "x"}],
+        },
+        {"type": "make_shot", "line": 1},
+    ]
+    p = ui.progress_of(events, 2)
+    assert p["word"] == "RENDERING" and p["step"] == 1 and p["of"] == 2 and p["calls"] == 1
+    assert p["picks"][0] == {"line": 1, "skill": "s1", "why": "dark"}
+    events += [{"type": "make_judged", "ok": True}, {"type": "run_end", "status": "DONE"}]
+    assert ui.progress_of(events, 2)["word"] == "DONE"

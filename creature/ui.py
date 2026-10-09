@@ -142,6 +142,8 @@ class Desk:
             "state": "running",
             "started": time.time(),
             "out": "",
+            "lines": len(lines),
+            "known": sorted(p.name for p in (root / "runs").glob("*.jsonl")),  # the run is the new one
         }
         threading.Thread(target=self._run, args=(job, command), daemon=True).start()
         return job
@@ -153,11 +155,26 @@ class Desk:
                 line for line in (done.stdout + done.stderr).splitlines()
                 if not line.startswith(("Using ", "Creating ", "Installed "))
             )  # fmt: skip
-            self.jobs[job].update(state="done", out=out[-4000:], **_result(out, self.homes))
+            self.jobs[job].update(out=out[-4000:], **_result(out, self.homes))
+            self.jobs[job]["state"] = "done"
         except Exception as error:  # the page shows it; the server keeps running
             self.jobs[job].update(state="done", out=f"{type(error).__name__}: {error}")
         finally:
             self.lock.release()
+
+    def job(self, job: str) -> dict[str, Any]:
+        """A job as the page sees it: its state, and the progress read from its run's own ledger."""
+        found = self.jobs.get(job)
+        if found is None:
+            return {"state": "unknown"}
+        runs = self.homes / found["home"] / "runs"
+        if found.get("run"):
+            path = runs / f"{found['run']}.jsonl"
+        else:
+            new = sorted(p for p in runs.glob("*.jsonl") if p.name not in found["known"])
+            path = new[-1] if new else None
+        progress = progress_of(ledger.read(path), found["lines"]) if path and path.is_file() else {}
+        return {k: v for k, v in found.items() if k != "known"} | {"progress": progress}
 
     def file(self, home: str, path: str) -> tuple[bytes, str]:
         """A file from the home's runs/ only: an mp4, a run page, a POSTUP.md or a picture."""
@@ -166,6 +183,41 @@ class Desk:
         if runs not in wanted.parents or wanted.suffix not in SHOWN or not wanted.is_file():
             raise PermissionError("not a file of this home's runs")
         return wanted.read_bytes(), SHOWN[wanted.suffix]
+
+
+def progress_of(events: list[dict[str, Any]], lines: int) -> dict[str, Any]:
+    """Where a make or a replay is, from its ledger: one word, a step of n, the model calls so far, and
+    for a make the skill picked for each line and why (from its last composition)."""
+    kinds = [e["type"] for e in events]
+    calls = sum(1 for e in events if e["type"] == "model_call")
+    choices = [e for e in events if e["type"] == "make_choice"]
+    picks = (
+        [{"line": s["line"], "skill": s["skill"], "why": s.get("why", "")} for s in choices[-1]["shots"]]
+        if choices
+        else []
+    )
+    attempt = choices[-1]["attempt"] if choices else 0
+    since = 0
+    if choices:
+        since = max(i for i, k in enumerate(kinds) if k == "make_choice")
+    shots = sum(1 for e in events[since:] if e["type"] in ("make_shot", "design_step"))
+    end = next((e for e in events if e["type"] == "run_end"), None)
+    if end:
+        word = end["status"]
+    elif "make_judged" in kinds[since:]:
+        word = "JUDGED"
+    elif "design_join" in kinds[since:]:
+        word = "JUDGING" if choices else "JOINING"
+    elif shots or "make_choice" in kinds or "design_task" in kinds:
+        word = "RENDERING"
+    elif "card" in kinds or "make_task" in kinds:
+        word = "READING SKILLS"
+    else:
+        word = "STARTING"
+    return {
+        "word": word, "step": min(shots, lines), "of": lines, "attempt": attempt, "calls": calls,
+        "spent": round(sum(float(e.get("cost_usd") or 0) for e in events), 4), "picks": picks,
+    }  # fmt: skip
 
 
 def _result(out: str, homes: Path) -> dict[str, Any]:
@@ -223,7 +275,7 @@ class Handler(BaseHTTPRequestHandler):
             elif url.path == "/api/home":
                 self._json(self.desk.describe(query.get("name", "")))
             elif url.path == "/api/job":
-                self._json(self.desk.jobs.get(query.get("id", ""), {"state": "unknown"}))
+                self._json(self.desk.job(query.get("id", "")))
             elif url.path.startswith("/font/") and url.path[6:] in FONTS:
                 path = ASSETS / FONTS[url.path[6:]]
                 if not path.is_file():

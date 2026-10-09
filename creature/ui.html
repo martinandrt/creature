@@ -5,97 +5,133 @@
 @font-face{font-family:"Barlow UI";src:local("Barlow SemiBold"),url(/font/barlow-semibold.ttf);font-weight:600}
 @font-face{font-family:"Barlow UI";src:local("Barlow ExtraBold"),url(/font/barlow-extrabold.ttf);font-weight:800}
 @font-face{font-family:"Mono UI";src:local("JetBrains Mono"),url(/font/jetbrainsmono.ttf);font-weight:100 800}
-:root{--night:#1B2135;--paper:#EBEDF2;--amber:#D4A574;--deep:#151a2b;--line:rgba(235,237,242,.16);
-  --mute:rgba(235,237,242,.6);--ok:#7fd49a;--bad:#ff7a6b;
+:root{--bg:#1B2135;--panel:#151a2b;--text:#EBEDF2;--acc:#D4A574;--ink:#1B2135;--line:rgba(235,237,242,.16);
+  --mute:rgba(235,237,242,.55);--ok:#7fd49a;--bad:#ff7a6b;--r:0;
   --sans:"Barlow UI","Barlow",system-ui,sans-serif;--mono:"Mono UI","JetBrains Mono",ui-monospace,Menlo,monospace}
-*{box-sizing:border-box;border-radius:0}
-html,body{margin:0;background:var(--night);color:var(--paper)}
-body{font:400 18px/1.45 var(--sans);min-height:100vh;display:flex;flex-direction:column}
-header{display:flex;align-items:baseline;gap:24px;padding:20px 32px;border-bottom:1px solid var(--line)}
-h1{font:800 28px/1 var(--sans);letter-spacing:.02em;margin:0;text-transform:uppercase}
-h1 span{color:var(--amber)}
-.label,h2{font:500 13px/1.3 var(--mono);text-transform:uppercase;letter-spacing:.12em;color:var(--mute);margin:0 0 12px}
-select,textarea,button{font:inherit;color:inherit}
-select{background:var(--night);color:var(--paper);border:1px solid var(--line);padding:6px 10px;font:500 15px var(--mono)}
-#sum{font:400 15px var(--mono);color:var(--mute);white-space:nowrap}
-main{flex:1;display:grid;grid-template-columns:240px minmax(340px,1fr) minmax(380px,1.15fr);min-height:0}
-@media (max-width:1100px){main{grid-template-columns:1fr}}
-section{padding:24px 28px;border-right:1px solid var(--line);min-width:0}
-section:last-child{border-right:0}
-#skills details{border-top:1px solid var(--line)}
-#skills summary{list-style:none;cursor:pointer;display:flex;gap:10px;align-items:center;padding:8px 0;font:600 16px var(--sans)}
+body.video{--bg:#05070D;--panel:#0B1022;--text:#F5F6F8;--acc:#FFC926;--ink:#05070D;--mute:rgba(245,246,248,.45);--r:14px}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text)}
+body{font:400 22px/1.4 var(--sans);display:grid;grid-template-rows:auto 1fr auto;height:100vh;overflow:hidden}
+::-webkit-scrollbar{display:none}
+.mono{font-family:var(--mono)}
+.cap{font:500 16px/1.2 var(--mono);text-transform:uppercase;letter-spacing:.14em;color:var(--mute)}
+header{display:flex;align-items:center;gap:28px;padding:20px 40px;border-bottom:1px solid var(--line);position:relative}
+h1{font:800 34px/1 var(--sans);letter-spacing:.03em;margin:0;text-transform:uppercase}h1 span{color:var(--acc)}
+select{font:500 18px var(--mono);color:var(--text);background:transparent;border:0;border-bottom:1px solid var(--line);padding:4px 2px;border-radius:0}
+select option{background:var(--bg)}
+#skillsbtn{all:unset;cursor:pointer;font:700 22px var(--mono)}#skillsbtn b{font-size:30px}#skillsbtn:hover{color:var(--acc)}
+#skills{display:none;position:absolute;left:0;right:0;top:100%;z-index:5;background:var(--panel);border-bottom:1px solid var(--line);
+  padding:16px 40px 20px;columns:3;column-gap:40px;max-height:60vh;overflow:auto}
+#skills.open{display:block}
+#skills details{break-inside:avoid;padding:6px 0}
+#skills summary{list-style:none;cursor:pointer;display:flex;gap:10px;align-items:center;font:600 19px var(--sans)}
 #skills summary::-webkit-details-marker{display:none}
-#skills summary:hover{color:var(--amber)}
-.sw{display:flex;gap:2px;flex:none}.sw i{width:11px;height:11px;outline:1px solid var(--line)}
-#skills p{margin:0 0 10px;font-size:15px;color:var(--mute)}
-#skills .meta{font:400 13px var(--mono);color:var(--mute);display:block;margin-top:4px}
-textarea{width:100%;height:46vh;min-height:260px;padding:18px 20px;background:var(--deep);border:1px solid var(--line);
-  color:var(--paper);font:600 26px/1.5 var(--sans);resize:vertical;outline:none}
-textarea:focus{border-color:var(--amber)}
-.act{display:flex;align-items:stretch;gap:0;margin-top:20px;border:1px solid var(--line)}
-.act button{flex:none;border:0;padding:16px 28px;cursor:pointer;font:800 20px var(--sans);text-transform:uppercase;letter-spacing:.06em}
-#make{background:var(--amber);color:var(--night)}#make:hover{background:var(--paper)}
-.price{flex:1;display:flex;flex-direction:column;justify-content:center;padding:8px 16px;font:500 15px/1.4 var(--mono)}
-.price b{font:700 22px var(--mono);color:var(--amber)}
-.opt{display:flex;align-items:center;gap:8px;padding:0 16px;border-left:1px solid var(--line);font:500 14px var(--mono);color:var(--mute)}
-.opt input{accent-color:var(--amber);width:18px;height:18px}
-.act.second{margin-top:12px}
-#replay{background:transparent;color:var(--paper);border-right:1px solid var(--line)}#replay:hover{color:var(--amber)}
-.act select{border:0;border-left:1px solid var(--line);background:transparent;padding:0 12px;max-width:260px}
+#skills p{margin:4px 0 6px 46px;font-size:16px;color:var(--mute)}
+.sw{display:flex;gap:2px;flex:none}.sw i{width:10px;height:10px;outline:1px solid var(--line)}
+main{display:grid;grid-template-columns:minmax(0,1fr) auto;min-height:0}
+.left{padding:32px 40px;display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--line)}
+textarea{flex:1;min-height:0;width:100%;background:transparent;border:0;color:var(--text);resize:none;outline:none;padding:0;
+  font:600 40px/1.5 var(--sans)}
+#picks{display:none;flex:1;min-height:0;overflow:auto}
+#picks.on{display:block}
+#picks div{display:flex;align-items:baseline;gap:18px;font:600 40px/1.5 var(--sans)}
+#picks .chip{flex:none;font:500 16px var(--mono);color:var(--acc);border-left:3px solid var(--acc);padding-left:10px;cursor:help;text-transform:lowercase}
+#picks .chip.none{color:var(--mute);border-color:var(--line)}
+.bar{display:flex;align-items:flex-start;gap:28px;margin-top:24px;flex-wrap:wrap}
+.do{display:flex;flex-direction:column;gap:8px}
+.do button{height:64px;padding:0 34px;font:800 28px var(--sans);text-transform:uppercase;letter-spacing:.05em;cursor:pointer;border-radius:var(--r)}
+#make{background:var(--acc);color:var(--ink);border:2px solid var(--acc)}
+#replay{background:transparent;color:var(--text);border:2px solid var(--line)}#replay:hover{border-color:var(--text)}
+#edit[hidden]{display:none}#edit{all:unset;cursor:pointer;font:500 16px var(--mono);color:var(--mute);text-decoration:underline;align-self:center}
+.price{font:500 16px var(--mono);color:var(--mute)}.price b{color:var(--text);font-weight:700}
+.opts{display:flex;flex-direction:column;gap:6px;font:500 16px var(--mono);color:var(--mute)}
+.opts input{accent-color:var(--acc);width:18px;height:18px;vertical-align:-3px}
 button:disabled{opacity:.4;cursor:wait}
-#note{margin-top:18px;font-size:15px;color:var(--mute)}
-#result video{display:block;width:100%;max-height:68vh;background:#000;border:1px solid var(--line)}
-.st{font:700 15px var(--mono);letter-spacing:.06em}
-#result .st{font-size:34px;margin:0 0 6px}
-.DONE,.BUILT,.HAVE{color:var(--ok)}.FAILED{color:var(--bad)}.ASK,.SKIP{color:var(--amber)}
-.spent{font:500 16px var(--mono);color:var(--mute);margin-bottom:12px}
-.links{display:flex;gap:20px;margin-top:12px;font:500 14px var(--mono)}
-a{color:var(--amber);text-decoration:none}a:hover{color:var(--paper)}
-pre{white-space:pre-wrap;font:400 14px/1.5 var(--mono);color:var(--mute);margin:10px 0 0}
-.runs{margin-top:28px}.runs div{padding:8px 0;border-top:1px solid var(--line);font-size:15px}
-.runs .cost{font:500 14px var(--mono);color:var(--mute);margin:0 8px}.runs .what{color:var(--mute)}
-.runs a{font:500 13px var(--mono);margin-left:8px}
-.wait{font:500 18px var(--mono);color:var(--amber)}
+.right{padding:28px 40px;display:flex;flex-direction:column;align-items:center;min-height:0}
+.frame{height:100%;min-height:0;aspect-ratio:9/16;background:var(--panel);position:relative;overflow:hidden;border-radius:var(--r)}
+.frame video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;animation:sharp .4s ease-out}
+@keyframes sharp{from{filter:blur(18px);opacity:.6}to{filter:none;opacity:1}}
+.dot{position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px;border-radius:50%;background:var(--acc);box-shadow:0 0 24px var(--acc)}
+.state{position:absolute;inset:auto 28px 50% 28px;transform:translateY(50%);text-align:center}
+.state .word{font:700 34px/1.2 var(--mono);text-transform:uppercase;letter-spacing:.08em}
+.state .sub{font:500 18px var(--mono);color:var(--mute);margin-top:10px;min-height:24px}
+.line{height:3px;background:var(--line);margin-top:22px;position:relative}
+.line i{position:absolute;left:0;top:0;bottom:0;background:var(--acc);transition:width .6s}
+.line i::after{content:"";position:absolute;right:-4px;top:-4px;width:11px;height:11px;border-radius:50%;background:var(--acc);box-shadow:0 0 16px var(--acc)}
+.under{height:30px;margin-top:14px;font:500 17px var(--mono);color:var(--mute);display:flex;gap:18px;white-space:nowrap}
+.under a{color:var(--acc);text-decoration:none}
+.st{font-weight:700}.DONE,.BUILT,.HAVE{color:var(--ok)}.FAILED{color:var(--bad)}.RUNNING{color:var(--acc)}
+footer{border-top:1px solid var(--line);padding:12px 40px 16px}
+#runs div{display:flex;gap:18px;font:500 16px var(--mono);color:var(--mute);padding:3px 0;white-space:nowrap;overflow:hidden}
+#runs .what{font-family:var(--sans);font-size:17px;color:var(--text);overflow:hidden;text-overflow:ellipsis;min-width:0}
+#runs a{color:var(--acc);text-decoration:none}
+@media (max-width:1200px){
+ body{height:auto;min-height:100vh;overflow:auto;font-size:19px}
+ header{flex-wrap:wrap;gap:14px 22px;padding:16px 20px}
+ main{grid-template-columns:1fr}
+ .left{border-right:0;border-bottom:1px solid var(--line);padding:22px 20px}
+ textarea,#picks div{font-size:30px}textarea{min-height:240px;flex:none}
+ .right{padding:22px 20px}.frame{height:auto;width:min(100%,420px)}
+ .under{flex-wrap:wrap;height:auto}
+ #skills{columns:1;padding:12px 20px}
+ footer{padding:12px 20px}#runs div{flex-wrap:wrap;white-space:normal}
+}
+@media (max-width:600px){textarea,#picks div{font-size:24px}.do button{height:56px;padding:0 22px;font-size:22px}h1{font-size:26px}}
 </style>
-<header><h1>Crea<span>t</span>ure</h1><select id="home"></select><span id="sum"></span></header>
+<header><h1>Crea<span>t</span>ure</h1><select id="home"></select>
+<button id="skillsbtn"><b id="nskills">0</b> skills</button><span class="cap" id="ndesigns"></span>
+<div id="skills"></div></header>
 <main>
-<section><h2>Skills</h2><div id="skills"></div></section>
-<section><h2>Script · one line per shot</h2>
-<textarea id="lines" spellcheck="false">Night shift.
+<section class="left">
+ <div class="cap" style="margin-bottom:18px">Script · one line per shot</div>
+ <textarea id="lines" spellcheck="false">Night shift.
 Seventeen reels.
 One creature.
 Zero new authority.</textarea>
-<div class="act"><button id="make">Make</button>
- <div class="price"><b>~$0.02</b><span>1 model call + 1 judge</span></div>
- <label class="opt"><input type="checkbox" id="style"> my style</label>
- <label class="opt"><input type="checkbox" id="sound"> sound</label></div>
-<div class="act second"><button id="replay">Replay</button><select id="design"></select>
- <div class="price"><b>$0</b><span>0 model calls</span></div></div>
-<p id="note">Make: one cheap call picks a learned screen for each line, a judge checks it (at most 3 tries). Replay: a saved design on your lines, no model.</p>
+ <div id="picks"></div>
+ <div class="bar">
+  <div class="do"><button id="make">Make</button><span class="price"><b>~$0.02</b> · 1 model call + 1 judge</span></div>
+  <div class="do"><button id="replay">Replay</button><span class="price"><b>$0</b> · 0 model calls</span></div>
+  <div class="opts"><select id="design" title="saved design to replay"></select>
+   <label><input type="checkbox" id="style"> my style</label><label><input type="checkbox" id="sound"> sound</label></div>
+  <button id="edit" hidden>edit script</button>
+ </div>
 </section>
-<section><h2>Result</h2><div id="result"><span class="spent">Nothing yet.</span></div>
-<div class="runs"><h2>Last runs</h2><div id="runs"></div></div></section>
+<section class="right"><div class="frame" id="frame"><div class="dot"></div></div><div class="under" id="under"></div></section>
 </main>
+<footer><div class="cap" style="margin-bottom:6px">Last runs</div><div id="runs"></div></footer>
 <script>
 const $=id=>document.getElementById(id);let home="";
+if(new URLSearchParams(location.search).has("video"))document.body.classList.add("video");
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const file=p=>`/file?home=${encodeURIComponent(home)}&path=${encodeURIComponent(p)}`;
 async function j(u,o){const r=await fetch(u,o);const d=await r.json();if(!r.ok)throw new Error(d.error||r.status);return d}
 async function homes(){const hs=await j("/api/homes");$("home").innerHTML=hs.map(h=>`<option>${esc(h)}</option>`).join("");
  home=hs.includes("mikro-s-knihovnou")?"mikro-s-knihovnou":hs[0];$("home").value=home;load()}
 async function load(){const d=await j("/api/home?name="+encodeURIComponent(home));
- $("sum").textContent=`${d.skills.length} skills · ${d.designs.length} designs`;
- $("skills").innerHTML=d.skills.map(s=>`<details><summary><span class="sw">${(s.colors||[]).map(c=>`<i style="background:${esc(c)}"></i>`).join("")}</span>${esc(s.slug)}</summary><p>${esc(s.effect)}<span class="meta">${s.tone?esc(s.tone)+" · ":""}${s.seconds??"?"} s${s.text_share!=null?" · text "+Math.round(s.text_share*100)+" %":""}</span></p></details>`).join("")||'<span class="spent">Nothing learned yet.</span>';
+ $("nskills").textContent=d.skills.length;$("ndesigns").textContent=`${d.designs.length} designs`;
+ $("skills").innerHTML=d.skills.map(s=>`<details><summary><span class="sw">${(s.colors||[]).map(c=>`<i style="background:${esc(c)}"></i>`).join("")}</span>${esc(s.slug)}</summary><p>${esc(s.effect)}<br><span class="mono">${s.tone?esc(s.tone)+" · ":""}${s.seconds??"?"} s${s.text_share!=null?" · text "+Math.round(s.text_share*100)+" %":""}</span></p></details>`).join("")||"Nothing learned yet.";
  $("design").innerHTML=d.designs.slice().sort((a,b)=>(b.name.startsWith("make")-a.name.startsWith("make"))||b.name.localeCompare(a.name)).map(x=>`<option value="${esc(x.name)}">${esc(x.name)} · ${x.steps} ${x.steps==1?"step":"steps"}</option>`).join("");
- $("runs").innerHTML=d.runs.map(r=>`<div><span class="st ${esc(r.status)}">${esc(r.status)}</span><span class="cost">${r.spent!=null?"$"+Number(r.spent).toFixed(3):""}</span><span class="what">${esc(r.what)}</span>${r.clip?`<a href="${file(r.clip)}" target="_blank">clip</a>`:""}<a href="${file(r.run+"/page.html")}" target="_blank">page</a></div>`).join("")}
-function show(job){const ok=["DONE","BUILT","HAVE"].includes(job.status);
- $("result").innerHTML=`<div class="st ${esc(job.status)}">${esc(job.status||"?")}</div>${job.spent?`<div class="spent">${esc(job.spent)}</div>`:""}${job.clip?`<video src="${file(job.clip)}" controls autoplay loop></video>`:""}${job.run?`<div class="links"><a href="${file(job.run+"/page.html")}" target="_blank">run page</a><a href="${file(job.run+"/POSTUP.md")}" target="_blank">POSTUP.md</a></div>`:""}${!ok&&job.gap?`<pre>${esc(job.gap)}</pre>`:""}`}
+ $("runs").innerHTML=d.runs.slice(0,5).map(r=>`<div><span class="st ${esc(r.status)}">${esc(r.status.split(" ")[0])}</span><span>${r.spent!=null?"$"+Number(r.spent).toFixed(3):""}</span><span class="what">${esc(r.what)}</span>${r.clip?`<a href="${file(r.clip)}" target="_blank">clip</a>`:""}<a href="${file(r.run+"/page.html")}" target="_blank">page</a></div>`).join("")}
+function picks(lines,list){if(!list||!list.length)return;const by={};list.forEach(p=>by[p.line]=p);
+ $("picks").innerHTML=lines.map((l,i)=>{const p=by[i+1];return `<div><span>${esc(l)}</span>${p&&p.skill?`<span class="chip" title="${esc(p.why)}">${esc(p.skill)}</span>`:`<span class="chip none">—</span>`}</div>`}).join("");
+ $("picks").classList.add("on");$("lines").style.display="none";$("edit").hidden=false}
+function editing(){$("picks").classList.remove("on");$("lines").style.display="";$("edit").hidden=true}
+function working(p){const w=(p&&p.word)||"STARTING";const of=p&&p.of?p.of:0;const step=p?p.step:0;
+ const share=w==="JUDGED"?100:of?Math.round(85*step/of)+(w==="RENDERING"?5:0):5;
+ $("frame").innerHTML=`<div class="state"><div class="word RUNNING">${esc(w)}</div><div class="sub">${w==="RENDERING"&&of?`shot ${Math.min(step+1,of)} / ${of}`:""}${p&&p.attempt>1?` · composition ${p.attempt}`:""}${p&&p.calls?` · ${p.calls} model calls`:""}</div><div class="line"><i style="width:${share}%"></i></div></div>`}
+function done(job,lines){const p=job.progress||{};const st=job.status||p.word||"?";
+ $("frame").innerHTML=job.clip?`<video src="${file(job.clip)}" autoplay loop playsinline ${$("sound").checked?"":"muted"} controls></video>`:`<div class="state"><div class="word ${esc(st)}">${esc(st)}</div><div class="sub">${esc((job.gap||"").slice(0,160))}</div></div>`;
+ $("under").innerHTML=`<span class="st ${esc(st)}">${esc(st)}</span><span>$${Number(p.spent||0).toFixed(3)}</span><span>${p.calls||0} model calls</span>${job.run?`<a href="${file(job.run+"/page.html")}" target="_blank">run page</a><a href="${file(job.run+"/POSTUP.md")}" target="_blank">POSTUP</a>`:""}`;
+ if(job.kind==="make")picks(lines,p.picks)}
 async function go(kind){const lines=$("lines").value.split("\n").map(s=>s.trim()).filter(Boolean);
  const body={home,lines,style:$("style").checked,sound:$("sound").checked,design:$("design").value};
- ["make","replay"].forEach(b=>$(b).disabled=true);$("result").innerHTML='<span class="wait">Working… a make takes a minute or two</span>';
+ ["make","replay"].forEach(b=>$(b).disabled=true);editing();$("under").innerHTML="";working(null);
  try{const {job}=await j("/api/"+kind,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
-  for(;;){await new Promise(r=>setTimeout(r,2000));const s=await j("/api/job?id="+job);if(s.state==="done"){show(s);break}}
- }catch(e){$("result").innerHTML=`<pre>${esc(e.message)}</pre>`}
+  for(;;){await new Promise(r=>setTimeout(r,1500));const s=await j("/api/job?id="+job);
+   if(s.state==="done"){done(s,lines);break}working(s.progress);if(kind==="make")picks(lines,s.progress&&s.progress.picks)}
+ }catch(e){$("frame").innerHTML=`<div class="state"><div class="word FAILED">ERROR</div><div class="sub">${esc(e.message)}</div></div>`}
  ["make","replay"].forEach(b=>$(b).disabled=false);load()}
-$("home").onchange=e=>{home=e.target.value;load()};$("make").onclick=()=>go("make");$("replay").onclick=()=>go("design");homes();
+$("home").onchange=e=>{home=e.target.value;load()};$("make").onclick=()=>go("make");$("replay").onclick=()=>go("design");
+$("edit").onclick=editing;$("skillsbtn").onclick=()=>$("skills").classList.toggle("open");homes();
 </script></html>
