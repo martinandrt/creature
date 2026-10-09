@@ -54,6 +54,9 @@ ol{margin:4px 0 0 18px;padding:0}li{margin:0 0 2px}a{color:inherit}
 """
 
 PLAYER = "controls muted loop playsinline preload='metadata'"  # many runs on one page: first frame only
+OUTPUT_PLAYER = (
+    "controls loop playsinline preload='metadata'"  # the creature's clip may carry sound: not muted
+)
 
 
 def _when(ts: str) -> float:
@@ -95,6 +98,16 @@ def _latest_picture(folder: Path) -> Path | None:
     return found[-1] if found else None
 
 
+def _design_origin(home: Path, name: str) -> tuple[str | None, Path | None]:
+    """The reel a saved design was learned from, and that run's copy of it: a replay belongs with it."""
+    try:
+        index = json.loads((home / "registry" / "index.json").read_text(encoding="utf-8"))
+        origin = index["designs"][name]["origin"]
+        return Path(str(origin["reel"])).name, home / "runs" / str(origin["run"]) / "reel.mp4"
+    except (OSError, ValueError, KeyError, TypeError):
+        return None, None
+
+
 def runs(homes: list[Path], now: float | None = None) -> list[dict[str, Any]]:
     now = time.time() if now is None else now
     found = []
@@ -112,6 +125,8 @@ def runs(homes: list[Path], now: float | None = None) -> list[dict[str, Any]]:
                 (e for e in events if e["type"] in ("task", "design_task", "tool_task", "wishes_task")), {}
             )
             clip = folder / end["clip"] if end and end.get("clip") else None
+            design = str(task.get("design") or "") if task.get("type") == "design_task" else ""
+            origin, origin_video = _design_origin(home, design) if design else (None, None)
             found.append(
                 {
                     "home": home.name,
@@ -125,6 +140,7 @@ def runs(homes: list[Path], now: float | None = None) -> list[dict[str, Any]]:
                     "source": Path(
                         str(
                             task.get("source")
+                            or origin
                             or task.get("design")
                             or task.get("wish")
                             or task.get("type")
@@ -133,6 +149,8 @@ def runs(homes: list[Path], now: float | None = None) -> list[dict[str, Any]]:
                         )
                     ).name,
                     "text": str(task.get("text", "")),
+                    "design": design,
+                    "reel_video": origin_video,
                     "spent": sum(float(e.get("cost_usd") or 0) for e in events),
                     "learned": [f"{e['skill']} v{e['version']}" for e in events if e["type"] == "installed"],
                     "gap": str(end.get("gap") or "") if end else "",
@@ -296,11 +314,12 @@ def _section(r: dict[str, Any], base: Path, now: float) -> str:
         f"<div class='head'><span class='st {r['status']}'>{r['status']}</span>"
         f"<b>{html.escape(r['source'])}</b><span class='mute'>{html.escape(r['home'])} · {r['id']}</span>"
         f"<span>{seconds / 60:.1f} min</span><span>${r['spent']:.3f}</span>"
+        + (f"<span>přehrání designu {html.escape(r['design'])}</span>" if r.get("design") else "")
         + (f"<span>naučeno: {html.escape(', '.join(r['learned']))}</span>" if r["learned"] else "")
         + (f"<a href='{html.escape(page)}'>stránka běhu</a>" if page else "")
         + "</div>"
     )
-    original = _rel(r["folder"] / "reel.mp4", base)
+    original = _rel(r.get("reel_video") or r["folder"] / "reel.mp4", base)
     source = (
         "<div><div class='mute'>Zdrojové video</div>"
         + (
@@ -317,7 +336,7 @@ def _section(r: dict[str, Any], base: Path, now: float) -> str:
         + "</div>"
     )
     if clip:
-        player = f"<video src='{html.escape(clip)}' {PLAYER}></video>"
+        player = f"<video src='{html.escape(clip)}' {OUTPUT_PLAYER}></video>"
         middle = f"<div><div class='mute'>Výstup</div>{player}</div>"
     elif picture:
         shown = f"<img src='{html.escape(picture)}' alt=''>"
