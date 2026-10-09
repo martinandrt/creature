@@ -159,7 +159,11 @@ class Desk:
             return out
         homes = [self.homes / home["name"] for home in self.home_list()]
         seen = board.snapshot(homes, self.homes, time.time())
-        seen["runs"] = [r for r in seen["runs"] if not self.hides(r["id"] + r["html"])]
+        runs = [r for r in seen["runs"] if not self.hides(r["id"] + r["html"])]
+        cut = next((i for i, r in enumerate(runs) if r["id"] == "archiv"), len(runs))
+        learned = [r for r in runs[:cut] if r["id"].endswith(".mp4") or "://" in r["id"]]
+        rest = [r for r in runs[:cut] if r not in learned]  # replays, makes, cards, practice: after the reels
+        seen["runs"] = learned + rest + runs[cut:]
         board._write_data(out, seen)
         return board.data_path(out)
 
