@@ -624,8 +624,8 @@ def test_a_montage_reel_learns_its_surface_composes_and_saves_a_timeline(montage
         job["frames"] == 360 and job["sources"] == ["a"] and job["mark_text"] == "S"
     )  # a monogram, never the word
     assert set(files) == {"a.mp4"} and job["inks"] == {"dark": "#111111", "light": "#f4f4f4"}
-    # the source was rendered at the montage's length, not the 3 s it was learned on
-    assert calls["renders"][-1]["output"]["duration_s"] == 3.0  # a source renders at its learned length, looped
+    # a source renders at the 3 s it was learned and tested at; the montage loops it
+    assert calls["renders"][-1]["output"]["duration_s"] == 3.0
     assert report.clip == creature.folder / "montage-1" / "montage.mp4"
 
 
