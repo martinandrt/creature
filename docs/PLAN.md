@@ -48,7 +48,6 @@ Deliverables: public GitHub repo + unlisted YouTube video of at most 90 s, "show
 | Apify `apify~instagram-reel-scraper`, sync call | one reel in ~20 s; accepts direct reel URLs; caption, `videoUrl`, `audioUrl` |
 | Apify prices (free tier) | reel $0.0026, start $0.001, transcript add-on $0.048, video add-on $0.02 |
 | Direct video download + ffmpeg + local Whisper | 1.6 s + 2 s, $0; music-only reels produce hallucinated lyrics → filter |
-| ElevenLabs | key works, paid tier (commercial use allowed) |
 | Images in the isolated model call | base64 image blocks over `--input-format stream-json`, no tools: read text and colors correctly, $0.0005, 3 s |
 | Workshop image (Python 3.12, ffmpeg, Pillow, numpy, DejaVu + Inter fonts) | builds in 45 s, 988 MB; a 5 s 1080×1920 30 fps clip renders in 1.2 s, 1.5–1.8 s with container start, no network, read-only root |
 | Judge model on frame strips (reel vs output, 3 criteria) | Haiku 5.5 gave the same verdicts and per-criterion marks as Sonnet 5.5 on a match, a near miss and a wrong technique; $0.001 vs $0.012 per judgement (synthetic clips, re-check on a real reel) |
@@ -115,7 +114,7 @@ is built by the creature itself, from a task.
 
 ## 5. Authority v2
 
-- **Spine network:** Apify API, Instagram CDN download (perception only), ElevenLabs API, the model via `claude -p`.
+- **Spine network:** Apify API, Instagram CDN download (perception only), the model via `claude -p`.
 - **Skills** are scripts over files: input (text, parameters, files) → file. They run only in the workshop
   container: Python, ffmpeg, Pillow, numpy, fonts; one writable work folder; may start programs inside; no network,
   no keys, no host environment; limits on time, memory, processes and output size.

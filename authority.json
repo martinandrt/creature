@@ -4,7 +4,6 @@
   "spine_network": [
     "Apify API",
     "Instagram CDN (perception only)",
-    "ElevenLabs API",
     "the model via claude -p"
   ],
   "models": {
