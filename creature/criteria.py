@@ -97,6 +97,8 @@ The domain is text and graphic animation that a Python script can render with Pi
 - verdict "skip": the reel shows no effect that can be reproduced.
   Also "skip" when the reel shows or advertises an app, plugin or AI tool that makes the effect for
   you (auto captions, a filter, a generator): the lesson there is the tool, not a technique.
+  Also "skip" when the reel is mostly a person on camera (a talking head, a face, a vlog) with graphics
+  around them: the creature learns motion design, and a filmed person is neither drawn nor learned.
 
 The frames are a grid of up to 24 in time order, 6 per row, each in its own cell with a grey border and
 its time in seconds under it; half of them come from the middle of the reel's shots. The caption and

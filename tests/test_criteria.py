@@ -184,3 +184,8 @@ def test_rhythm_check_is_in_house_frames_whatever_the_reels_frame_rate(reel):
     checks = {c["kind"]: c for c in criteria.look_checks(fast, "clip.mp4")}
     assert checks["palette"]["colors"] == ["#112233"]  # 2 % is noise
     assert checks["rhythm"]["frames_per_shot"] == pytest.approx(15, abs=0.5)
+
+
+def test_the_criteria_skip_tools_and_people_on_camera():
+    # 9. 10., the author: "no face in it, it has to be motion design"; a tool's promo teaches the tool
+    assert "advertises an app" in criteria.SYSTEM and "talking head" in criteria.SYSTEM
