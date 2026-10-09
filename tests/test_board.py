@@ -298,11 +298,35 @@ def test_a_design_replay_sits_with_the_reel_it_was_learned_from(tmp_path):
     out = base / "board.html"
     board.render([home], out)
     groups = {g["id"]: g["html"] for g in _data(out)["runs"]}
-    assert list(groups) == ["src:shorter", "src:R.mp4"]  # newest first; no reel origin: its own name
+    # no reel origin: its own name; it only failed, so it goes below the reel that has a BUILT and a DONE
+    assert list(groups) == ["src:R.mp4", "src:shorter"]
     reel = groups["src:R.mp4"]
     assert reel.count("<section class='run'>") == 2 and "přehrání designu promo" in reel
     assert reel.count("<video src='one/runs/learn/reel.mp4'") == 2  # the learning run's reel, shown twice
     assert "přehrání designu shorter" in groups["src:shorter"] and "<video" not in groups["src:shorter"]
+
+
+def test_reels_with_a_success_come_before_reels_that_only_failed_however_many_attempts(tmp_path):
+    # Martin, 9. 10. 04:45: the successful reels (a run that ended BUILT, HAVE or DONE) above the ones that
+    # only failed, even when the failed one is the newest and has many attempts; a running reel stays on
+    # top; inside each group the newest first
+    base = tmp_path / "creature-homes"
+    home = _home(base, "one")
+    _run(home, "b", ("run_end", {"status": "BUILT"}), source="Built.mp4")
+    _later()
+    _run(home, "h1", ("run_end", {"status": "HAVE"}), source="Have.mp4")
+    _later()
+    _run(home, "h2", ("run_end", {"status": "FAILED", "gap": "later"}), source="Have.mp4")  # no demotion
+    for n in range(3):  # the newest reel: three failed attempts, nothing else
+        _later()
+        _run(home, f"f{n}", ("run_end", {"status": "FAILED", "gap": "no"}), source="Failed.mp4")
+    _later()
+    _run(home, "going", ("round", {"round": 1, "note": "n"}), source="Live.mp4")
+    out = base / "board.html"
+    board.render([home], out)
+    ids = [g["id"] for g in _data(out)["runs"]]
+    assert ids == ["src:Live.mp4", "src:Have.mp4", "src:Built.mp4", "src:Failed.mp4"]
+    assert "<b>7</b>běhů" in _data(out)["summary"]
 
 
 def test_an_archived_reel_goes_last_on_one_line_and_still_counts(tmp_path):

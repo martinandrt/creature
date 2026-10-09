@@ -3,7 +3,9 @@ and for a run still going its latest steps and the latest picture of reel next t
 reads ledgers and files.
 
 Every run of the same reel (the source file name, in any home, any number of times) is one section with
-tabs V1..Vn, oldest to newest, the newest shown; sections go by their newest run, newest first.
+tabs V1..Vn, oldest to newest, the newest shown. Sections go by what came of the reel: a reel still running
+first, then reels with a run that ended BUILT, HAVE or DONE, then the ones that only failed (FAILED, STOPPED,
+ASK, SKIP), however many attempts they took; inside each group the newest run first.
 
 The page never reloads. OUT.html is a static shell (style, header, an empty container, a small script);
 OUT-data.js sits next to it and holds `window.BOARD_DATA`: the summary and one {id, sig, html} per reel, sig
@@ -28,6 +30,7 @@ from creature import ledger
 POLL_S = 10  # how often the open page asks for fresh data; the page itself is never reloaded
 STEPS_SHOWN = 8
 STALE_S = 900  # a run with no end and nothing new for this long was stopped
+SUCCESS = ("BUILT", "HAVE", "DONE")  # a reel with one such run is listed above the reels that only failed
 
 STYLE = """
 :root{--bg:#f6f5f2;--fg:#1b1d22;--mute:#6b6f78;--line:#dddad3;--card:#fff;--ok:#1f7a45;--bad:#b3261e;--run:#9a6700}
@@ -385,7 +388,8 @@ def snapshot(homes: list[Path], base: Path, now: float) -> dict[str, Any]:
     """Everything the page shows, as data. A pure function of the ledgers, the files and `now`.
 
     One entry per reel (the source file name), however many homes or times it was run; its runs are the
-    tabs. Entries go by their newest run, newest first. An entry's sig covers all of its runs."""
+    tabs. Entries go running first, then reels with a successful run (BUILT, HAVE, DONE), then the rest;
+    inside each group by their newest run, newest first. An entry's sig covers all of its runs."""
     items = runs(homes, now)
     spent = sum(r["spent"] for r in items)
     learned = sum(len(r["learned"]) for r in items)
@@ -404,7 +408,15 @@ def snapshot(homes: list[Path], base: Path, now: float) -> dict[str, Any]:
     except OSError:
         archived = set()
     listed, shelved = [], []
-    for source, members in sorted(by_source.items(), key=lambda kv: (-kv[1][-1][1]["start"], kv[0])):
+
+    def rank(members: list[tuple[str, dict[str, Any]]]) -> int:
+        statuses = {r["status"] for _, r in members}
+        if "RUNNING" in statuses:
+            return 0
+        return 1 if statuses & set(SUCCESS) else 2
+
+    ordered = sorted(by_source.items(), key=lambda kv: (rank(kv[1]), -kv[1][-1][1]["start"], kv[0]))
+    for source, members in ordered:
         if source in archived:
             r = members[-1][1]
             cost = sum(m["spent"] for _, m in members)

@@ -180,8 +180,10 @@ montage and let it ask (PAID, outcome not guaranteed).
 
 ## 8. The board ($0, verified)
 
-`~/Desktop/creature-homes/board.html`: one section per reel, the reel run most recently on top. A reel
-run several times (in any home) is one section with tabs `V1..Vn`, oldest to newest, the newest shown.
+`~/Desktop/creature-homes/board.html`: one section per reel. A reel still running on top, then the reels
+with a successful run (`BUILT`, `HAVE`, `DONE`), then the ones that only failed, however many attempts
+they took; newest first inside each group. A reel run several times (in any home) is one section with
+tabs `V1..Vn`, oldest to newest, the newest shown.
 Per run: the source video, the input text and reel frames, the output clip or the latest pairs sheet,
 time, dollars, what was learned, the last steps and the gap; a run that died without an end says so
 (`STOPPED`, no output, the last step is in the list). Totals on top: runs, running, learned, spent.
